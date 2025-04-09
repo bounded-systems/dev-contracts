@@ -8,6 +8,7 @@ lint:
     - linters: [ALL]
       paths:
         - db/schema.rb
+        - "**/Dockerfile*"
   enabled:
     - brakeman@5.4.0
     # - rubocop@1.39.0
