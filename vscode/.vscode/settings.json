@@ -56,5 +56,21 @@
   "yaml.schemas": {
     "https://raw.githubusercontent.com/trunk-io/trunk/main/schemas/trunk.yaml.schema.json": [".trunk/trunk.yaml"]
   },
-  "yaml.validate": true
+  "yaml.validate": true,
+
+  // YAML Language Support
+  "yaml.format.enable": true,
+  "yaml.format.singleQuote": true,
+  "yaml.format.bracketSpacing": true,
+  "yaml.format.proseWrap": "preserve",
+  "yaml.format.printWidth": 80,
+  "yaml.hover": true,
+  "yaml.completion": true,
+  "yaml.validate": true,
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  }
 }

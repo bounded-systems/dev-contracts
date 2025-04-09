@@ -2,6 +2,7 @@
   "recommendations": [
     "Shopify.ruby-lsp",
     "sorbet.sorbet-vscode-extension",
-    "trunk.io"
+    "trunk.io",
+    "redhat.vscode-yaml"
   ]
 }
