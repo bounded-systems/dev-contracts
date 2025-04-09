@@ -46,8 +46,6 @@ actions:
     - trunk-upgrade-available
 runtimes:
   enabled:
-    - node@18.20.5
-    - python@3.10.8
     - ruby@3.1.4
 plugins:
   sources:
