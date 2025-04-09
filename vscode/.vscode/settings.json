@@ -1,7 +1,8 @@
 {
   "rubyLsp.rubyExecutablePath": "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby",
   "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
-  "rubyLsp.formatter": "auto",
+  
+  "editor.defaultFormatter": "trunk.io",
   "editor.formatOnSave": false,
   
   "rubyLsp.enabledFeatures": {
@@ -42,5 +43,12 @@
   "trunk.addToolsToPath": true,
   "trunk.autoInit": false,
   "trunk.showPreexistingIssues": false,
-  "trunk.showWhatsNewMessage": false
+  "trunk.showWhatsNewMessage": false,
+  "[ruby]": {
+    "editor.defaultFormatter": "trunk.io"
+  },
+
+  // JSON Schema Validation Settings
+  "json.validate.enable": true,
+  "json.schemaDownload.enable": true,
 }
