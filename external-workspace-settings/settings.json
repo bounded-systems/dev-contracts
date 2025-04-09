@@ -1,0 +1,24 @@
+{
+  "rubyLsp.rubyExecutablePath": "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby",
+  "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
+  
+  "sorbet.enabled": true,
+  "sorbet.lspConfigs": [
+    {
+      "id": "default",
+      "name": "Sorbet",
+      "description": "Launch Sorbet using bundle exec with Ruby ${env:PUSHD_DEVTOOLS_RBENV_VERSION}",
+      "command": ["${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/bundle", "exec", "srb", "tc", "--lsp"],
+      "env": {
+        "BUNDLE_GEMFILE": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
+        "RBENV_VERSION": "${env:PUSHD_DEVTOOLS_RBENV_VERSION}"
+      }
+    }
+  ],
+  "sorbet.selectedLspConfigId": "default",
+  
+  "trunk.addToolsToPath": true,
+  "trunk.autoInit": false,
+  "trunk.showPreexistingIssues": false,
+  "trunk.showWhatsNewMessage": false
+}

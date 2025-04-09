@@ -1,0 +1,6 @@
+{
+  "trunk.addToolsToPath": true,
+  "trunk.autoInit": false,
+  "trunk.showPreexistingIssues": false,
+  "trunk.showWhatsNewMessage": false
+} 

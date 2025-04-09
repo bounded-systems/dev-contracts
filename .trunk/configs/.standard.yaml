@@ -1,0 +1,16 @@
+# .standard.yml
+---
+fix: false
+format: false
+parallel: true
+rubocop:
+  require: []
+  AllCops:
+    Exclude:
+      - 'db/schema.rb'
+      - 'bin/*'
+      - 'node_modules/**/*'
+  Style/StringLiterals:
+    Enabled: false
+  Layout/IndentationWidth:
+    Enabled: false

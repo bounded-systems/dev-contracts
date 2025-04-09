@@ -1,0 +1,40 @@
+2025-04-03T21:13:08.624Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-03T21:13:46.644Z [[31merror[39m] Channel has been closed
+2025-04-03T21:13:58.323Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-03T21:15:04.387Z [[31merror[39m] Channel has been closed
+2025-04-03T21:15:12.237Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-03T21:17:05.044Z [[31merror[39m] Channel has been closed
+2025-04-03T21:17:25.482Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-03T21:18:17.125Z [[31merror[39m] Channel has been closed
+2025-04-03T21:18:24.740Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-03T21:30:54.325Z [[31merror[39m] Channel has been closed
+2025-04-03T21:31:05.514Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-04T15:44:33.971Z [[31merror[39m] Channel has been closed
+2025-04-04T16:36:54.707Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T15:18:22.884Z [[31merror[39m] Channel has been closed
+2025-04-07T15:19:00.821Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T17:25:47.125Z [[31merror[39m] Channel has been closed
+2025-04-07T17:25:54.242Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T17:26:37.217Z [[31merror[39m] Channel has been closed
+2025-04-07T17:26:43.236Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T17:28:59.183Z [[31merror[39m] Channel has been closed
+2025-04-07T17:29:04.889Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T19:02:28.923Z [[31merror[39m] Channel has been closed
+2025-04-07T19:02:34.796Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T19:42:43.930Z [[31merror[39m] Channel has been closed
+2025-04-07T19:42:50.221Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-07T23:37:33.768Z [[31merror[39m] Channel has been closed
+2025-04-09T15:49:07.625Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/pushd-web","detached":false,"shell":false}}
+2025-04-09T16:06:20.941Z [[31merror[39m] Client is not running
+2025-04-09T17:57:11.785Z [[34mdebug[39m] Starting Trunk language client with run config: {"command":"/Users/bobby/.cache/trunk/launcher/trunk","args":["lsp-proxy"],"options":{"cwd":"/Users/bobby/dev/repos/pushd-web","detached":false,"shell":false}}
+2025-04-09T17:57:13.698Z [[31merror[39m] Failed to spawn trunk process: Error: Command failed: '/Users/bobby/.cache/trunk/launcher/trunk' config print 
+
+2025-04-09T17:59:56.757Z [[31merror[39m] Cannot read properties of undefined (reading 'version')
+2025-04-09T17:59:56.797Z [[31merror[39m] Failed to spawn trunk process: Error: Command failed: '/Users/bobby/.cache/trunk/launcher/trunk' config print 
+[0;31m✘[0m Invalid .trunk/trunk.yaml, no cli version found. See https://docs.trunk.io for more info.
+
+2025-04-09T18:00:30.626Z [[31merror[39m] Failed to spawn trunk process: Error: Command failed: '/Users/bobby/.cache/trunk/launcher/trunk' config print 
+
+2025-04-09T18:00:30.734Z [[31merror[39m] Failed to spawn trunk process: Error: Command failed: '/Users/bobby/.cache/trunk/launcher/trunk' config print 
+
+2025-04-09T18:03:14.773Z [[31merror[39m] Client is not running
