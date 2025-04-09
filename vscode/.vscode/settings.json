@@ -1,6 +1,19 @@
 {
   "rubyLsp.rubyExecutablePath": "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby",
   "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
+  "rubyLsp.formatter": "auto",
+  "rubyLsp.enabledFeatures": {
+    "documentHighlights": true,
+    "documentSymbols": true,
+    "foldingRanges": true,
+    "formatting": true,
+    "hover": true,
+    "inlayHint": true,
+    "onTypeFormatting": true,
+    "semanticHighlighting": true,
+    "signatureHelp": true
+  },
+  "editor.formatOnSave": false,
   
   "sorbet.enabled": true,
   "sorbet.lspConfigs": [
