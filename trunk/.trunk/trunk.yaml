@@ -4,13 +4,9 @@ version: 0.1
 cli:
   version: 1.22.10
 lint:
-  ignore:
-    - linters: [ALL]
-      paths:
-        - db/schema.rb
   enabled:
-    - standardrb@latest
-    - yamllint@latest
+    - standardrb@1.49.0
+    - yamllint@1.32.0
   disabled:
     - rufo
     - brakeman
@@ -26,14 +22,7 @@ runtimes:
   definitions:
     - type: ruby
       version: 3.2.2
-      path: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby
-      runtime_environment:
-        - name: BUNDLE_GEMFILE
-          value: ${PUSHD_DEVTOOLS_DIR}/config/Gemfile
-        - name: RBENV_VERSION
-          value: ${PUSHD_DEVTOOLS_RBENV_VERSION}
-        - name: PATH
-          value: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin:${PATH}
+      system_version: ignored
 plugins:
   sources:
     - id: trunk
