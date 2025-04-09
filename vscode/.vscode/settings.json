@@ -52,12 +52,6 @@
   "json.validate.enable": true,
   "json.schemaDownload.enable": true,
   
-  // YAML Schema Validation
-  "yaml.schemas": {
-    "https://raw.githubusercontent.com/trunk-io/trunk/main/schemas/trunk.yaml.schema.json": [".trunk/trunk.yaml"]
-  },
-  "yaml.validate": true,
-
   // YAML Language Support
   "yaml.format.enable": true,
   "yaml.format.singleQuote": true,
@@ -72,5 +66,9 @@
     "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2
+  },
+  "yaml.schemas": {
+    "https://static.trunk.io/pub/trunk-yaml-schema.json": [".trunk/trunk.yaml"],
+    "https://json.schemastore.org/github-workflow.json": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
   }
 }

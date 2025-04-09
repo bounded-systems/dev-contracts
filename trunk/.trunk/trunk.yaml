@@ -22,12 +22,18 @@ actions:
     - trunk-announce
 runtimes:
   enabled:
-    - ruby@3.2.2:
-        path: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby
-        env:
-          BUNDLE_GEMFILE: ${PUSHD_DEVTOOLS_DIR}/config/Gemfile
-          RBENV_VERSION: ${PUSHD_DEVTOOLS_RBENV_VERSION}
-          PATH: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin:${PATH}
+    - ruby@3.2.2
+  definitions:
+    - type: ruby
+      version: 3.2.2
+      path: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby
+      runtime_environment:
+        - name: BUNDLE_GEMFILE
+          value: ${PUSHD_DEVTOOLS_DIR}/config/Gemfile
+        - name: RBENV_VERSION
+          value: ${PUSHD_DEVTOOLS_RBENV_VERSION}
+        - name: PATH
+          value: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin:${PATH}
 plugins:
   sources:
     - id: trunk
