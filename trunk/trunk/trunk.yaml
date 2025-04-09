@@ -1,0 +1,55 @@
+# This file controls the behavior of Trunk: https://docs.trunk.io/cli
+# To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
+version: 0.1
+cli:
+  version: 1.22.10
+lint:
+  ignore:
+    - linters: [ALL]
+      paths:
+        - db/schema.rb
+  enabled:
+    - brakeman@5.4.0
+    # - rubocop@1.39.0
+    - prettier@3.5.2
+    - eslint@8.57.0
+    - sqlfluff@3.3.1
+    # - cspell@8.17.1
+  disabled:
+    - standardrb
+    - rufo
+    - actionlint
+    - bandit
+    - black
+    - checkov
+    - git-diff-check
+    - hadolint
+    - isort
+    - markdownlint
+    - osv-scanner
+    - oxipng
+    - ruff
+    - shellcheck
+    - shfmt
+    - svgo
+    - terrascan
+    - trivy
+    - trufflehog
+    - yamllint
+actions:
+  disabled:
+    - trunk-check-pre-push
+    - trunk-fmt-pre-commit
+    - trunk-announce
+  enabled:
+    - trunk-upgrade-available
+runtimes:
+  enabled:
+    - node@18.20.5
+    - python@3.10.8
+    - ruby@3.1.4
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.6.7
+      uri: https://github.com/trunk-io/plugins
