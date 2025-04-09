@@ -51,4 +51,10 @@
   // JSON Schema Validation Settings
   "json.validate.enable": true,
   "json.schemaDownload.enable": true,
+  
+  // YAML Schema Validation
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/trunk-io/trunk/main/schemas/trunk.yaml.schema.json": [".trunk/trunk.yaml"]
+  },
+  "yaml.validate": true
 }

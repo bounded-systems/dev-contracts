@@ -1,0 +1,35 @@
+# This file controls the behavior of Trunk: https://docs.trunk.io/cli
+# To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
+version: 0.1
+cli:
+  version: 1.22.10
+lint:
+  ignore:
+    - linters: [ALL]
+      paths:
+        - db/schema.rb
+  enabled:
+    - standardrb@latest
+    - yamllint@latest
+  disabled:
+    - rufo
+    - brakeman
+actions:
+  enabled:
+    - trunk-fmt-pre-commit
+  disabled:
+    - trunk-check-pre-push
+    - trunk-announce
+runtimes:
+  enabled:
+    - ruby@3.2.2:
+        path: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby
+        env:
+          BUNDLE_GEMFILE: ${PUSHD_DEVTOOLS_DIR}/config/Gemfile
+          RBENV_VERSION: ${PUSHD_DEVTOOLS_RBENV_VERSION}
+          PATH: ${PUSHD_DEVTOOLS_DIR}/ruby/${PUSHD_DEVTOOLS_RBENV_VERSION}/bin:${PATH}
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.6.7
+      uri: https://github.com/trunk-io/plugins
