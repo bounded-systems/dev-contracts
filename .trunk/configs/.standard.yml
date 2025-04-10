@@ -1,0 +1,8 @@
+ruby_version: 3.2.2
+extend_config:
+  - .rubocop.yml
+ignore:
+  - "db/schema.rb"
+  - "vendor/**/*"
+  - "tmp/**/*"
+  - "node_modules/**/*"

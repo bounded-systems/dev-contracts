@@ -61,12 +61,8 @@
     "editor.tabSize": 2
   },
   "yaml.schemas": {
-    "https://static.trunk.io/pub/trunk-yaml-schema.json": [
-      "**/trunk.{yml,yaml}"
-    ],
-    "https://json.schemastore.org/github-workflow.json": [
-      ".github/workflows/*.{yml,yaml}"
-    ],
+    "https://static.trunk.io/pub/trunk-yaml-schema.json": ["**/trunk.{yml,yaml}"],
+    "https://json.schemastore.org/github-workflow.json": [".github/workflows/*.{yml,yaml}"],
     "https://raw.githubusercontent.com/rubocop/rubocop/master/config/default.yml": [
       "**/*rubocop*.{yml,yaml}"
     ],
