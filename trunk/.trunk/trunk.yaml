@@ -7,12 +7,15 @@ lint:
   enabled:
     - standardrb@1.49.0
     - yamllint@1.37.0
-    - rubocop@1.57.1
     - prettier@3.5.3
     - eslint@8.57.0
+    - shellcheck@0.9.0
   disabled:
     - rufo
     - brakeman
+    - rubocop-rails
+    - bundler-audit
+    - rubocop
 actions:
   enabled:
     - trunk-upgrade-available
@@ -23,15 +26,20 @@ actions:
 runtimes:
   enabled:
     - ruby@3.2.2
-    - node@20.11.1
+    - node@18.20.5
   definitions:
     - type: ruby
-      system_version: required
       runtime_environment:
         - name: BUNDLE_GEMFILE
           value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/Gemfile"
+        - name: BUNDLE_PATH
+          value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/vendor/bundle"
+        - name: BUNDLE_WITHOUT
+          value: "production:staging"
+        - name: GEM_HOME
+          value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/vendor/bundle"
     - type: node
-      system_version: ignored
+      version: 18.20.5
       runtime_environment:
         - name: NODE_ENV
           value: development
