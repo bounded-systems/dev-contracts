@@ -44,44 +44,159 @@ ruby = "3.3.3"
 trunk = "1.22.12"
 
 [tasks]
+
 # Tasks migrated from scripts/deno.json
-test = { run = "deno test --allow-run --allow-read --allow-env", depends = [
-  "install",
-] }
-test_watch = { run = "deno test --allow-run --allow-read --allow-env --watch", depends = [
-  "install",
-], description = "Run tests in watch mode" }
-test_coverage = { run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage", depends = [
-  "install",
-], description = "Run tests and generate coverage report" }
+[tasks.test]
+run = "deno test --allow-run --allow-read --allow-env"
+depends_on = ["install"]
+
+[tasks.test_watch]
+run = "deno test --allow-run --allow-read --allow-env --watch"
+depends_on = ["install"]
+description = "Run tests in watch mode"
+
+[tasks.test_coverage]
+run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage"
+depends_on = ["install"]
+description = "Run tests and generate coverage report"
 
 # Tasks for standalone scripts
-setup = { run = "deno run -A scripts/setup.ts", depends = [
-  "install",
-], description = "Run initial project setup" }
-link_configs = { run = "deno run -A scripts/link-configs.ts", depends = [
-  "install",
-], description = "Link configuration files" }
-validate_trunk = { run = "deno run -A scripts/validate_trunk.ts", depends = [
-  "install",
-], description = "Validate Trunk configuration" }
-sync_yaml_schemas = { run = "deno run -A scripts/sync_yaml_schemas.ts", depends = [
-  "install",
-], description = "Sync YAML schemas" }
-generate_env = { run = "deno run -A scripts/generate_env.ts", depends = [
-  "install",
-], description = "Generate environment file" }
+[tasks.setup]
+run = "deno run -A scripts/setup.ts"
+depends_on = ["install"]
+description = "Run initial project setup"
+
+[tasks.link_configs]
+run = "deno run -A scripts/link-configs.ts"
+depends_on = ["install"]
+description = "Link configuration files"
+
+[tasks.validate_trunk]
+run = "deno run -A scripts/validate_trunk.ts"
+depends_on = ["install"]
+description = "Validate Trunk configuration"
+
+[tasks.sync_yaml_schemas]
+run = "deno run -A scripts/sync_yaml_schemas.ts"
+depends_on = ["install"]
+description = "Sync YAML schemas"
+
+[tasks.generate_env]
+run = "deno run -A scripts/generate_env.ts"
+depends_on = ["install"]
+description = "Generate environment file"
 
 # Trunk tasks
-trunk_check = { run = "trunk check --ci", depends = [
-  "install",
-], description = "Run Trunk checks" }
-trunk_fmt = { run = "trunk fmt", depends = [
-  "install",
-], description = "Format code using Trunk" }
-trunk_upgrade = { run = "trunk upgrade", depends = [
-  "install",
-], description = "Upgrade Trunk plugins" }
+[tasks.trunk_check]
+run = "trunk check --ci"
+depends_on = ["install"]
+description = "Run Trunk checks"
+
+[tasks.trunk_fmt]
+run = "trunk fmt"
+depends_on = ["install"]
+description = "Format code using Trunk"
+
+[tasks.trunk_upgrade]
+run = "trunk upgrade"
+depends_on = ["install"]
+description = "Upgrade Trunk plugins"
+
+# Consistency Check
+[tasks.sync_validate]
+run = "deno run -A scripts/sync_validate.ts"
+depends_on = ["install"]
+description = "Validate and sync configuration files"
+
+# Config Generation
+[tasks.generate_configs]
+run = "deno run -A scripts/generate_configs.ts"
+depends_on = ["install"]
+description = "Generate config files from mise.toml"
+
+[tasks.update_all]
+depends_on = ["generate_configs"]
+run = "deno run -A scripts/run_installs.ts"
+description = "Generate configs and install dependencies"
 
 # Default install task (ensures tools are installed)
-install = { run = "mise install" }
+[tasks.install]
+run = "mise install"
+
+# --- End of Tasks ---
+
+[settings]
+# Add any mise specific settings here, like experimental = true
+# ... keep existing settings if any ...
+
+# --- Central Devtools Configuration (Custom) ---
+# This section defines the dependencies and settings used to generate
+# various configuration files (Gemfile, package.json, deno.json, trunk.yaml, .ruby-version)
+[settings.devtools]
+description = "Central configuration for generating project files."
+
+[settings.devtools.ruby]
+# The Ruby version is taken from the main [tools] section (e.g., tools.ruby)
+source = "https://rubygems.org"
+gems = [
+  # From runtimes/ruby/Gemfile & trunk.yaml
+  { name = "standardrb", version = "1.49.0", groups = [
+    "lint",
+  ] }, # Matches trunk
+  { name = "yamllint", version = "1.37.0", groups = [
+    "lint",
+  ] }, # Matches trunk
+  { name = "debug", version = "latest", groups = [
+    "development",
+  ] },
+  # Add other gems like rubocop, etc. here if needed, ensure versions match trunk if applicable
+]
+
+[settings.devtools.node]
+# The Node version is taken from the main [tools] section (e.g., tools.nodejs)
+package_name = "pushd-devtools-node-runtime"
+package_version = "1.0.0" # Corresponds to runtimes/node/package.json
+description = "Node.js runtime for Pushd DevTools"
+private = true
+dependencies = [
+  # From runtimes/node/package.json
+  { name = "js-yaml", version = "^4.1.0" },
+]
+dev_dependencies = [
+  # From runtimes/node/package.json & trunk.yaml
+  { name = "prettier", version = "3.5.3" },        # Matches trunk
+  { name = "ts-node", version = "^10.9.2" },
+  { name = "typescript", version = "^5.3.3" },
+  { name = "@types/js-yaml", version = "^4.0.9" },
+  { name = "eslint", version = "9.24.0" },         # Matches trunk
+]
+
+[settings.devtools.deno]
+# The Deno version is taken from the main [tools] section (e.g., tools.deno)
+imports = [
+  # From scripts/deno.json
+  { name = "std/", url = "https://deno.land/std@0.224.0/" }, # Pinned std version
+  { name = "zod", url = "https://deno.land/x/zod/mod.ts" },
+  # Imports needed for generate_configs.ts script itself
+  { name = "jsr:@std/fs/exists", url = "jsr:@std/fs@^0.229.3/exists" },
+  { name = "jsr:@std/path", url = "jsr:@std/path@^0.225.0" },
+  { name = "jsr:@std/yaml", url = "jsr:@std/yaml@^0.224.0" },
+  { name = "jsr:@std/toml", url = "jsr:@std/toml@^0.224.0" },
+]
+
+[settings.devtools.trunk]
+# The Trunk CLI version is taken from the main [tools] section (e.g., tools.trunk)
+# The Ruby and Node runtime versions for Trunk are also taken from the main [tools] section.
+enabled_linters = [
+  # Should match versions defined in ruby.gems and node.dev_dependencies above
+  "standardrb@1.49.0",
+  "yamllint@1.37.0",
+  "prettier@3.5.3",
+  "eslint@9.24.0",
+]
+actions_enabled = [
+  "trunk-upgrade-available",
+  "trunk-fmt-pre-commit",
+  "trunk-check-pre-push",
+]
+actions_disabled = ["trunk-announce"]
