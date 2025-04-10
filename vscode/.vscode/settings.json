@@ -74,20 +74,19 @@
     "editor.tabSize": 2
   },
   "yaml.schemas": {
-    "https://static.trunk.io/pub/trunk-yaml-schema.json": [".trunk/trunk.yaml"],
+    "https://static.trunk.io/pub/trunk-yaml-schema.json": [
+      "**/trunk.{yml,yaml}"
+    ],
     "https://json.schemastore.org/github-workflow.json": [
-      ".github/workflows/*.yml",
-      ".github/workflows/*.yaml"
+      ".github/workflows/*.{yml,yaml}"
     ],
     "https://raw.githubusercontent.com/rubocop/rubocop/master/config/default.yml": [
-      ".trunk/configs/.rubocop.yml"
+      "**/*rubocop*.{yml,yaml}"
     ],
     "https://raw.githubusercontent.com/standardrb/standard/main/config/base.yml": [
-      ".trunk/configs/.standard.yml"
+      "**/*standard*.{yml,yaml}"
     ],
-    "https://raw.githubusercontent.com/adrienverge/yamllint/master/data/yamllint/config-schema.json": [
-      ".trunk/configs/.yamllint.yml"
-    ]
+    "https://json.schemastore.org/yamllint.json": ["**/*yamllint*.{yml,yaml}"]
   },
 
   "[jsonc]": {
