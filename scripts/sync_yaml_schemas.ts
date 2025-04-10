@@ -4,47 +4,9 @@ import { join } from "https://deno.land/std/path/mod.ts";
 import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
 import { parse as parseJson } from "https://deno.land/std@0.224.0/jsonc/mod.ts";
 
-// Load project environment variables
-async function loadProjectEnv(): Promise<Record<string, string>> {
-  const envPath = join(Deno.cwd(), ".env.project");
-  try {
-    const envContent = await Deno.readTextFile(envPath);
-    const envVars: Record<string, string> = {};
-
-    // Parse the .env file
-    for (const line of envContent.split("\n")) {
-      // Skip comments and empty lines
-      if (line.startsWith("#") || line.trim() === "") continue;
-
-      // Parse KEY=VALUE format
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const [, key, value] = match;
-        const trimmedKey = key.trim();
-        const trimmedValue = value.trim();
-
-        // Handle quoted values
-        const finalValue =
-          trimmedValue.startsWith('"') && trimmedValue.endsWith('"')
-            ? trimmedValue.slice(1, -1)
-            : trimmedValue;
-
-        envVars[trimmedKey] = finalValue;
-      }
-    }
-
-    return envVars;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      console.error(
-        "Error: .env.project file not found. Please create it with the required environment variables.",
-      );
-    } else {
-      console.error("Error loading project environment:", error);
-    }
-    Deno.exit(1);
-  }
-}
+// Re-use loadProjectEnv from setup.ts (assuming it's accessible/correctly located)
+// If not, keep the function definition here.
+import { loadProjectEnv } from "./setup.ts";
 
 interface YamlLintSchema {
   pattern: string;
@@ -63,20 +25,50 @@ interface VSCodeSettings {
   [key: string]: unknown;
 }
 
-class SchemaSyncer {
+// Export class
+export class SchemaSyncer {
   private readonly rootDir: string;
   private readonly yamllintPath: string;
   private readonly vscodeSettingsPath: string;
+  private readonly projectEnv: Record<string, string>; // Store projectEnv
 
-  constructor() {
-    // Load project environment variables
-    const projectEnv = await loadProjectEnv();
+  // Pass projectEnv to constructor
+  constructor(projectEnv: Record<string, string>) {
+    this.projectEnv = projectEnv;
 
-    this.rootDir = join(new URL(".", import.meta.url).pathname, "..");
-    this.yamllintPath = join(this.rootDir, projectEnv.YAMLLINT_CONFIG_PATH);
+    // Prioritize PUSHD_DEVTOOLS_DIR from env for rootDir
+    const devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR");
+    if (devtoolsDir) {
+      this.rootDir = devtoolsDir;
+    } else {
+      console.warn(
+        "PUSHD_DEVTOOLS_DIR not set, deriving rootDir from script location. This might be inaccurate.",
+      );
+      // Fallback using import.meta.url (less reliable for testing)
+      this.rootDir = join(new URL(".", import.meta.url).pathname, "..");
+    }
+    console.log(`SchemaSyncer using rootDir: ${this.rootDir}`); // Debugging log
+
+    // Ensure required env vars are present in the passed projectEnv
+    if (
+      !this.projectEnv.YAMLLINT_CONFIG_PATH ||
+      !this.projectEnv.VSCODE_SETTINGS_PATH
+    ) {
+      console.error(
+        "Error: Missing YAMLLINT_CONFIG_PATH or VSCODE_SETTINGS_PATH in project environment.",
+      );
+      // Avoid Deno.exit here, let the caller handle missing config paths if needed
+      // Deno.exit(1);
+      throw new Error("Missing required config paths in environment");
+    }
+
+    this.yamllintPath = join(
+      this.rootDir,
+      this.projectEnv.YAMLLINT_CONFIG_PATH,
+    );
     this.vscodeSettingsPath = join(
       this.rootDir,
-      projectEnv.VSCODE_SETTINGS_PATH,
+      this.projectEnv.VSCODE_SETTINGS_PATH,
     );
   }
 
@@ -85,7 +77,12 @@ class SchemaSyncer {
       const content = await Deno.readTextFile(this.yamllintPath);
       return parseYaml(content) as YamlLintConfig;
     } catch (error) {
-      console.error(`Failed to read yamllint config: ${error.message}`);
+      // Handle unknown error type
+      if (error instanceof Error) {
+        console.error(`Failed to read yamllint config: ${error.message}`);
+      } else {
+        console.error(`Failed to read yamllint config: Unknown error`);
+      }
       throw error;
     }
   }
@@ -93,9 +90,19 @@ class SchemaSyncer {
   private async readVSCodeSettings(): Promise<VSCodeSettings> {
     try {
       const content = await Deno.readTextFile(this.vscodeSettingsPath);
-      return parseJson(content) as VSCodeSettings;
+      // Explicitly handle potential null from parseJson if needed, though std usually throws
+      const parsed = parseJson(content);
+      if (parsed === null || typeof parsed !== "object") {
+        throw new Error("Invalid VSCode settings JSON format");
+      }
+      return parsed as VSCodeSettings;
     } catch (error) {
-      console.error(`Failed to read VSCode settings: ${error.message}`);
+      // Handle unknown error type
+      if (error instanceof Error) {
+        console.error(`Failed to read VSCode settings: ${error.message}`);
+      } else {
+        console.error(`Failed to read VSCode settings: Unknown error`);
+      }
       throw error;
     }
   }
@@ -104,28 +111,43 @@ class SchemaSyncer {
     [key: string]: string[];
   } {
     const vscodeSchemas: { [key: string]: string[] } = {};
-    yamllintConfig.schemas.forEach((schema) => {
-      vscodeSchemas[schema.schema] = [schema.pattern];
-    });
+    // Ensure yamllintConfig.schemas exists and is an array
+    if (Array.isArray(yamllintConfig?.schemas)) {
+      yamllintConfig.schemas.forEach((schema) => {
+        if (
+          schema &&
+          typeof schema.schema === "string" &&
+          typeof schema.pattern === "string"
+        ) {
+          vscodeSchemas[schema.schema] = [schema.pattern];
+        }
+      });
+    }
     return vscodeSchemas;
   }
 
   private async writeVSCodeSettings(settings: VSCodeSettings): Promise<void> {
     try {
       const jsonString = JSON.stringify(settings, null, 2);
-      // Restore the comments at the top of sections
-      const finalContent = jsonString
-        .replace(
-          '"json.validate.enable"',
-          '\n  // JSON Schema Validation Settings\n  "json.validate.enable"',
-        )
-        .replace(
-          '"yaml.format.enable"',
-          '\n  // YAML Language Support\n  "yaml.format.enable"',
-        );
-      await Deno.writeTextFile(this.vscodeSettingsPath, finalContent);
+      // Consider a more robust way to handle comments if needed
+      // This simple replace might break if the key appears elsewhere
+      // const finalContent = jsonString
+      //   .replace(
+      //     '"json.validate.enable"',
+      //     '\n  // JSON Schema Validation Settings\n  "json.validate.enable"',
+      //   )
+      //   .replace(
+      //     '"yaml.format.enable"',
+      //     '\n  // YAML Language Support\n  "yaml.format.enable"',
+      //   );
+      await Deno.writeTextFile(this.vscodeSettingsPath, jsonString + "\n"); // Add newline
     } catch (error) {
-      console.error(`Failed to write VSCode settings: ${error.message}`);
+      // Handle unknown error type
+      if (error instanceof Error) {
+        console.error(`Failed to write VSCode settings: ${error.message}`);
+      } else {
+        console.error(`Failed to write VSCode settings: Unknown error`);
+      }
       throw error;
     }
   }
@@ -136,10 +158,13 @@ class SchemaSyncer {
     const yamllintConfig = await this.readYamlLintConfig();
     const vscodeSettings = await this.readVSCodeSettings();
 
-    console.log(
-      `Found ${yamllintConfig.schemas.length} schemas in yamllint config`,
-    );
+    const schemaCount = yamllintConfig?.schemas?.length || 0;
+    console.log(`Found ${schemaCount} schemas in yamllint config`);
 
+    // Ensure "yaml.schemas" exists in vscodeSettings
+    if (!vscodeSettings["yaml.schemas"]) {
+      vscodeSettings["yaml.schemas"] = {};
+    }
     vscodeSettings["yaml.schemas"] = this.convertSchemas(yamllintConfig);
     await this.writeVSCodeSettings(vscodeSettings);
 
@@ -149,13 +174,33 @@ class SchemaSyncer {
   }
 }
 
-export { SchemaSyncer };
+// Wrap main execution in IIFE
+(async () => {
+  if (import.meta.main) {
+    try {
+      // Load project env vars
+      const projectEnv = await loadProjectEnv();
 
-// Run the sync
-if (import.meta.main) {
-  const syncer = new SchemaSyncer();
-  syncer.sync().catch((error) => {
-    console.error("Schema sync failed:", error);
-    Deno.exit(1);
-  });
-}
+      // Validate required env vars for this script
+      const requiredEnvVars = ["YAMLLINT_CONFIG_PATH", "VSCODE_SETTINGS_PATH"];
+      for (const envVar of requiredEnvVars) {
+        if (!projectEnv[envVar]) {
+          console.error(
+            `Error: Required environment variable ${envVar} is missing from .env.project`,
+          );
+          Deno.exit(1);
+        }
+      }
+
+      // Create instance and run sync
+      const syncer = new SchemaSyncer(projectEnv);
+      await syncer.sync();
+    } catch (error) {
+      console.error(
+        "Schema sync failed:",
+        error instanceof Error ? error.message : error,
+      );
+      Deno.exit(1);
+    }
+  }
+})();

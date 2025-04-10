@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "test": "deno test --allow-run --allow-read --allow-env",
+    "test:watch": "deno test --allow-run --allow-read --allow-env --watch",
+    "test:coverage": "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage"
+  },
+  "imports": {
+    "std/": "https://deno.land/std/",
+    "zod": "https://deno.land/x/zod/mod.ts"
+  },
+  "fmt": {
+    "include": ["*.ts"],
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "include": ["*.ts"],
+    "rules": {
+      "tags": ["recommended"]
+    }
+  }
+}

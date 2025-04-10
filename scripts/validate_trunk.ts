@@ -44,85 +44,159 @@ async function loadProjectEnv(): Promise<Record<string, string>> {
   }
 }
 
-class TrunkValidator {
+// Export class
+export class TrunkValidator {
   private readonly devtoolsDir: string;
   private readonly trunkYaml: string;
   private readonly trunkTemplateDir: string;
+  private readonly projectEnv: Record<string, string>; // Store loaded env
 
-  constructor() {
-    // Load project environment variables
-    const projectEnv = await loadProjectEnv();
+  // Pass projectEnv
+  constructor(projectEnv: Record<string, string>) {
+    this.projectEnv = projectEnv;
 
     this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
-    this.trunkYaml = join(this.devtoolsDir, projectEnv.TRUNK_YAML_PATH);
+    if (!this.devtoolsDir) {
+      console.error(
+        "Error: PUSHD_DEVTOOLS_DIR environment variable is not set.",
+      );
+      Deno.exit(1);
+    }
+    // Use projectEnv from constructor
+    this.trunkYaml = join(this.devtoolsDir, this.projectEnv.TRUNK_YAML_PATH);
     this.trunkTemplateDir = join(
       this.devtoolsDir,
-      projectEnv.TRUNK_TEMPLATE_DIR,
+      this.projectEnv.TRUNK_TEMPLATE_DIR,
     );
   }
 
-  private async runCommand(cmd: string[]): Promise<void> {
-    const process = new Deno.Command(cmd[0], {
-      args: cmd.slice(1),
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    await process.output();
-  }
-
-  private async checkTrunkInstalled(): Promise<void> {
+  // Updated runCommand to return status and handle errors
+  private async runCommand(
+    cmd: string[],
+    options?: { cwd?: string },
+  ): Promise<Deno.CommandOutput> {
+    console.log(
+      `Running command: ${cmd.join(" ")} ${options?.cwd ? `in ${options.cwd}` : ""}`,
+    );
     try {
-      await this.runCommand(["which", "trunk"]);
-    } catch {
-      console.error("Error: trunk is not installed");
-      Deno.exit(1);
+      const process = new Deno.Command(cmd[0], {
+        args: cmd.slice(1),
+        stdout: "inherit",
+        stderr: "inherit",
+        cwd: options?.cwd, // Allow specifying CWD
+      });
+      const status = await process.output();
+      if (!status.success) {
+        // Don't exit here, let the caller handle specific errors
+        console.error(
+          `Command failed: ${cmd.join(" ")}, Exit code: ${status.code}`,
+        );
+        // Optionally throw an error to be caught by the caller
+        // throw new Error(`Command failed: ${cmd.join(" ")} with code ${status.code}`);
+      }
+      return status;
+    } catch (error) {
+      console.error(`Error executing command ${cmd.join(" ")}:`, error);
+      // Re-throw or handle as appropriate, maybe exit if it's a critical setup step
+      throw error; // Let caller decide how to handle execution errors
     }
   }
 
+  private async checkTrunkInstalled(): Promise<void> {
+    console.log("Checking if trunk is installed...");
+    const status = await this.runCommand(["which", "trunk"]);
+    if (!status.success) {
+      console.error("Error: trunk is not installed or not found in PATH.");
+      Deno.exit(1);
+    }
+    console.log("Trunk is installed.");
+  }
+
   private async checkTrunkYamlExists(): Promise<void> {
+    console.log(`Checking if trunk.yaml exists at ${this.trunkYaml}...`);
     try {
       await Deno.stat(this.trunkYaml);
-    } catch {
-      console.error(`Error: trunk.yaml not found at ${this.trunkYaml}`);
+      console.log("trunk.yaml found.");
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        console.error(`Error: trunk.yaml not found at ${this.trunkYaml}`);
+      } else {
+        console.error(
+          `Error checking trunk.yaml: ${error instanceof Error ? error.message : error}`,
+        );
+      }
       Deno.exit(1);
     }
   }
 
   private async validateTrunkConfig(): Promise<void> {
-    try {
-      // Change to trunk directory and run trunk check
-      const originalDir = Deno.cwd();
-      Deno.chdir(this.trunkTemplateDir);
-      // Run trunk check in the trunk directory
-      await this.runCommand(["trunk", "check"]);
-      // Return to original directory
-      Deno.chdir(originalDir);
-    } catch (error) {
-      console.error("Error: trunk.yaml configuration is invalid");
+    console.log(
+      `Validating trunk configuration in ${this.trunkTemplateDir}...`,
+    );
+    // Use runCommand with cwd option
+    const status = await this.runCommand(["trunk", "check"], {
+      cwd: this.trunkTemplateDir,
+    });
+
+    if (!status.success) {
+      console.error(
+        "Error: trunk.yaml configuration is invalid according to 'trunk check'.",
+      );
       Deno.exit(1);
     }
+    console.log("Trunk configuration validated successfully.");
   }
 
   public async validate(): Promise<void> {
-    console.log("Validating trunk.yaml configuration...");
-
+    console.log("\n--- Starting Trunk Validation ---");
     try {
       await this.checkTrunkInstalled();
       await this.checkTrunkYamlExists();
       await this.validateTrunkConfig();
 
-      console.log("Validation successful!");
-      console.log("Configuration is valid and working correctly");
+      console.log("\nValidation successful!");
+      console.log("Trunk configuration is valid and working correctly.");
+      console.log("--- Trunk Validation Complete ---\n");
     } catch (error) {
-      console.error("Validation failed:", error);
-      Deno.exit(1);
+      // Errors leading to exit(1) should be caught by Deno,
+      // but catch other potential errors during the process.
+      console.error(
+        "\nValidation failed:",
+        error instanceof Error ? error.message : error,
+      );
+      console.log("--- Trunk Validation Failed ---\n");
+      Deno.exit(1); // Ensure exit on failure
     }
   }
 }
 
-export { TrunkValidator };
+// Wrap main execution in IIFE
+(async () => {
+  if (import.meta.main) {
+    try {
+      // Load project env vars
+      const projectEnv = await loadProjectEnv();
 
-if (import.meta.main) {
-  const validator = new TrunkValidator();
-  await validator.validate();
-}
+      // Validate required vars
+      const requiredEnvVars = ["TRUNK_YAML_PATH", "TRUNK_TEMPLATE_DIR"];
+      for (const envVar of requiredEnvVars) {
+        if (!projectEnv[envVar]) {
+          console.error(
+            `Error: Required environment variable ${envVar} is missing from .env.project`,
+          );
+          Deno.exit(1);
+        }
+      }
+
+      const validator = new TrunkValidator(projectEnv);
+      await validator.validate();
+    } catch (error) {
+      // Catch errors during loadProjectEnv or constructor
+      console.error(
+        "Failed to initialize TrunkValidator:",
+        error instanceof Error ? error.message : error,
+      );
+      Deno.exit(1);
+    }
+  }
+})();
