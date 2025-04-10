@@ -18,16 +18,48 @@ Core projects often rely on specific, sometimes outdated, runtime versions (e.g.
 
 This approach allows developers to benefit from modern tooling without altering the core runtime environment of the projects they are working on.
 
+## Core Concept & Expectations
+
+- **This Repo (`pushd-devtools`)**: Manages tool versions (`mise.toml`), configurations (`templates/`), and setup scripts (`scripts/`). You only set this up _once_ on your machine.
+- **Target Project (e.g., `pushd-web`)**: Uses the tools provided by `pushd-devtools` via symlinked configuration files (`.vscode/`, `.trunk/`).
+- **Separation**: The target project _does not_ directly depend on or include the runtimes (Node, Ruby) managed by `pushd-devtools`. Its own runtime dependencies remain unchanged.
+- **Workflow**: Set up `pushd-devtools` -> Set an environment variable pointing to it -> Run a script _in_ your target project to link the configurations.
+- **Updates**: Tool versions and configurations are updated centrally by pulling changes in `pushd-devtools`.
+- **Prerequisites**: You need `mise` to manage this repository's tools. Target projects primarily need Git and a shell for the linking process.
+
 ## Prerequisites
 
+**For `pushd-devtools` setup (on your development machine):**
+
 - Git (for cloning this repository).
-- [mise (formerly rtx)](https://mise.jdx.dev/) version manager. This is the primary requirement. The setup script will use `mise` to install other necessary runtimes like Deno.
+- [mise (formerly rtx)](https://mise.jdx.dev/) version manager. This is the primary requirement for _this_ repository. The setup script uses `mise` to install necessary runtimes like Deno, Node, and Ruby _within the context of this project_.
+
+**For Target Projects (e.g., `pushd-web`):**
+
+- Git (to manage the project and its `.gitignore`).
 - A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`). This is needed for the configuration linking script.
 - Potentially specific editor extensions (e.g., VS Code extensions for Trunk.io, Ruby LSP, Sorbet, YAML) to utilize the provided configurations.
+
+_(Note: Target projects do **not** need to have the specific Node.js or Ruby versions defined in `pushd-devtools/mise.toml` installed directly, as the tools will run using the sandboxed versions managed here via `mise`.)_
 
 ## Setup & Usage
 
 The setup involves cloning this repository, running a setup script to install tools, setting an environment variable, and then running a linking script in your target projects.
+
+```mermaid
+graph TD
+    A[Start: Developer Machine] --> B(Clone pushd-devtools);
+    B --> C{In pushd-devtools dir};
+    C --> D[Run setup.ts<br>(mise install tools)];
+    D --> E[Set PUSHD_DEVTOOLS_DIR<br>env var globally];
+    E --> F{In Target Project dir<br>(e.g., pushd-web)};
+    F --> G[Run link-configs.ts<br>(using PUSHD_DEVTOOLS_DIR)];
+    G --> H[Symlinks created in Target Project:<br>.vscode -> .../templates/.vscode<br>.trunk -> .../templates/.trunk];
+    H --> I{Ensure .gitignore<br>in Target Project};
+    I --> J[Add .vscode/ & .trunk/];
+    H --> K[Editor (e.g., VS Code)<br>uses symlinked configs];
+    J --> K;
+```
 
 ### 1. Clone this Repository
 
@@ -45,7 +77,7 @@ _(Replace `<repository-url>` with the actual URL)_
 
 _(This step is performed within your local clone of `pushd-devtools`)_
 
-Navigate to the root directory of your cloned `pushd-devtools` repository. This script uses `mise` to install the correct versions of Deno, Node.js, Ruby, etc., as defined in `.rtx.toml`.
+Navigate to the root directory of your cloned `pushd-devtools` repository. This script uses `mise` to install the correct versions of Deno, Node.js, Ruby, etc., as defined in `mise.toml`.
 
 ```bash
 cd /path/to/your/pushd-devtools/clone
@@ -112,7 +144,7 @@ _(This step relates to your code editor configuration)_
 
 - **`.vscode/`**: Contains VS Code settings (`settings.json`) and potentially extension recommendations (`extensions.json`) tailored for projects using these devtools. Configures formatters, linters, language servers (Ruby LSP, Sorbet), and JSON/YAML validation using Trunk.
 - **`.trunk/`**: Contains the `trunk.yaml` configuration file for the Trunk.io toolchain manager. This defines the specific linters, formatters, and other tools managed by Trunk.
-- **`.rtx.toml`**: Defines runtime versions managed by `mise`.
+- **`mise.toml`**: Defines runtime versions managed by `mise` (`[tools]`), project-specific environment variables (`[env]`), and runnable project tasks (`[tasks]`).
 
 ## Managing & Updating Tools
 
@@ -132,5 +164,5 @@ Contributions or changes to the tooling setup should be made via pull requests t
 
 - **`templates/`**: Contains the configuration artifacts (`.vscode/` and `.trunk/`) intended to be symlinked into target projects.
 - **`scripts/`**: Contains helper scripts (`setup.ts`, `link-configs.ts`) for automating the setup and linking process.
-- **`.rtx.toml`**: Defines runtime versions managed by `mise`.
-- **Other Files (e.g., `README.md`)**: Project documentation and configuration.
+- **`mise.toml`**: Defines project tools/runtimes, environment variables, and common tasks.
+- **Other Files (e.g., `README.md`)**: Project documentation.

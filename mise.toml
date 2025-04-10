@@ -11,7 +11,7 @@ NODE_RUNTIME_DIR = "runtimes/node"
 # File names
 GEMFILE_NAME = "Gemfile"
 PACKAGE_JSON_NAME = "package.json"
-TOOL_VERSIONS_NAME = ".rtx.toml"   # Keeping this as is for now, might need adjustment later
+TOOL_VERSIONS_NAME = "mise.toml"
 
 # Package information
 PACKAGE_VERSION = "1.0.0"
