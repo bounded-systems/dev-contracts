@@ -4,6 +4,48 @@ import { join } from "https://deno.land/std/path/mod.ts";
 import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
 import { parse as parseJson } from "https://deno.land/std@0.224.0/jsonc/mod.ts";
 
+// Load project environment variables
+async function loadProjectEnv(): Promise<Record<string, string>> {
+  const envPath = join(Deno.cwd(), ".env.project");
+  try {
+    const envContent = await Deno.readTextFile(envPath);
+    const envVars: Record<string, string> = {};
+
+    // Parse the .env file
+    for (const line of envContent.split("\n")) {
+      // Skip comments and empty lines
+      if (line.startsWith("#") || line.trim() === "") continue;
+
+      // Parse KEY=VALUE format
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const [, key, value] = match;
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+
+        // Handle quoted values
+        const finalValue =
+          trimmedValue.startsWith('"') && trimmedValue.endsWith('"')
+            ? trimmedValue.slice(1, -1)
+            : trimmedValue;
+
+        envVars[trimmedKey] = finalValue;
+      }
+    }
+
+    return envVars;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      console.error(
+        "Error: .env.project file not found. Please create it with the required environment variables.",
+      );
+    } else {
+      console.error("Error loading project environment:", error);
+    }
+    Deno.exit(1);
+  }
+}
+
 interface YamlLintSchema {
   pattern: string;
   schema: string;
@@ -27,9 +69,15 @@ class SchemaSyncer {
   private readonly vscodeSettingsPath: string;
 
   constructor() {
+    // Load project environment variables
+    const projectEnv = await loadProjectEnv();
+
     this.rootDir = join(new URL(".", import.meta.url).pathname, "..");
-    this.yamllintPath = Deno.env.get("YAMLLINT_CONFIG_PATH") || "";
-    this.vscodeSettingsPath = Deno.env.get("VSCODE_SETTINGS_PATH") || "";
+    this.yamllintPath = join(this.rootDir, projectEnv.YAMLLINT_CONFIG_PATH);
+    this.vscodeSettingsPath = join(
+      this.rootDir,
+      projectEnv.VSCODE_SETTINGS_PATH,
+    );
   }
 
   private async readYamlLintConfig(): Promise<YamlLintConfig> {
@@ -100,6 +148,8 @@ class SchemaSyncer {
     );
   }
 }
+
+export { SchemaSyncer };
 
 // Run the sync
 if (import.meta.main) {

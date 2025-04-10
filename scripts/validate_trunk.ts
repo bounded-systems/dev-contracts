@@ -2,13 +2,63 @@
 
 import { join } from "https://deno.land/std/path/mod.ts";
 
+// Load project environment variables
+async function loadProjectEnv(): Promise<Record<string, string>> {
+  const envPath = join(Deno.cwd(), ".env.project");
+  try {
+    const envContent = await Deno.readTextFile(envPath);
+    const envVars: Record<string, string> = {};
+
+    // Parse the .env file
+    for (const line of envContent.split("\n")) {
+      // Skip comments and empty lines
+      if (line.startsWith("#") || line.trim() === "") continue;
+
+      // Parse KEY=VALUE format
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const [, key, value] = match;
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+
+        // Handle quoted values
+        const finalValue =
+          trimmedValue.startsWith('"') && trimmedValue.endsWith('"')
+            ? trimmedValue.slice(1, -1)
+            : trimmedValue;
+
+        envVars[trimmedKey] = finalValue;
+      }
+    }
+
+    return envVars;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      console.error(
+        "Error: .env.project file not found. Please create it with the required environment variables.",
+      );
+    } else {
+      console.error("Error loading project environment:", error);
+    }
+    Deno.exit(1);
+  }
+}
+
 class TrunkValidator {
   private readonly devtoolsDir: string;
   private readonly trunkYaml: string;
+  private readonly trunkTemplateDir: string;
 
   constructor() {
+    // Load project environment variables
+    const projectEnv = await loadProjectEnv();
+
     this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
-    this.trunkYaml = Deno.env.get("TRUNK_YAML_PATH") || "";
+    this.trunkYaml = join(this.devtoolsDir, projectEnv.TRUNK_YAML_PATH);
+    this.trunkTemplateDir = join(
+      this.devtoolsDir,
+      projectEnv.TRUNK_TEMPLATE_DIR,
+    );
   }
 
   private async runCommand(cmd: string[]): Promise<void> {
@@ -42,8 +92,7 @@ class TrunkValidator {
     try {
       // Change to trunk directory and run trunk check
       const originalDir = Deno.cwd();
-      const trunkDir = Deno.env.get("PUSHD_DEVTOOLS_TRUNK_TEMPLATE_DIR") || "";
-      Deno.chdir(trunkDir);
+      Deno.chdir(this.trunkTemplateDir);
       // Run trunk check in the trunk directory
       await this.runCommand(["trunk", "check"]);
       // Return to original directory

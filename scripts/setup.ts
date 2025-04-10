@@ -16,6 +16,14 @@ const requiredEnvVars = [
   "TOOL_VERSIONS_NAME",
   "NODE_ENV",
   "PROJECT_NAME",
+  "PACKAGE_VERSION",
+  "PACKAGE_DESCRIPTION",
+  "RUBY_GEMS_SOURCE",
+  "RUBY_ENV_PREFIX",
+  "NODE_ENV_PREFIX",
+  "RUBY_HOME_VAR",
+  "NODE_PACKAGE_VAR",
+  "TRUNK_YAML_PATH",
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -130,7 +138,7 @@ class DevToolsSetup {
     try {
       await Deno.stat(gemfilePath);
     } catch {
-      const gemfileContent = `source 'https://rubygems.org'
+      const gemfileContent = `source '${projectEnv.RUBY_GEMS_SOURCE}'
 
 ruby '${this.rubyVersion}'
 
@@ -165,8 +173,8 @@ ruby '${this.rubyVersion}'
     } catch {
       const packageJson = {
         name: PROJECT_NAME,
-        version: "1.0.0",
-        description: "Pushd Development Tools",
+        version: projectEnv.PACKAGE_VERSION,
+        description: projectEnv.PACKAGE_DESCRIPTION,
         engines: {
           node: this.nodeVersion,
         },
@@ -256,6 +264,8 @@ async function loadProjectEnv(): Promise<Record<string, string>> {
     Deno.exit(1);
   }
 }
+
+export { DevToolsSetup };
 
 if (import.meta.main) {
   const setup = new DevToolsSetup();
