@@ -20,8 +20,9 @@ This approach allows developers to benefit from modern tooling without altering 
 
 ## Prerequisites
 
-- A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`).
+- A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`). This is needed for the one-time setup script run in the _target_ project.
 - Git (for cloning this repository).
+- [Deno](https://deno.land/) (for running any helper scripts provided _within_ this `pushd-devtools` repository itself).
 - Potentially specific editor extensions (e.g., VS Code extensions for Trunk.io, Ruby LSP, Sorbet, YAML) to utilize the provided configurations.
 
 ## Setup & Usage
@@ -47,10 +48,11 @@ This approach allows developers to benefit from modern tooling without altering 
 
 3.  **Link Configurations into Target Project:**
     Navigate to the **root directory** of the project where you want to use these dev tools (e.g., `cd ~/dev/pushd-web`).
-    Run the following commands to create the symbolic links. **Use caution:** if you already have local `.vscode` or `.trunk` directories with settings you want to keep, back them up first.
+    Run the following commands **in your shell** to create the symbolic links. **Use caution:** if you already have local `.vscode` or `.trunk` directories with settings you want to keep, back them up first.
 
     ```bash
-    # Ensure the PUSHD_DEVTOOLS_DIR variable is set correctly!
+    # Example setup script for Bash/Zsh running in the TARGET project directory.
+    # Ensure the PUSHD_DEVTOOLS_DIR environment variable is set correctly in your shell!
     if [ -z "$PUSHD_DEVTOOLS_DIR" ]; then
       echo "Error: PUSHD_DEVTOOLS_DIR environment variable is not set."
     else
@@ -70,7 +72,10 @@ This approach allows developers to benefit from modern tooling without altering 
     fi
     ```
 
-    _(Consider saving the commands above into a reusable script within this `pushd-devtools` repo, perhaps in a `bin/` directory, for easier setup in the future.)_
+    _(**Note:** The script above is an example for common shells like Bash or Zsh to be run directly in the target project's root. Helper scripts *within* the `pushd-devtools` repository itself (e.g., for maintenance or advanced setup) would typically be written using Deno.)_
+
+    **Environment Variables & `.env` Files:**
+    This project relies on the `PUSHD_DEVTOOLS_DIR` environment variable. While the example above shows exporting it directly in your shell profile (`.zshrc`, `.bashrc`), it's also common practice to manage environment variables for development using `.env` files (which often use Bash-like syntax). Deno scripts can access environment variables using `Deno.env.get("VAR_NAME")`. If you choose to use `.env` files, you would typically need a mechanism to load them into the environment before running applications or tools that depend on them (e.g., using a shell command like `source .env` if the syntax is compatible, or using Deno's `dotenv` standard library module within Deno scripts). Using `.env` is a reasonable and common pattern, especially for sensitive or configuration-specific values.
 
 4.  **Editor Integration:**
     - **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Ruby LSP`, `Sorbet`, `YAML`). Reload VS Code after creating the symlinks. The settings defined in `.vscode/settings.json` (via the symlink) should now be active, utilizing the `PUSHD_DEVTOOLS_DIR` variable.
