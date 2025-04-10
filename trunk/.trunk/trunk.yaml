@@ -22,19 +22,16 @@ actions:
     - trunk-announce
 runtimes:
   enabled:
-    - python@3.10.8
     - ruby@3.2.2
     - node@18.20.5
   definitions:
     - type: ruby
-      version: 3.2.2
-      system_version: ignored
+      system_version: preferred
       runtime_environment:
         - name: BUNDLE_GEMFILE
           value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/Gemfile"
     - type: node
-      version: 18.20.5
-      system_version: ignored
+      system_version: preferred
       runtime_environment:
         - name: NODE_ENV
           value: development
