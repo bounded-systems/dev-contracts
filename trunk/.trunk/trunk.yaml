@@ -28,7 +28,7 @@ runtimes:
         - name: PUSHD_DEVTOOLS_DIR
           value: ${PUSHD_DEVTOOLS_DIR}
         - name: BUNDLE_GEMFILE
-          value: ${PUSHD_DEVTOOLS_DIR}/ruby/Gemfile
+          value: ${PUSHD_DEVTOOLS_DIR}/runtimes/ruby/Gemfile
 plugins:
   sources:
     - id: trunk
