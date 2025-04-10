@@ -14,7 +14,7 @@ runtimes:
   enabled:
     - node@20.14.0
     - ruby@3.3.3
-    - deno@1.44.4
+    # - deno@1.44.4 # Removed as it's not a directly supported runtime and not needed by current linters
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   enabled:
@@ -24,6 +24,7 @@ lint:
     - prettier@3.5.3
     - rubocop@1.65.0
     - shellcheck@0.10.0
+    - taplo@0.9.2
 actions:
   enabled:
     - trunk-announce
