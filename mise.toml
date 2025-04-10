@@ -45,43 +45,43 @@ trunk = "1.22.12"
 
 [tasks]
 # Tasks migrated from scripts/deno.json
-test = { run = "deno test --allow-run --allow-read --allow-env", deps = [
+test = { run = "deno test --allow-run --allow-read --allow-env", depends = [
   "install",
 ] }
-test_watch = { run = "deno test --allow-run --allow-read --allow-env --watch", deps = [
+test_watch = { run = "deno test --allow-run --allow-read --allow-env --watch", depends = [
   "install",
-], help = "Run tests in watch mode" }
-test_coverage = { run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage", deps = [
+], description = "Run tests in watch mode" }
+test_coverage = { run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage", depends = [
   "install",
-], help = "Run tests and generate coverage report" }
+], description = "Run tests and generate coverage report" }
 
 # Tasks for standalone scripts
-setup = { run = "deno run -A scripts/setup.ts", deps = [
+setup = { run = "deno run -A scripts/setup.ts", depends = [
   "install",
-], help = "Run initial project setup" }
-link_configs = { run = "deno run -A scripts/link-configs.ts", deps = [
+], description = "Run initial project setup" }
+link_configs = { run = "deno run -A scripts/link-configs.ts", depends = [
   "install",
-], help = "Link configuration files" }
-validate_trunk = { run = "deno run -A scripts/validate_trunk.ts", deps = [
+], description = "Link configuration files" }
+validate_trunk = { run = "deno run -A scripts/validate_trunk.ts", depends = [
   "install",
-], help = "Validate Trunk configuration" }
-sync_yaml_schemas = { run = "deno run -A scripts/sync_yaml_schemas.ts", deps = [
+], description = "Validate Trunk configuration" }
+sync_yaml_schemas = { run = "deno run -A scripts/sync_yaml_schemas.ts", depends = [
   "install",
-], help = "Sync YAML schemas" }
-generate_env = { run = "deno run -A scripts/generate_env.ts", deps = [
+], description = "Sync YAML schemas" }
+generate_env = { run = "deno run -A scripts/generate_env.ts", depends = [
   "install",
-], help = "Generate environment file" }
+], description = "Generate environment file" }
 
 # Trunk tasks
-trunk_check = { run = "trunk check --ci", deps = [
+trunk_check = { run = "trunk check --ci", depends = [
   "install",
-], help = "Run Trunk checks" }
-trunk_fmt = { run = "trunk fmt", deps = [
+], description = "Run Trunk checks" }
+trunk_fmt = { run = "trunk fmt", depends = [
   "install",
-], help = "Format code using Trunk" }
-trunk_upgrade = { run = "trunk upgrade", deps = [
+], description = "Format code using Trunk" }
+trunk_upgrade = { run = "trunk upgrade", depends = [
   "install",
-], help = "Upgrade Trunk plugins" }
+], description = "Upgrade Trunk plugins" }
 
 # Default install task (ensures tools are installed)
 install = { run = "mise install" }
