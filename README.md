@@ -21,65 +21,92 @@ This approach allows developers to benefit from modern tooling without altering 
 ## Prerequisites
 
 - A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`). This is needed for the one-time setup script run in the _target_ project.
+- [asdf](https://asdf-vm.com/) version manager. This project uses a `.tool-versions` file to define required runtime versions.
 - Git (for cloning this repository).
 - [Deno](https://deno.land/) (for running any helper scripts provided _within_ this `pushd-devtools` repository itself).
 - Potentially specific editor extensions (e.g., VS Code extensions for Trunk.io, Ruby LSP, Sorbet, YAML) to utilize the provided configurations.
 
 ## Setup & Usage
 
-1.  **Clone this Repository:**
-    Choose a stable location on your development machine to clone this repository. For example:
+### 1. Tool Version Setup (with asdf)
 
-    ```bash
-    git clone <repository-url> ~/dev/pushd-devtools
-    ```
+_(This step is performed within your local clone of `pushd-devtools`)_
 
-    _(Replace `<repository-url>` with the actual URL)_
+This project uses `asdf` to manage runtime versions (like Deno, Node.js, Ruby) defined in the `.tool-versions` file. Before proceeding, ensure you have `asdf` installed and the necessary plugins added (e.g., `asdf plugin add deno`, `asdf plugin add nodejs`, `asdf plugin add ruby`).
 
-2.  **Set Environment Variable (Crucial):**
-    The VS Code settings rely on an environment variable pointing to this repository's location. Add the following line to your shell configuration file (e.g., `~/.zshrc`, `~/.bashrc`, `~/.profile`, or `~/.config/fish/config.fish`):
+Navigate to the root directory of your cloned `pushd-devtools` repository and run:
 
-    ```bash
-    export PUSHD_DEVTOOLS_DIR="/path/to/your/pushd-devtools/clone"
-    # Example: export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
-    ```
+```bash
+asdf install
+```
 
-    **Important:** Remember to source your profile (e.g., `source ~/.zshrc`) or restart your shell session for the variable to take effect. Verify it's set using `echo $PUSHD_DEVTOOLS_DIR`.
+This will install the specific tool versions listed in `.tool-versions`.
 
-3.  **Link Configurations into Target Project:**
-    Navigate to the **root directory** of the project where you want to use these dev tools (e.g., `cd ~/dev/pushd-web`).
-    Run the following commands **in your shell** to create the symbolic links. **Use caution:** if you already have local `.vscode` or `.trunk` directories with settings you want to keep, back them up first.
+### 2. Clone this Repository
 
-    ```bash
-    # Example setup script for Bash/Zsh running in the TARGET project directory.
-    # Ensure the PUSHD_DEVTOOLS_DIR environment variable is set correctly in your shell!
-    if [ -z "$PUSHD_DEVTOOLS_DIR" ]; then
-      echo "Error: PUSHD_DEVTOOLS_DIR environment variable is not set."
-    else
-      echo "Linking configurations from $PUSHD_DEVTOOLS_DIR..."
+_(This step is performed once on your development machine)_
 
-      # Remove existing directories/symlinks if they exist (optional, use with caution)
-      # echo "Removing existing .vscode and .trunk directories..."
-      # rm -rf .vscode
-      # rm -rf .trunk
+Choose a stable location on your development machine to clone this repository. For example:
 
-      # Create symlinks
-      ln -s "$PUSHD_DEVTOOLS_DIR/templates/vscode/.vscode" .vscode
-      ln -s "$PUSHD_DEVTOOLS_DIR/templates/trunk/.trunk" .trunk
+```bash
+git clone <repository-url> ~/dev/pushd-devtools
+```
 
-      echo "Symlinks created."
-      echo "Make sure '.vscode/' and '.trunk/' are in your project's .gitignore file."
-    fi
-    ```
+_(Replace `<repository-url>` with the actual URL)_
 
-    _(**Note:** The script above is an example for common shells like Bash or Zsh to be run directly in the target project's root. Helper scripts *within* the `pushd-devtools` repository itself (e.g., for maintenance or advanced setup) would typically be written using Deno.)_
+### 3. Set Environment Variable (Crucial)
 
-    **Environment Variables & `.env` Files:**
-    This project relies on the `PUSHD_DEVTOOLS_DIR` environment variable. While the example above shows exporting it directly in your shell profile (`.zshrc`, `.bashrc`), it's also common practice to manage environment variables for development using `.env` files (which often use Bash-like syntax). Deno scripts can access environment variables using `Deno.env.get("VAR_NAME")`. If you choose to use `.env` files, you would typically need a mechanism to load them into the environment before running applications or tools that depend on them (e.g., using a shell command like `source .env` if the syntax is compatible, or using Deno's `dotenv` standard library module within Deno scripts). Using `.env` is a reasonable and common pattern, especially for sensitive or configuration-specific values.
+_(This step modifies your shell configuration)_
 
-4.  **Editor Integration:**
-    - **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Ruby LSP`, `Sorbet`, `YAML`). Reload VS Code after creating the symlinks. The settings defined in `.vscode/settings.json` (via the symlink) should now be active, utilizing the `PUSHD_DEVTOOLS_DIR` variable.
-    - **Other Editors:** Adapt the configuration as needed for your editor of choice, potentially leveraging the `.trunk/` directory if using Trunk CLI directly.
+The VS Code settings rely on an environment variable pointing to this repository's location. Add the following line to your shell configuration file (e.g., `~/.zshrc`, `~/.bashrc`, `~/.profile`, or `~/.config/fish/config.fish`):
+
+```bash
+export PUSHD_DEVTOOLS_DIR="/path/to/your/pushd-devtools/clone"
+# Example: export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
+```
+
+**Important:** Remember to source your profile (e.g., `source ~/.zshrc`) or restart your shell session for the variable to take effect. Verify it's set using `echo $PUSHD_DEVTOOLS_DIR`.
+
+### 4. Link Configurations into Target Project
+
+_(This step is performed within the root directory of each target project, e.g., `pushd-web`)_
+
+Navigate to the **root directory** of the project where you want to use these dev tools (e.g., `cd ~/dev/pushd-web`).
+Run the following commands **in your shell** to create the symbolic links. **Use caution:** if you already have local `.vscode` or `.trunk` directories with settings you want to keep, back them up first.
+
+```bash
+# Example setup script for Bash/Zsh running in the TARGET project directory.
+# Ensure the PUSHD_DEVTOOLS_DIR environment variable is set correctly in your shell!
+if [ -z "$PUSHD_DEVTOOLS_DIR" ]; then
+  echo "Error: PUSHD_DEVTOOLS_DIR environment variable is not set."
+else
+  echo "Linking configurations from $PUSHD_DEVTOOLS_DIR..."
+
+  # Remove existing directories/symlinks if they exist (optional, use with caution)
+  # echo "Removing existing .vscode and .trunk directories..."
+  # rm -rf .vscode
+  # rm -rf .trunk
+
+  # Create symlinks
+  ln -s "$PUSHD_DEVTOOLS_DIR/templates/vscode/.vscode" .vscode
+  ln -s "$PUSHD_DEVTOOLS_DIR/templates/trunk/.trunk" .trunk
+
+  echo "Symlinks created."
+  echo "Make sure '.vscode/' and '.trunk/' are in your project's .gitignore file."
+fi
+```
+
+_(**Note:** The script above is an example for common shells like Bash or Zsh to be run directly in the target project's root. Helper scripts *within* the `pushd-devtools` repository itself (e.g., for maintenance or advanced setup) would typically be written using Deno.)_
+
+**Environment Variables & `.env` Files:**
+This project relies on the `PUSHD_DEVTOOLS_DIR` environment variable. While the example above shows exporting it directly in your shell profile (`.zshrc`, `.bashrc`), it's also common practice to manage environment variables for development using `.env` files (which often use Bash-like syntax). Deno scripts can access environment variables using `Deno.env.get("VAR_NAME")`. If you choose to use `.env` files, you would typically need a mechanism to load them into the environment before running applications or tools that depend on them (e.g., using a shell command like `source .env` if the syntax is compatible, or using Deno's `dotenv` standard library module within Deno scripts). Using `.env` is a reasonable and common pattern, especially for sensitive or configuration-specific values.
+
+### 5. Editor Integration
+
+_(This step relates to your code editor configuration)_
+
+- **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Ruby LSP`, `Sorbet`, `YAML`). Reload VS Code after creating the symlinks. The settings defined in `.vscode/settings.json` (via the symlink) should now be active, utilizing the `PUSHD_DEVTOOLS_DIR` variable.
+- **Other Editors:** Adapt the configuration as needed for your editor of choice, potentially leveraging the `.trunk/` directory if using Trunk CLI directly.
 
 ## Included Tools & Configurations (via Templates)
 
@@ -103,4 +130,5 @@ Contributions or changes to the tooling setup should be made via pull requests t
 ## Project Structure
 
 - **`templates/`**: This directory contains the configuration artifacts (`.vscode/` and `.trunk/`) that are intended to be **symlinked** into target projects. These files define the development environment for those projects.
+- **`.tool-versions`**: Defines the specific runtime versions (Deno, Node, Ruby, etc.) managed by `asdf` for use within this `pushd-devtools` project.
 - **Other Files (e.g., `README.md`, potential scripts in `bin/`)**: These files are part of the `pushd-devtools` project itself. They provide documentation, setup instructions, and potentially helper scripts for managing this centralized tooling repository. They are **not** intended to be linked into target projects directly.
