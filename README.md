@@ -94,3 +94,8 @@ All tool definitions, configurations, and runtime management happen **within thi
 3.  Restart your editor or relevant language servers if necessary.
 
 Contributions or changes to the tooling setup should be made via pull requests to this repository.
+
+## Project Structure
+
+- **`templates/`**: This directory contains the configuration artifacts (`.vscode/` and `.trunk/`) that are intended to be **symlinked** into target projects. These files define the development environment for those projects.
+- **Other Files (e.g., `README.md`, potential scripts in `bin/`)**: These files are part of the `pushd-devtools` project itself. They provide documentation, setup instructions, and potentially helper scripts for managing this centralized tooling repository. They are **not** intended to be linked into target projects directly.
