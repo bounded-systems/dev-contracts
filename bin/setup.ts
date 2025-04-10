@@ -115,9 +115,9 @@ ruby '${this.rubyVersion}'
 export PUSHD_DEVTOOLS_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Runtime environment variables
-export BUNDLE_GEMFILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/ruby/Gemfile"
-export NODE_ENV=development
-export PACKAGE_FILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/node/package.json"
+export PUSHD_DEVTOOLS_BUNDLE_GEMFILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/ruby/Gemfile"
+export PUSHD_DEVTOOLS_NODE_ENV=development
+export PUSHD_DEVTOOLS_PACKAGE_FILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/node/package.json"
 `;
     await Deno.writeTextFile(join(this.devtoolsDir, ".env"), envContent);
   }

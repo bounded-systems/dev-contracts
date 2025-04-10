@@ -30,7 +30,7 @@
       "description": "Launch Sorbet using bundle exec with ASF Ruby",
       "command": ["/opt/asf/ruby/bin/bundle", "exec", "srb", "tc", "--lsp"],
       "env": {
-        "BUNDLE_GEMFILE": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile"
+        "PUSHD_DEVTOOLS_BUNDLE_GEMFILE": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile"
       }
     }
   ],

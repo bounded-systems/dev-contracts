@@ -42,7 +42,7 @@ class TrunkValidator {
     try {
       // Change to trunk directory and run trunk check
       const originalDir = Deno.cwd();
-      const trunkDir = Deno.env.get("TRUNK_TEMPLATE_DIR") || "";
+      const trunkDir = Deno.env.get("PUSHD_DEVTOOLS_TRUNK_TEMPLATE_DIR") || "";
       Deno.chdir(trunkDir);
       // Run trunk check in the trunk directory
       await this.runCommand(["trunk", "check"]);
