@@ -9,7 +9,7 @@ lint:
     - yamllint@1.32.0
     - rubocop@1.57.1
     - prettier@3.2.5
-    - json-schema-validator@1.0.0
+    - eslint@8.56.0
   disabled:
     - rufo
     - brakeman
@@ -36,9 +36,8 @@ runtimes:
       runtime_environment:
         - name: NODE_ENV
           value: development
-      package_manager:
-        type: npm
-        package_file: $PUSHD_DEVTOOLS_DIR/runtimes/node/package.json
+        - name: PACKAGE_FILE
+          value: $PUSHD_DEVTOOLS_DIR/runtimes/node/package.json
 plugins:
   sources:
     - id: trunk

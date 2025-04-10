@@ -16,7 +16,6 @@
     "no-unsafe-finally": true,
     "no-unsafe-negation": true,
     "use-isnan": true,
-    "valid-jsdoc": true,
-    "valid-typeof": true
+    "valid-jsdoc": true
   }
 } 
