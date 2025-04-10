@@ -2,7 +2,7 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.22.12
+  version: 1.22.11
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
@@ -29,7 +29,5 @@ actions:
   enabled:
     - trunk-announce
     - trunk-check-pre-push
-    - trunk-check-ci
     - trunk-fmt-pre-commit
-    - trunk-fmt-ci
     - trunk-upgrade-available

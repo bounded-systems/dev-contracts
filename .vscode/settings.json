@@ -78,5 +78,13 @@
   "[jsonc]": {
     "editor.insertSpaces": true,
     "editor.tabSize": 2
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "trunk.io"
+  },
+  "evenBetterToml.schema.associations": {
+    "https://json.schemastore.org/pyproject.json": [
+      "pyproject.toml"
+    ]
   }
 }
