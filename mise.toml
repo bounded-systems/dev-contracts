@@ -1,0 +1,59 @@
+[env]
+# Project configuration
+PROJECT_NAME = "pushd-devtools"
+NODE_ENV = "development"
+
+# Directory structure
+RUNTIMES_DIR = "runtimes"
+RUBY_RUNTIME_DIR = "runtimes/ruby"
+NODE_RUNTIME_DIR = "runtimes/node"
+
+# File names
+GEMFILE_NAME = "Gemfile"
+PACKAGE_JSON_NAME = "package.json"
+TOOL_VERSIONS_NAME = ".rtx.toml" # Keeping this as is for now, might need adjustment later
+
+# Package information
+PACKAGE_VERSION = "1.0.0"
+PACKAGE_DESCRIPTION = "Pushd Development Tools"
+
+# Ruby configuration
+RUBY_GEMS_SOURCE = "https://rubygems.org"
+
+# Environment variable prefixes
+RUBY_ENV_PREFIX = "BUNDLE_"
+NODE_ENV_PREFIX = "NODE_"
+
+# Special environment variables
+RUBY_HOME_VAR = "GEM_HOME"
+NODE_PACKAGE_VAR = "PACKAGE_FILE"
+
+# Trunk configuration
+TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
+TRUNK_TEMPLATE_DIR = "templates/trunk"
+TRUNK_CLI_VERSION = "1.22.12"
+
+# YAML schema configuration
+YAMLLINT_CONFIG_PATH = ".yamllint"
+VSCODE_SETTINGS_PATH = ".vscode/settings.json"
+
+[tools]
+deno = "2.2.4"
+nodejs = "20.14.0"
+ruby = "3.3.3" 
+
+[tasks]
+# Tasks migrated from scripts/deno.json
+test = { run = "deno task test", dir = "scripts", deps = ["install"] }
+test_watch = { run = "deno task test:watch", dir = "scripts", deps = ["install"], help = "Run tests in watch mode" }
+test_coverage = { run = "deno task test:coverage", dir = "scripts", deps = ["install"], help = "Run tests and generate coverage report" }
+
+# Tasks for standalone scripts
+setup = { run = "deno run -A scripts/setup.ts", deps = ["install"], help = "Run initial project setup" }
+link_configs = { run = "deno run -A scripts/link-configs.ts", deps = ["install"], help = "Link configuration files" }
+validate_trunk = { run = "deno run -A scripts/validate_trunk.ts", deps = ["install"], help = "Validate Trunk configuration" }
+sync_yaml_schemas = { run = "deno run -A scripts/sync_yaml_schemas.ts", deps = ["install"], help = "Sync YAML schemas" }
+generate_env = { run = "deno run -A scripts/generate_env.ts", deps = ["install"], help = "Generate environment file" }
+
+# Default install task (ensures tools are installed)
+install = { run = "mise install" } 

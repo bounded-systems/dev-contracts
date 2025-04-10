@@ -21,7 +21,7 @@ This approach allows developers to benefit from modern tooling without altering 
 ## Prerequisites
 
 - Git (for cloning this repository).
-- [asdf](https://asdf-vm.com/) version manager. This is the primary requirement. The setup script will use `asdf` to install other necessary runtimes like Deno.
+- [mise (formerly rtx)](https://mise.jdx.dev/) version manager. This is the primary requirement. The setup script will use `mise` to install other necessary runtimes like Deno.
 - A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`). This is needed for the configuration linking script.
 - Potentially specific editor extensions (e.g., VS Code extensions for Trunk.io, Ruby LSP, Sorbet, YAML) to utilize the provided configurations.
 
@@ -45,7 +45,7 @@ _(Replace `<repository-url>` with the actual URL)_
 
 _(This step is performed within your local clone of `pushd-devtools`)_
 
-Navigate to the root directory of your cloned `pushd-devtools` repository. This script uses `asdf` to install the correct versions of Deno, Node.js, Ruby, etc., as defined in `.tool-versions`.
+Navigate to the root directory of your cloned `pushd-devtools` repository. This script uses `mise` to install the correct versions of Deno, Node.js, Ruby, etc., as defined in `.rtx.toml`.
 
 ```bash
 cd /path/to/your/pushd-devtools/clone
@@ -54,9 +54,8 @@ deno run -A scripts/setup.ts
 
 This script will:
 
-- Check if `asdf` is installed.
-- Add the necessary `asdf` plugins (deno, nodejs, ruby) if they aren't already present.
-- Run `asdf install` to install the required tool versions.
+- Check if `mise` is installed.
+- Run `mise install` to install the required tool versions.
 - Provide instructions for the next step (setting the environment variable).
 
 ### 3. Set Environment Variable (Crucial)
@@ -113,6 +112,7 @@ _(This step relates to your code editor configuration)_
 
 - **`.vscode/`**: Contains VS Code settings (`settings.json`) and potentially extension recommendations (`extensions.json`) tailored for projects using these devtools. Configures formatters, linters, language servers (Ruby LSP, Sorbet), and JSON/YAML validation using Trunk.
 - **`.trunk/`**: Contains the `trunk.yaml` configuration file for the Trunk.io toolchain manager. This defines the specific linters, formatters, and other tools managed by Trunk.
+- **`.rtx.toml`**: Defines runtime versions managed by `mise`.
 
 ## Managing & Updating Tools
 
@@ -132,5 +132,5 @@ Contributions or changes to the tooling setup should be made via pull requests t
 
 - **`templates/`**: Contains the configuration artifacts (`.vscode/` and `.trunk/`) intended to be symlinked into target projects.
 - **`scripts/`**: Contains helper scripts (`setup.ts`, `link-configs.ts`) for automating the setup and linking process.
-- **`.tool-versions`**: Defines runtime versions managed by `asdf`.
+- **`.rtx.toml`**: Defines runtime versions managed by `mise`.
 - **Other Files (e.g., `README.md`)**: Project documentation and configuration.

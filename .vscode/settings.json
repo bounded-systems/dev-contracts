@@ -2,7 +2,7 @@
   "rubyLsp.rubyExecutablePath": "/opt/asf/ruby/bin/ruby",
   "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
   "editor.defaultFormatter": "trunk.io",
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "rubyLsp.enabledFeatures": {
     "documentHighlights": true,
     "documentSymbols": true,
@@ -57,8 +57,6 @@
   "yaml.completion": true,
   "yaml.validate": true,
   "[yaml]": {
-    "editor.defaultFormatter": "trunk.io",
-    "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2
   },
@@ -78,8 +76,6 @@
     "https://json.schemastore.org/yamllint.json": ["**/*yamllint*.{yml,yaml}"]
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "trunk.io",
-    "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2
   }
