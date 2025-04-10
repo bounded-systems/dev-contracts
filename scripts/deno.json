@@ -2,18 +2,5 @@
   "imports": {
     "std/": "https://deno.land/std/",
     "zod": "https://deno.land/x/zod/mod.ts"
-  },
-  "fmt": {
-    "include": ["*.ts"],
-    "lineWidth": 100,
-    "indentWidth": 2,
-    "semiColons": true,
-    "singleQuote": false
-  },
-  "lint": {
-    "include": ["*.ts"],
-    "rules": {
-      "tags": ["recommended"]
-    }
   }
 }
