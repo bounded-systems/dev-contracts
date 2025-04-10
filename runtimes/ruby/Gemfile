@@ -4,9 +4,9 @@ source 'https://rubygems.org'
 ruby '~> 3.2.2'
 
 # Linting and Formatting
-gem 'standardrb', '1.49.0'
-gem 'yamllint', '1.32.0'
-gem 'rubocop', '1.57.1'
+gem 'standardrb', '~> 1.0.1'
+gem 'yamllint', '~> 0.0.9'
+gem 'rubocop', '~> 1.75.2'
 
 # Development tools
 group :development do
