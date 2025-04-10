@@ -1,10 +1,10 @@
 {
   "rubyLsp.rubyExecutablePath": "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby",
   "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
-  
+
   "editor.defaultFormatter": "trunk.io",
   "editor.formatOnSave": false,
-  
+
   "rubyLsp.enabledFeatures": {
     "documentHighlights": true,
     "documentSymbols": true,
@@ -24,14 +24,20 @@
     "workspaceSymbol": true,
     "typeHierarchy": true
   },
-  
+
   "sorbet.enabled": true,
   "sorbet.lspConfigs": [
     {
       "id": "default",
       "name": "Sorbet",
       "description": "Launch Sorbet using bundle exec with Ruby ${env:PUSHD_DEVTOOLS_RBENV_VERSION}",
-      "command": ["${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/bundle", "exec", "srb", "tc", "--lsp"],
+      "command": [
+        "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/bundle",
+        "exec",
+        "srb",
+        "tc",
+        "--lsp"
+      ],
       "env": {
         "BUNDLE_GEMFILE": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
         "RBENV_VERSION": "${env:PUSHD_DEVTOOLS_RBENV_VERSION}"
@@ -39,7 +45,7 @@
     }
   ],
   "sorbet.selectedLspConfigId": "default",
-  
+
   "trunk.addToolsToPath": true,
   "trunk.autoInit": false,
   "trunk.showPreexistingIssues": false,
@@ -51,7 +57,7 @@
   // JSON Schema Validation Settings
   "json.validate.enable": true,
   "json.schemaDownload.enable": true,
-  
+
   // YAML Language Support
   "yaml.format.enable": true,
   "yaml.format.singleQuote": true,
@@ -62,13 +68,32 @@
   "yaml.completion": true,
   "yaml.validate": true,
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.defaultFormatter": "trunk.io",
     "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2
   },
   "yaml.schemas": {
     "https://static.trunk.io/pub/trunk-yaml-schema.json": [".trunk/trunk.yaml"],
-    "https://json.schemastore.org/github-workflow.json": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+    "https://json.schemastore.org/github-workflow.json": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ],
+    "https://raw.githubusercontent.com/rubocop/rubocop/master/config/default.yml": [
+      ".trunk/configs/.rubocop.yml"
+    ],
+    "https://raw.githubusercontent.com/standardrb/standard/main/config/base.yml": [
+      ".trunk/configs/.standard.yml"
+    ],
+    "https://raw.githubusercontent.com/adrienverge/yamllint/master/data/yamllint/config-schema.json": [
+      ".trunk/configs/.yamllint.yml"
+    ]
+  },
+
+  "[jsonc]": {
+    "editor.defaultFormatter": "trunk.io",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
   }
 }

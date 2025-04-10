@@ -7,4 +7,4 @@ rules:
   document-end: disable
   trailing-spaces: enable
   truthy:
-    check-keys: false 
+    check-keys: false
