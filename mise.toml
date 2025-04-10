@@ -41,6 +41,7 @@ VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 deno = "2.2.4"
 nodejs = "20.14.0"
 ruby = "3.3.3" 
+trunk = "1.22.12"
 
 [tasks]
 # Tasks migrated from scripts/deno.json
@@ -54,6 +55,11 @@ link_configs = { run = "deno run -A scripts/link-configs.ts", deps = ["install"]
 validate_trunk = { run = "deno run -A scripts/validate_trunk.ts", deps = ["install"], help = "Validate Trunk configuration" }
 sync_yaml_schemas = { run = "deno run -A scripts/sync_yaml_schemas.ts", deps = ["install"], help = "Sync YAML schemas" }
 generate_env = { run = "deno run -A scripts/generate_env.ts", deps = ["install"], help = "Generate environment file" }
+
+# Trunk tasks
+trunk_check = { run = "trunk check --ci", deps = ["install"], help = "Run Trunk checks" }
+trunk_fmt = { run = "trunk fmt", deps = ["install"], help = "Format code using Trunk" }
+trunk_upgrade = { run = "trunk upgrade", deps = ["install"], help = "Upgrade Trunk plugins" }
 
 # Default install task (ensures tools are installed)
 install = { run = "mise install" } 
