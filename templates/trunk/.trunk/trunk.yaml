@@ -24,8 +24,9 @@ actions:
     - trunk-announce
 runtimes:
   enabled:
-    - ruby@3.2.2
-    - node@18.20.5
+    - ruby@3.3.3
+    - node@20.14.0
+    - deno@2.2.4
   definitions:
     - type: ruby
       runtime_environment:
