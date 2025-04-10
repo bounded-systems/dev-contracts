@@ -48,74 +48,74 @@ trunk = "1.22.12"
 # Tasks migrated from scripts/deno.json
 [tasks.test]
 run = "deno test --allow-run --allow-read --allow-env"
-depends_on = ["install"]
+depends = ["install"]
 
 [tasks.test_watch]
 run = "deno test --allow-run --allow-read --allow-env --watch"
-depends_on = ["install"]
+depends = ["install"]
 description = "Run tests in watch mode"
 
 [tasks.test_coverage]
 run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage"
-depends_on = ["install"]
+depends = ["install"]
 description = "Run tests and generate coverage report"
 
 # Tasks for standalone scripts
 [tasks.setup]
 run = "deno run -A scripts/setup.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Run initial project setup"
 
 [tasks.link_configs]
 run = "deno run -A scripts/link-configs.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Link configuration files"
 
 [tasks.validate_trunk]
 run = "deno run -A scripts/validate_trunk.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Validate Trunk configuration"
 
 [tasks.sync_yaml_schemas]
 run = "deno run -A scripts/sync_yaml_schemas.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Sync YAML schemas"
 
 [tasks.generate_env]
 run = "deno run -A scripts/generate_env.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Generate environment file"
 
 # Trunk tasks
 [tasks.trunk_check]
 run = "trunk check --ci"
-depends_on = ["install"]
+depends = ["install"]
 description = "Run Trunk checks"
 
 [tasks.trunk_fmt]
 run = "trunk fmt"
-depends_on = ["install"]
+depends = ["install"]
 description = "Format code using Trunk"
 
 [tasks.trunk_upgrade]
 run = "trunk upgrade"
-depends_on = ["install"]
+depends = ["install"]
 description = "Upgrade Trunk plugins"
 
 # Consistency Check
 [tasks.sync_validate]
 run = "deno run -A scripts/sync_validate.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Validate and sync configuration files"
 
 # Config Generation
 [tasks.generate_configs]
 run = "deno run -A scripts/generate_configs.ts"
-depends_on = ["install"]
+depends = ["install"]
 description = "Generate config files from mise.toml"
 
 [tasks.update_all]
-depends_on = ["generate_configs"]
+depends = ["generate_configs"]
 run = "deno run -A scripts/run_installs.ts"
 description = "Generate configs and install dependencies"
 
