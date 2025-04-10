@@ -2,6 +2,7 @@
 
 import { join } from "https://deno.land/std/path/mod.ts";
 import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
+import { parse as parseJson } from "https://deno.land/std@0.224.0/jsonc/mod.ts";
 
 interface YamlLintSchema {
   pattern: string;
@@ -50,7 +51,7 @@ class SchemaSyncer {
   private async readVSCodeSettings(): Promise<VSCodeSettings> {
     try {
       const content = await Deno.readTextFile(this.vscodeSettingsPath);
-      return JSON.parse(content) as VSCodeSettings;
+      return parseJson(content) as VSCodeSettings;
     } catch (error) {
       console.error(`Failed to read VSCode settings: ${error.message}`);
       throw error;
@@ -69,10 +70,18 @@ class SchemaSyncer {
 
   private async writeVSCodeSettings(settings: VSCodeSettings): Promise<void> {
     try {
-      await Deno.writeTextFile(
-        this.vscodeSettingsPath,
-        JSON.stringify(settings, null, 2),
-      );
+      const jsonString = JSON.stringify(settings, null, 2);
+      // Restore the comments at the top of sections
+      const finalContent = jsonString
+        .replace(
+          '"json.validate.enable"',
+          '\n  // JSON Schema Validation Settings\n  "json.validate.enable"',
+        )
+        .replace(
+          '"yaml.format.enable"',
+          '\n  // YAML Language Support\n  "yaml.format.enable"',
+        );
+      await Deno.writeTextFile(this.vscodeSettingsPath, finalContent);
     } catch (error) {
       console.error(`Failed to write VSCode settings: ${error.message}`);
       throw error;

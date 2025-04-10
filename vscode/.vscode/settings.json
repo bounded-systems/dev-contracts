@@ -1,10 +1,8 @@
 {
   "rubyLsp.rubyExecutablePath": "${env:PUSHD_DEVTOOLS_DIR}/ruby/${env:PUSHD_DEVTOOLS_RBENV_VERSION}/bin/ruby",
   "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
-
   "editor.defaultFormatter": "trunk.io",
   "editor.formatOnSave": false,
-
   "rubyLsp.enabledFeatures": {
     "documentHighlights": true,
     "documentSymbols": true,
@@ -24,7 +22,6 @@
     "workspaceSymbol": true,
     "typeHierarchy": true
   },
-
   "sorbet.enabled": true,
   "sorbet.lspConfigs": [
     {
@@ -45,7 +42,6 @@
     }
   ],
   "sorbet.selectedLspConfigId": "default",
-
   "trunk.addToolsToPath": true,
   "trunk.autoInit": false,
   "trunk.showPreexistingIssues": false,
@@ -88,7 +84,6 @@
     ],
     "https://json.schemastore.org/yamllint.json": ["**/*yamllint*.{yml,yaml}"]
   },
-
   "[jsonc]": {
     "editor.defaultFormatter": "trunk.io",
     "editor.formatOnSave": true,
