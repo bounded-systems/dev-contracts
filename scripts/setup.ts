@@ -1,18 +1,85 @@
 #!/usr/bin/env -S deno run --allow-run --allow-env --allow-write --allow-read
 
 import { join } from "https://deno.land/std/path/mod.ts";
+import { config } from "../config/setup.config.ts";
+
+// Load project environment variables
+const projectEnv = await loadProjectEnv();
+
+// Validate required environment variables
+const requiredEnvVars = [
+  "RUNTIMES_DIR",
+  "RUBY_RUNTIME_DIR",
+  "NODE_RUNTIME_DIR",
+  "GEMFILE_NAME",
+  "PACKAGE_JSON_NAME",
+  "TOOL_VERSIONS_NAME",
+  "NODE_ENV",
+  "PROJECT_NAME",
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!projectEnv[envVar]) {
+    console.error(
+      `Error: Required environment variable ${envVar} is missing from .env.project`,
+    );
+    Deno.exit(1);
+  }
+}
+
+// Directory structure constants
+const RUNTIMES_DIR = projectEnv.RUNTIMES_DIR;
+const RUBY_RUNTIME_DIR = projectEnv.RUBY_RUNTIME_DIR;
+const NODE_RUNTIME_DIR = projectEnv.NODE_RUNTIME_DIR;
+
+// File name constants
+const GEMFILE_NAME = projectEnv.GEMFILE_NAME;
+const PACKAGE_JSON_NAME = projectEnv.PACKAGE_JSON_NAME;
+const TOOL_VERSIONS_NAME = projectEnv.TOOL_VERSIONS_NAME;
+
+// Environment constants
+const NODE_ENV = projectEnv.NODE_ENV;
+const PROJECT_NAME = projectEnv.PROJECT_NAME;
 
 class DevToolsSetup {
   private readonly devtoolsDir: string;
-  private readonly rubyVersion = "3.2.2";
-  private readonly nodeVersion = "20.11.1";
+  private readonly rubyVersion: string;
+  private readonly nodeVersion: string;
 
   constructor() {
+    // Read PUSHD_DEVTOOLS_DIR from environment variable
     this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
     if (!this.devtoolsDir) {
       console.error(
         "Error: PUSHD_DEVTOOLS_DIR environment variable is not set",
       );
+      Deno.exit(1);
+    }
+    // Get versions from asdf
+    this.rubyVersion = this.getToolVersion("ruby");
+    this.nodeVersion = this.getToolVersion("nodejs");
+  }
+
+  private getToolVersion(tool: string): string {
+    try {
+      // Run asdf current to get the current version
+      const process = new Deno.Command("asdf", {
+        args: ["current", tool],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const output = process.outputSync();
+      const stdout = new TextDecoder().decode(output.stdout);
+
+      // Parse the output (format: "tool version")
+      const match = stdout.trim().match(/^(\S+)\s+(\S+)/);
+      if (!match) {
+        throw new Error(`Could not parse version for ${tool}`);
+      }
+
+      return match[2];
+    } catch (error) {
+      console.error(`Error getting ${tool} version:`, error);
       Deno.exit(1);
     }
   }
@@ -28,10 +95,10 @@ class DevToolsSetup {
 
   private async createDirectories(): Promise<void> {
     console.log("Creating necessary directories...");
-    await Deno.mkdir(join(this.devtoolsDir, "runtimes/ruby"), {
+    await Deno.mkdir(join(this.devtoolsDir, RUBY_RUNTIME_DIR), {
       recursive: true,
     });
-    await Deno.mkdir(join(this.devtoolsDir, "runtimes/node"), {
+    await Deno.mkdir(join(this.devtoolsDir, NODE_RUNTIME_DIR), {
       recursive: true,
     });
   }
@@ -59,7 +126,7 @@ class DevToolsSetup {
     await this.runCommand(["asdf", "local", "ruby", this.rubyVersion]);
 
     // Create Gemfile if it doesn't exist
-    const gemfilePath = join(this.devtoolsDir, "runtimes/ruby/Gemfile");
+    const gemfilePath = join(this.devtoolsDir, RUBY_RUNTIME_DIR, GEMFILE_NAME);
     try {
       await Deno.stat(gemfilePath);
     } catch {
@@ -90,13 +157,14 @@ ruby '${this.rubyVersion}'
     // Create package.json if it doesn't exist
     const packageJsonPath = join(
       this.devtoolsDir,
-      "runtimes/node/package.json",
+      NODE_RUNTIME_DIR,
+      PACKAGE_JSON_NAME,
     );
     try {
       await Deno.stat(packageJsonPath);
     } catch {
       const packageJson = {
-        name: "pushd-devtools",
+        name: PROJECT_NAME,
         version: "1.0.0",
         description: "Pushd Development Tools",
         engines: {
@@ -112,12 +180,12 @@ ruby '${this.rubyVersion}'
 
   private async createEnvFile(): Promise<void> {
     const envContent = `# Set the project root directory
-export PUSHD_DEVTOOLS_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+export ${config.env.devtoolsDir}="${this.devtoolsDir}"
 
 # Runtime environment variables
-export PUSHD_DEVTOOLS_BUNDLE_GEMFILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/ruby/Gemfile"
-export PUSHD_DEVTOOLS_NODE_ENV=development
-export PUSHD_DEVTOOLS_PACKAGE_FILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/node/package.json"
+export ${config.env.bundleGemfile}="${this.devtoolsDir}/${RUBY_RUNTIME_DIR}/${GEMFILE_NAME}"
+export ${config.env.nodeEnv}=${NODE_ENV}
+export ${config.env.packageFile}="${this.devtoolsDir}/${NODE_RUNTIME_DIR}/${PACKAGE_JSON_NAME}"
 `;
     await Deno.writeTextFile(join(this.devtoolsDir, ".env"), envContent);
   }
@@ -139,6 +207,53 @@ export PUSHD_DEVTOOLS_PACKAGE_FILE="\${PUSHD_DEVTOOLS_DIR}/runtimes/node/package
       console.error("Setup failed:", error);
       Deno.exit(1);
     }
+  }
+}
+
+// Function to load project environment variables
+async function loadProjectEnv(): Promise<Record<string, string>> {
+  const envPath = join(Deno.cwd(), ".env.project");
+  try {
+    const envContent = await Deno.readTextFile(envPath);
+    const envVars: Record<string, string> = {};
+
+    // Parse the .env file
+    for (const line of envContent.split("\n")) {
+      // Skip comments and empty lines
+      if (line.startsWith("#") || line.trim() === "") continue;
+
+      // Parse KEY=VALUE format
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const [, key, value] = match;
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+
+        // Handle quoted values
+        const finalValue =
+          trimmedValue.startsWith('"') && trimmedValue.endsWith('"')
+            ? trimmedValue.slice(1, -1)
+            : trimmedValue;
+
+        envVars[trimmedKey] = finalValue;
+      }
+    }
+
+    // Set default values for optional variables if not present
+    if (!envVars.NODE_ENV) {
+      envVars.NODE_ENV = "development";
+    }
+
+    return envVars;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      console.error(
+        "Error: .env.project file not found. Please create it with the required environment variables.",
+      );
+    } else {
+      console.error("Error loading project environment:", error);
+    }
+    Deno.exit(1);
   }
 }
 
