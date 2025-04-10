@@ -24,7 +24,9 @@ runtimes:
     - type: ruby
       version: 3.2.2
       system_version: ignored
-      bundle_gemfile: ${PUSHD_DEVTOOLS_DIR}/ruby/Gemfile
+      runtime_environment:
+        - name: BUNDLE_GEMFILE
+          value: ${PUSHD_DEVTOOLS_DIR}/ruby/Gemfile
 plugins:
   sources:
     - id: trunk
