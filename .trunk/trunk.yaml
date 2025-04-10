@@ -29,5 +29,7 @@ actions:
   enabled:
     - trunk-announce
     - trunk-check-pre-push
+    - trunk-check-ci
     - trunk-fmt-pre-commit
+    - trunk-fmt-ci
     - trunk-upgrade-available
