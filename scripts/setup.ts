@@ -7,9 +7,7 @@ import * as toml from "jsr:@std/toml@0.224.0"; // Import TOML parser
 
 // Function to load project environment variables (can be reused/exported)
 // Accepts an optional rootDir to look for .env.project relative to
-export async function loadProjectEnv(
-  rootDir?: string,
-): Promise<Record<string, string>> {
+export async function loadProjectEnv(rootDir?: string): Promise<Record<string, string>> {
   const base = rootDir || Deno.cwd(); // Use provided rootDir or cwd
   const envPath = join(base, ".env.project");
   console.log(`Loading project environment from: ${envPath}`);
@@ -47,19 +45,31 @@ export async function loadProjectEnv(
     console.log("Project environment loaded successfully.");
     return envVars;
   } catch (error) {
+    // Instead of exiting, return default values for key environment variables
     if (error instanceof Deno.errors.NotFound) {
-      console.error(
-        `Error: .env.project file not found at ${envPath}. Please create it with the required environment variables.`,
-      );
+      console.warn(`Note: .env.project file not found at ${envPath}. Using default values.`);
+      return {
+        RUBY_RUNTIME_DIR: "runtimes/ruby",
+        NODE_RUNTIME_DIR: "runtimes/node",
+        GEMFILE_NAME: "Gemfile",
+        PACKAGE_JSON_NAME: "package.json",
+        TOOL_VERSIONS_NAME: "mise.toml",
+        TRUNK_YAML_PATH: ".trunk/trunk.yaml",
+        TRUNK_CLI_VERSION: "1.22.12",
+      };
     } else if (error instanceof Error) {
-      console.error("Error loading project environment:", error.message);
+      console.warn("Warning loading project environment:", error.message);
+      return {
+        TOOL_VERSIONS_NAME: "mise.toml",
+        TRUNK_YAML_PATH: ".trunk/trunk.yaml",
+      };
     } else {
-      console.error(
-        "An unknown error occurred while loading project environment:",
-        error,
-      );
+      console.warn("An unknown warning occurred while loading project environment:", error);
+      return {
+        TOOL_VERSIONS_NAME: "mise.toml",
+        TRUNK_YAML_PATH: ".trunk/trunk.yaml",
+      };
     }
-    Deno.exit(1);
   }
 }
 
@@ -79,9 +89,7 @@ export class DevToolsSetup {
     // Read PUSHD_DEVTOOLS_DIR from environment variable
     this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
     if (!this.devtoolsDir) {
-      console.error(
-        "Error: PUSHD_DEVTOOLS_DIR environment variable is not set",
-      );
+      console.error("Error: PUSHD_DEVTOOLS_DIR environment variable is not set");
       Deno.exit(1);
     }
     // Get versions from mise
@@ -108,34 +116,36 @@ export class DevToolsSetup {
       if (!output.success) {
         // Handle cases where mise hasn't been activated yet or tool isn't installed
         if (stderr.includes("not installed") || stderr.includes("No version set")) {
-           console.warn(`Tool '${tool}' not yet installed or activated by mise. Attempting to read from .rtx.toml directly.`);
-           // Fallback: Read directly from .rtx.toml (best effort for initial setup)
-            try {
-                const rtxTomlPath = join(this.devtoolsDir, ".rtx.toml");
-                const tomlContent = Deno.readTextFileSync(rtxTomlPath);
-                const parsedToml = toml.parse(tomlContent);
-                const version = parsedToml?.tools?.[tool];
-                if (typeof version === 'string') {
-                    console.warn(`Read version '${version}' for '${tool}' from .rtx.toml.`);
-                    return version;
-                } else {
-                     throw new Error(`Tool '${tool}' not found in .rtx.toml [tools] section.`);
-                }
-            } catch (tomlError) {
-                 throw new Error(
-                    `Failed to get version for ${tool}. 'mise current' failed (Stderr: ${stderr}) and fallback read from .rtx.toml failed: ${tomlError.message}`
-                );
+          console.warn(
+            `Tool '${tool}' not yet installed or activated by mise. Attempting to read from .rtx.toml directly.`
+          );
+          // Fallback: Read directly from .rtx.toml (best effort for initial setup)
+          try {
+            const rtxTomlPath = join(this.devtoolsDir, ".rtx.toml");
+            const tomlContent = Deno.readTextFileSync(rtxTomlPath);
+            const parsedToml = toml.parse(tomlContent);
+            const version = parsedToml?.tools?.[tool];
+            if (typeof version === "string") {
+              console.warn(`Read version '${version}' for '${tool}' from .rtx.toml.`);
+              return version;
+            } else {
+              throw new Error(`Tool '${tool}' not found in .rtx.toml [tools] section.`);
             }
+          } catch (tomlError) {
+            throw new Error(
+              `Failed to get version for ${tool}. 'mise current' failed (Stderr: ${stderr}) and fallback read from .rtx.toml failed: ${tomlError.message}`
+            );
+          }
         } else {
-             throw new Error(
-                `Failed to get version for ${tool}. Exit code: ${output.code}. Stderr: ${stderr}`
-             );
+          throw new Error(
+            `Failed to get version for ${tool}. Exit code: ${output.code}. Stderr: ${stderr}`
+          );
         }
       }
 
       // If mise current succeeded, stdout should be the version
       if (!stdout) {
-          throw new Error(`Could not parse version from mise output. Stderr: ${stderr}`);
+        throw new Error(`Could not parse version from mise output. Stderr: ${stderr}`);
       }
 
       return stdout;
@@ -143,10 +153,7 @@ export class DevToolsSetup {
       if (error instanceof Error) {
         console.error(`Error getting ${tool} version:`, error.message);
       } else {
-        console.error(
-          `An unknown error occurred while getting ${tool} version:`,
-          error,
-        );
+        console.error(`An unknown error occurred while getting ${tool} version:`, error);
       }
       Deno.exit(1);
     }
@@ -186,7 +193,7 @@ export class DevToolsSetup {
     const gemfilePath = join(
       this.devtoolsDir,
       this.projectEnv.RUBY_RUNTIME_DIR,
-      this.projectEnv.GEMFILE_NAME,
+      this.projectEnv.GEMFILE_NAME
     );
     console.log(`Checking for Gemfile at: ${gemfilePath}`);
     try {
@@ -228,15 +235,14 @@ export class DevToolsSetup {
           {
             name: "pushd-devtools-node-env",
             version: "1.0.0",
-            description:
-              "Node.js environment managed by pushd-devtools setup",
+            description: "Node.js environment managed by pushd-devtools setup",
             private: true, // Mark as private to avoid accidental publishing
             engines: {
               node: this.nodeVersion, // Use the determined node version
             },
           },
           null,
-          2, // Indent with 2 spaces
+          2 // Indent with 2 spaces
         );
         await Deno.writeTextFile(packageJsonPath, packageJsonContent + "\\n"); // Add trailing newline
         console.log("package.json created.");
@@ -266,9 +272,7 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
     console.log("Checking ~/.zshrc for PUSHD_DEVTOOLS export...");
     const homeDir = Deno.env.get("HOME");
     if (!homeDir) {
-      console.warn(
-        "Could not determine home directory. Skipping ~/.zshrc check.",
-      );
+      console.warn("Could not determine home directory. Skipping ~/.zshrc check.");
       return;
     }
     const zshrcPath = join(homeDir, ".zshrc");
@@ -296,35 +300,27 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
           // Append the line
           const currentContent = await Deno.readTextFile(zshrcPath);
           const newContent =
-            currentContent.trim() +
-            `\\n\\n# Added by pushd-devtools setup\\n${exportLine}\\n`;
+            currentContent.trim() + `\\n\\n# Added by pushd-devtools setup\\n${exportLine}\\n`;
           await Deno.writeTextFile(zshrcPath, newContent); // Overwrite with appended content
           console.log(`Successfully appended export line to ${zshrcPath}.`);
           console.log(
-            "Please restart your shell or run 'source ~/.zshrc' for changes to take effect.",
+            "Please restart your shell or run 'source ~/.zshrc' for changes to take effect."
           );
         } catch (appendError) {
           if (appendError instanceof Deno.errors.NotFound) {
-            console.warn(
-              `${zshrcPath} not found. Creating file and adding export line...`,
-            );
+            console.warn(`${zshrcPath} not found. Creating file and adding export line...`);
             const newContent = `# Created by pushd-devtools setup\\n${exportLine}\\n`;
             await Deno.writeTextFile(zshrcPath, newContent);
+            console.log(`Successfully created ${zshrcPath} and added export line.`);
             console.log(
-              `Successfully created ${zshrcPath} and added export line.`,
-            );
-            console.log(
-              "Please restart your shell or run 'source ~/.zshrc' for changes to take effect.",
+              "Please restart your shell or run 'source ~/.zshrc' for changes to take effect."
             );
           } else if (appendError instanceof Error) {
-            console.error(
-              `Error appending to ${zshrcPath}:`,
-              appendError.message,
-            );
+            console.error(`Error appending to ${zshrcPath}:`, appendError.message);
           } else {
             console.error(
               `An unknown error occurred while appending to ${zshrcPath}:`,
-              appendError,
+              appendError
             );
           }
         }
@@ -335,10 +331,7 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
       if (checkError instanceof Error) {
         console.error(`Error checking ${zshrcPath}:`, checkError.message);
       } else {
-        console.error(
-          `An unknown error occurred while checking ${zshrcPath}:`,
-          checkError,
-        );
+        console.error(`An unknown error occurred while checking ${zshrcPath}:`, checkError);
       }
     }
   }
@@ -346,9 +339,7 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
   private async checkTrunkVersion(): Promise<void> {
     console.log("Checking Trunk CLI version...");
     if (!this.trunkCliVersion) {
-      console.warn(
-        "TRUNK_CLI_VERSION not found in .env.project. Skipping Trunk version check.",
-      );
+      console.warn("TRUNK_CLI_VERSION not found in .env.project. Skipping Trunk version check.");
       return;
     }
 
@@ -359,28 +350,22 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
 
       if (!output.success || !actualVersion) {
         throw new Error(
-          `Failed to get trunk version. Exit code: ${output.code}. Stderr: ${new TextDecoder().decode(output.stderr)}`,
+          `Failed to get trunk version. Exit code: ${output.code}. Stderr: ${new TextDecoder().decode(output.stderr)}`
         );
       }
 
       if (actualVersion === this.trunkCliVersion) {
-        console.log(
-          `Trunk CLI version matches expected version: ${this.trunkCliVersion}`,
-        );
+        console.log(`Trunk CLI version matches expected version: ${this.trunkCliVersion}`);
       } else {
         console.warn(
-          `Warning: Trunk CLI version mismatch! Expected: ${this.trunkCliVersion}, Found: ${actualVersion}`,
+          `Warning: Trunk CLI version mismatch! Expected: ${this.trunkCliVersion}, Found: ${actualVersion}`
         );
-        console.warn(
-          ` -> Ensure .env.project and .trunk/trunk.yaml versions match.`,
-        );
-        console.warn(
-          ` -> You might need to run 'trunk upgrade' to sync versions.`,
-        );
+        console.warn(` -> Ensure .env.project and .trunk/trunk.yaml versions match.`);
+        console.warn(` -> You might need to run 'trunk upgrade' to sync versions.`);
       }
     } catch (error) {
       console.error(
-        `Error checking Trunk CLI version: ${error.message}. Is Trunk installed and in PATH?`,
+        `Error checking Trunk CLI version: ${error.message}. Is Trunk installed and in PATH?`
       );
       // Decide if this should be fatal - for now, just warn
       // Deno.exit(1);
@@ -411,18 +396,20 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
       const rtxContent = await Deno.readTextFile(rtxTomlPath);
       rtxConfig = toml.parse(rtxContent);
       // Extract versions from the [tools] section
-      if (rtxConfig.tools && typeof rtxConfig.tools === 'object') {
-          expectedVersions = Object.entries(rtxConfig.tools)
-              .reduce((acc, [key, value]) => {
-                  if (typeof value === 'string') {
-                      // Map tool names if necessary (e.g., nodejs -> node)
-                      const mappedKey = key === 'nodejs' ? 'node' : key;
-                      acc[mappedKey] = value;
-                  }
-                  return acc;
-              }, {} as Record<string, string>);
+      if (rtxConfig.tools && typeof rtxConfig.tools === "object") {
+        expectedVersions = Object.entries(rtxConfig.tools).reduce(
+          (acc, [key, value]) => {
+            if (typeof value === "string") {
+              // Map tool names if necessary (e.g., nodejs -> node)
+              const mappedKey = key === "nodejs" ? "node" : key;
+              acc[mappedKey] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
       } else {
-          console.warn(`Warning: No [tools] section found in ${rtxTomlPath}`);
+        console.warn(`Warning: No [tools] section found in ${rtxTomlPath}`);
       }
     } catch (error) {
       console.error(`Error reading or parsing ${rtxTomlPath}:`, error);
@@ -444,41 +431,36 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
     for (const tool in trunkRuntimeVersions) {
       if (expectedVersions[tool]) {
         if (trunkRuntimeVersions[tool] !== expectedVersions[tool]) {
-          console.error(
-            `❌ Mismatch for runtime '${tool}':`,
-          );
+          console.error(`❌ Mismatch for runtime '${tool}':`);
           console.error(`   Trunk enabled version: ${trunkRuntimeVersions[tool]}`);
           console.error(`   Expected (.rtx.toml): ${expectedVersions[tool]}`);
           mismatch = true;
         }
       } else {
         // Runtime in trunk.yaml but not in .rtx.toml
-         warnings.push(
-             `Warning: Runtime '${tool}' enabled in trunk.yaml but not defined in .rtx.toml.`
-         );
+        warnings.push(
+          `Warning: Runtime '${tool}' enabled in trunk.yaml but not defined in .rtx.toml.`
+        );
       }
     }
 
-     // Check for runtimes in .rtx.toml not in trunk.yaml enabled runtimes
-     for (const tool in expectedVersions) {
-         if (!trunkRuntimeVersions[tool]) {
-             warnings.push(
-                 `Warning: Runtime '${tool}' defined in .rtx.toml but not found in .trunk/trunk.yaml enabled runtimes.`
-             );
-         }
-     }
-
+    // Check for runtimes in .rtx.toml not in trunk.yaml enabled runtimes
+    for (const tool in expectedVersions) {
+      if (!trunkRuntimeVersions[tool]) {
+        warnings.push(
+          `Warning: Runtime '${tool}' defined in .rtx.toml but not found in .trunk/trunk.yaml enabled runtimes.`
+        );
+      }
+    }
 
     // Print warnings
     if (warnings.length > 0) {
-        console.warn("\\nRuntime Configuration Warnings:");
-        warnings.forEach(warning => console.warn(`  ${warning}`));
+      console.warn("\nRuntime Configuration Warnings:");
+      warnings.forEach(warning => console.warn(`  ${warning}`));
     }
 
     if (mismatch) {
-      console.error(
-        "\\n❌ Trunk runtime versions do not match .rtx.toml. Please align them.",
-      );
+      console.error("\n❌ Trunk runtime versions do not match .rtx.toml. Please align them.");
       Deno.exit(1);
     } else {
       console.log("✅ Trunk runtime versions match .rtx.toml.");
@@ -496,12 +478,14 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
     await this.checkTrunkVersion(); // Check Trunk CLI version specified in .env.project
     await this.checkTrunkRuntimes(); // Check runtimes vs .rtx.toml
 
-    console.log(\`\\nSetup appears complete. Configuration directory is at: ${this.devtoolsDir}\\n\`);
-    console.log(\`Next steps:\`);
-    console.log(\`1. Ensure your shell is restarted or your profile (~/.zshrc) is sourced.\`);
-    console.log(\`2. Ensure 'mise install' has completed successfully in ${this.devtoolsDir}.\`);
-    console.log(\`3. Navigate to the project you want to apply these configurations to.\`);
-    console.log(\`4. Run 'deno run -A ${join(this.devtoolsDir, "scripts", "link-configs.ts")}' to link the configurations.\`);
+    console.log(`\nSetup appears complete. Configuration directory is at: ${this.devtoolsDir}\n`);
+    console.log(`Next steps:`);
+    console.log(`1. Ensure your shell is restarted or your profile (~/.zshrc) is sourced.`);
+    console.log(`2. Ensure 'mise install' has completed successfully in ${this.devtoolsDir}.`);
+    console.log(`3. Navigate to the project you want to apply these configurations to.`);
+    console.log(
+      `4. Run 'deno run -A ${join(this.devtoolsDir, "scripts", "link-configs.ts")}' to link the configurations.`
+    );
   }
 }
 
@@ -514,22 +498,13 @@ async function checkMise(): Promise<boolean> {
     console.log("✅ mise found.");
     return true;
   } catch (_error) {
-    console.error(
-      "❌ Error: mise version manager not found.",
-    );
-    console.error(
-      "\\nPlease install mise first:",
-    );
-    console.error(
-        "\\nhttps://mise.jdx.dev/getting-started.html",
-    );
-    console.error(
-      "\\n(e.g., using Homebrew: 'brew install mise')",
-    );
+    console.error("❌ Error: mise version manager not found.");
+    console.error("\nPlease install mise first:");
+    console.error("\nhttps://mise.jdx.dev/getting-started.html");
+    console.error("\n(e.g., using Homebrew: 'brew install mise')");
     return false;
   }
 }
-
 
 // Main execution function
 async function main() {
@@ -547,15 +522,12 @@ async function main() {
   // Set PUSHD_DEVTOOLS_DIR env var for this process if not already set externally
   if (!Deno.env.get("PUSHD_DEVTOOLS_DIR")) {
     console.log(
-      `Setting PUSHD_DEVTOOLS_DIR environment variable for this process to: ${devtoolsDir}`,
+      `Setting PUSHD_DEVTOOLS_DIR environment variable for this process to: ${devtoolsDir}`
     );
     Deno.env.set("PUSHD_DEVTOOLS_DIR", devtoolsDir);
   } else {
-     console.log(
-         `PUSHD_DEVTOOLS_DIR already set: ${Deno.env.get("PUSHD_DEVTOOLS_DIR")}`
-     );
+    console.log(`PUSHD_DEVTOOLS_DIR already set: ${Deno.env.get("PUSHD_DEVTOOLS_DIR")}`);
   }
-
 
   // 1. Check for mise
   if (!(await checkMise())) {
@@ -563,15 +535,15 @@ async function main() {
   }
 
   // 2. Install tools using mise
-  console.log("\\n⏳ Installing tool versions from .rtx.toml using mise...");
+  console.log("\n⏳ Installing tool versions from .rtx.toml using mise...");
   try {
     // Run mise install from the root directory of the project
     await $`mise install`.cwd(devtoolsDir).stdout("inherit").stderr("inherit");
     console.log("✅ mise install completed successfully.");
   } catch (error) {
-    console.error("\\n❌ mise install failed:", error.message);
+    console.error("\n❌ mise install failed:", error.message);
     console.error(
-      "   Please ensure mise is configured correctly and try running 'mise install' manually in the devtools directory.",
+      "   Please ensure mise is configured correctly and try running 'mise install' manually in the devtools directory."
     );
     Deno.exit(1);
   }
@@ -581,7 +553,7 @@ async function main() {
   const projectEnv = await loadProjectEnv(devtoolsDir);
 
   // 4. Run the main setup logic
-  console.log("\\n🚀 Starting DevTools Setup...\n");
+  console.log("\n🚀 Starting DevTools Setup...\n");
   const setup = new DevToolsSetup(projectEnv); // Pass loaded env vars
   await setup.setup();
 }

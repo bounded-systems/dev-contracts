@@ -123,6 +123,24 @@ description = "Generate configs and install dependencies"
 [tasks.install]
 run = "mise install"
 
+# New task to validate schemas and generate types
+[tasks.validate_schemas]
+run = "deno run -A scripts/generate_schema_types.ts"
+depends = ["install"]
+description = "Validate schemas, generate TypeScript interfaces, and ensure consistency between mise.toml and trunk.yaml"
+
+# New task to run schema validator tests
+[tasks.test_schemas]
+run = "deno test --allow-read --allow-write --allow-net --allow-env --no-check scripts/generate_schema_types.test.ts"
+depends = ["install"]
+description = "Run tests for the schema validator"
+
+# New task to transform schemas
+[tasks.transform_schemas]
+run = "deno run -A scripts/generate_schema_types.ts --transform"
+depends = ["install"]
+description = "Validate schemas and automatically update trunk.yaml to match mise.toml configuration"
+
 # --- End of Tasks ---
 
 [settings]
