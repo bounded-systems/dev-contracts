@@ -6,10 +6,6 @@
   "engines": {
     "node": ">=18.20.5"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "sync-schemas": "ts-node ../bin/sync_yaml_schemas.ts"
-  },
   "dependencies": {
     "js-yaml": "^4.1.0"
   },
