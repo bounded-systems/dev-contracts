@@ -44,9 +44,9 @@ ruby = "3.3.3"
 
 [tasks]
 # Tasks migrated from scripts/deno.json
-test = { run = "deno task test", dir = "scripts", deps = ["install"] }
-test_watch = { run = "deno task test:watch", dir = "scripts", deps = ["install"], help = "Run tests in watch mode" }
-test_coverage = { run = "deno task test:coverage", dir = "scripts", deps = ["install"], help = "Run tests and generate coverage report" }
+test = { run = "deno test --allow-run --allow-read --allow-env", deps = ["install"] }
+test_watch = { run = "deno test --allow-run --allow-read --allow-env --watch", deps = ["install"], help = "Run tests in watch mode" }
+test_coverage = { run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage", deps = ["install"], help = "Run tests and generate coverage report" }
 
 # Tasks for standalone scripts
 setup = { run = "deno run -A scripts/setup.ts", deps = ["install"], help = "Run initial project setup" }
