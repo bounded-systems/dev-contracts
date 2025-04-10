@@ -8,7 +8,13 @@ class DevToolsSetup {
   private readonly nodeVersion = "20.11.1";
 
   constructor() {
-    this.devtoolsDir = "/Users/bobby/dev/pushd-devtools";
+    this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
+    if (!this.devtoolsDir) {
+      console.error(
+        "Error: PUSHD_DEVTOOLS_DIR environment variable is not set",
+      );
+      Deno.exit(1);
+    }
   }
 
   private async runCommand(cmd: string[]): Promise<void> {
