@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-ne
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net
 
 import { exists } from "jsr:@std/fs/exists";
 import * as path from "jsr:@std/path";
@@ -87,7 +87,7 @@ export class SchemaValidator {
    * Generate TypeScript types from the schemas
    */
   async generateLinterTypes(): Promise<void> {
-    // Create types directory if it doesn't exis
+    // Create types directory if it doesn't exist
     if (!(await exists(this.typesDir))) {
       await Deno.mkdir(this.typesDir, { recursive: true });
     }
@@ -211,6 +211,14 @@ export interface TrunkConfig {
   version: string | number;
   runtimes?: {
     enabled?: string[];
+    definitions?: Array<{
+      type: string;
+      version?: string;
+      runtime_environment?: Array<{
+        name: string;
+        value: string;
+      }>;
+    }>;
   };
   lint?: {
     enabled?: LinterConfig[];
@@ -227,7 +235,7 @@ export interface MiseConfig {
     ruby?: string;
     nodejs?: string;
     deno?: string;
-    [key: string]: string | undefined;
+    [key: string]: string | undefined | Record<string, string | string[]>;
   };
   settings?: {
     devtools?: {
@@ -257,7 +265,7 @@ async validateMiseConfig(): Promise<{ valid: boolean; issues: string[] }> {
 
   try {
     // Load mise.toml
-    const miseConfig = (await this.loadConfigFile(this.miseConfigPath)) as MiseConfig;
+    const miseConfig = await this.loadConfigFile(this.miseConfigPath) as MiseConfig;
 
     // Validate that enabled_linters in mise.toml match versions in other places
     if (miseConfig.settings?.devtools?.trunk?.enabled_linters) {
@@ -342,43 +350,6 @@ async validateMiseConfig(): Promise<{ valid: boolean; issues: string[] }> {
 }
 
 /**
- * Validate configurations and generate types
- */
-async validateAndGenerate(): Promise<boolean> {
-  try {
-    // Generate TypeScript types
-    await this.generateLinterTypes();
-
-    // Validate mise.toml
-    console.log("Validating mise.toml...");
-    const miseValidation = await this.validateMiseConfig();
-
-    // Validate trunk.yaml
-    console.log(`Validating trunk.yaml at: ${this.trunkConfigPath}...`);
-    const trunkValidation = await this.validateTrunkConfig();
-
-    // Report validation results
-    console.log("\n===== Validation Results =====");
-    console.log(`mise.toml: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-    if (miseValidation.issues.length > 0) {
-      console.log("  Issues:");
-      miseValidation.issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-
-    console.log(`trunk.yaml: ${trunkValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-    if (trunkValidation.issues.length > 0) {
-      console.log("  Issues:");
-      trunkValidation.issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-
-    return miseValidation.valid && trunkValidation.valid;
-  } catch (error) {
-    console.error("Validation failed:", error instanceof Error ? error.message : String(error));
-    return false;
-  }
-}
-
-/**
  * Validate trunk.yaml against schema and internal requirements
  */
 async validateTrunkConfig(): Promise<{ valid: boolean; issues: string[] }> {
@@ -419,7 +390,7 @@ async validateTrunkConfig(): Promise<{ valid: boolean; issues: string[] }> {
         if (typeof linter === "string") {
           return linter;
         } else if (typeof linter === "object" && linter.name) {
-          return `${linter.name}`;
+          return String(linter.name);
         }
         return "";
       })
@@ -451,6 +422,43 @@ async validateTrunkConfig(): Promise<{ valid: boolean; issues: string[] }> {
 }
 
 /**
+ * Validate configurations and generate types
+ */
+async validateAndGenerate(): Promise<boolean> {
+  try {
+    // Generate TypeScript types
+    await this.generateLinterTypes();
+
+    // Validate mise.toml
+    console.log("Validating mise.toml...");
+    const miseValidation = await this.validateMiseConfig();
+
+    // Validate trunk.yaml
+    console.log(`Validating trunk.yaml at: ${this.trunkConfigPath}...`);
+    const trunkValidation = await this.validateTrunkConfig();
+
+    // Report validation results
+    console.log("\n===== Validation Results =====");
+    console.log(`mise.toml: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
+    if (miseValidation.issues.length > 0) {
+      console.log("  Issues:");
+      miseValidation.issues.forEach(issue => console.log(`  - ${issue}`));
+    }
+
+    console.log(`trunk.yaml: ${trunkValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
+    if (trunkValidation.issues.length > 0) {
+      console.log("  Issues:");
+      trunkValidation.issues.forEach(issue => console.log(`  - ${issue}`));
+    }
+
+    return miseValidation.valid && trunkValidation.valid;
+  } catch (error) {
+    console.error("Validation failed:", error instanceof Error ? error.message : String(error));
+    return false;
+  }
+}
+
+/**
  * Transform trunk.yaml to match mise.toml configuration
  */
 async transformTrunkConfig(): Promise<boolean> {
@@ -458,8 +466,8 @@ async transformTrunkConfig(): Promise<boolean> {
     console.log("Transforming trunk.yaml to match mise.toml configuration...");
 
     // Load configurations
-    const miseConfig = (await this.loadConfigFile(this.miseConfigPath)) as MiseConfig;
-    const trunkConfig = (await this.loadConfigFile(this.trunkConfigPath)) as TrunkConfig;
+    const miseConfig = await this.loadConfigFile(this.miseConfigPath) as MiseConfig;
+    const trunkConfig = await this.loadConfigFile(this.trunkConfigPath) as TrunkConfig;
 
     // Get supported runtimes from Trunk schema
     const supportedRuntimes = await fetchSupportedRuntimes();

@@ -6,23 +6,6 @@ plugins:
     - id: trunk
       ref: v1.6.7
       uri: "https://github.com/trunk-io/plugins"
-downloads:
-  - name: deno
-    downloads:
-      - os:
-          linux: linux
-          macos: darwin
-          windows: windows
-        cpu:
-          x86_64: x86_64
-          arm_64: aarch64
-        url: https://github.com/denoland/deno/releases/download/v${version}/deno-${cpu}-${os}.zip
-tools:
-  definitions:
-    - name: deno
-      download: deno
-      known_good_version: 2.2.4
-      shims: [deno]
 runtimes:
   enabled:
     - node@20.14.0
