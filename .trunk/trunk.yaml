@@ -5,12 +5,11 @@ plugins:
   sources:
     - id: trunk
       ref: v1.6.7
-      uri: 'https://github.com/trunk-io/plugins'
+      uri: "https://github.com/trunk-io/plugins"
 runtimes:
   enabled:
     - node@20.14.0
     - ruby@3.3.3
-    - deno@2.2.4
 lint:
   enabled:
     - git-diff-check
