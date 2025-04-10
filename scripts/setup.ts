@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run --allow-run --allow-env --allow-write --allow-read
 
 import { join } from "https://deno.land/std/path/mod.ts";
+import $ from "jsr:@david/dax@0.39.2";
 
 // Function to load project environment variables (can be reused/exported)
 // Accepts an optional rootDir to look for .env.project relative to
@@ -445,3 +446,107 @@ export NODE_PACKAGE_VAR="${this.devtoolsDir}/${this.projectEnv.NODE_RUNTIME_DIR}
     console.log("Setup script finished.");
   }
 })(); // End of async IIFE
+
+const requiredPlugins = ["deno", "nodejs", "ruby"];
+const devtoolsDir = $.path.dirname($.path.dirname(import.meta.url));
+
+async function checkAsdf(): Promise<boolean> {
+  try {
+    await $`asdf --version`.quiet();
+    console.log("✅ asdf found.");
+    return true;
+  } catch (e) {
+    console.error(
+      "❌ Error: asdf version manager not found.",
+      "\\nPlease install asdf first:",
+      "\\nhttps://asdf-vm.com/guide/getting-started.html",
+    );
+    return false;
+  }
+}
+
+async function checkOrAddPlugin(plugin: string): Promise<boolean> {
+  const installedPlugins = await $`asdf plugin list`.lines();
+  if (installedPlugins.includes(plugin)) {
+    console.log(`  ✅ Plugin '${plugin}' already installed.`);
+    return true;
+  } else {
+    console.log(`  ⏳ Adding plugin '${plugin}'...`);
+    try {
+      await $`asdf plugin add ${plugin}`;
+      console.log(`  ✅ Plugin '${plugin}' added.`);
+      return true;
+    } catch (e) {
+      console.error(`  ❌ Failed to add plugin '${plugin}': ${e.message}`);
+      return false;
+    }
+  }
+}
+
+async function main() {
+  // Correctly determine the devtools directory assuming the script is in pushd-devtools/scripts/
+  const devtoolsDir = new URL("..", import.meta.url).pathname;
+  console.log(`🚀 Setting up pushd-devtools in ${devtoolsDir}...`);
+
+  if (!(await checkAsdf())) {
+    Deno.exit(1);
+  }
+
+  console.log("\\nEnsuring required asdf plugins are installed:");
+  let allPluginsOk = true;
+  for (const plugin of requiredPlugins) {
+    if (!(await checkOrAddPlugin(plugin))) {
+      allPluginsOk = false;
+    }
+  }
+
+  if (!allPluginsOk) {
+    console.error(
+      "\\n❌ Not all required asdf plugins could be added. Please check errors above.",
+    );
+    Deno.exit(1);
+  }
+
+  console.log("\\n⏳ Installing tool versions from .tool-versions...");
+  try {
+    // Run asdf install from the root directory of the project
+    await $`asdf install`.cwd(devtoolsDir).stdout("inherit").stderr("inherit");
+    console.log("\\n✅ Tool versions installed successfully.");
+  } catch (e) {
+    console.error("\\n❌ Failed to install tool versions:", e.message);
+    console.error(
+      "   Please ensure asdf is configured correctly and try running 'asdf install' manually.",
+    );
+    Deno.exit(1);
+  }
+
+  const profile = Deno.env.get("SHELL")?.includes("zsh")
+    ? "~/.zshrc"
+    : "~/.bashrc (or similar)";
+  const linkScriptPath = new URL("link-configs.ts", import.meta.url).pathname; // Get path relative to this script
+
+  console.log("\\n✨ Setup complete! ✨");
+  console.log("\\nNext steps:");
+  console.log(
+    "1. IMPORTANT: Add the following line to your shell configuration file",
+  );
+  console.log(`   (e.g., ${profile}):`);
+  console.log(`\\n     export PUSHD_DEVTOOLS_DIR="${devtoolsDir}"`);
+  console.log(
+    `\\n   Replace \`${devtoolsDir}\` with the actual absolute path if needed.`,
+  );
+  console.log(`   Then, restart your shell or run 'source ${profile}'.`);
+  console.log(
+    "\\n2. Verify the variable is set by running: echo $PUSHD_DEVTOOLS_DIR",
+  );
+  console.log(
+    "\\n3. Navigate to your target project (e.g., pushd-web) and run the linking script:",
+  );
+  // Use --unstable-fs for Deno.symlink in link-configs.ts
+  console.log(`\\n     deno run -A --unstable-fs ${linkScriptPath}`);
+  console.log(
+    "\\n     (Make sure PUSHD_DEVTOOLS_DIR is set in that shell session!)",
+  );
+}
+
+await main();
