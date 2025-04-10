@@ -120,6 +120,8 @@ class TrunkValidator {
   }
 }
 
+export { TrunkValidator };
+
 if (import.meta.main) {
   const validator = new TrunkValidator();
   await validator.validate();
