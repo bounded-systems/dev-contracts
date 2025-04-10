@@ -26,12 +26,12 @@ runtimes:
     - node@18.20.5
   definitions:
     - type: ruby
-      system_version: preferred
+      system_version: required
       runtime_environment:
         - name: BUNDLE_GEMFILE
           value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/Gemfile"
     - type: node
-      system_version: preferred
+      system_version: required
       runtime_environment:
         - name: NODE_ENV
           value: development
