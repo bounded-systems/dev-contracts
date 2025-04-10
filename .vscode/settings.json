@@ -83,8 +83,6 @@
     "editor.defaultFormatter": "trunk.io"
   },
   "evenBetterToml.schema.associations": {
-    "https://json.schemastore.org/pyproject.json": [
-      "pyproject.toml"
-    ]
+    "https://json.schemastore.org/pyproject.json": ["pyproject.toml"]
   }
 }
