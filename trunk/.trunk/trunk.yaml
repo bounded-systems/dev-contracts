@@ -23,7 +23,7 @@ actions:
 runtimes:
   enabled:
     - ruby@3.2.2
-    - node@18.20.5
+    - node@20.11.1
   definitions:
     - type: ruby
       system_version: required
@@ -31,7 +31,7 @@ runtimes:
         - name: BUNDLE_GEMFILE
           value: "$PUSHD_DEVTOOLS_DIR/runtimes/ruby/Gemfile"
     - type: node
-      system_version: required
+      system_version: ignored
       runtime_environment:
         - name: NODE_ENV
           value: development
