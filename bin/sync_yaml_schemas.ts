@@ -28,14 +28,8 @@ class SchemaSyncer {
 
   constructor() {
     this.rootDir = join(new URL(".", import.meta.url).pathname, "..");
-    this.yamllintPath = join(
-      this.rootDir,
-      "trunk/.trunk/configs/.yamllint.yml",
-    );
-    this.vscodeSettingsPath = join(
-      this.rootDir,
-      "vscode/.vscode/settings.json",
-    );
+    this.yamllintPath = Deno.env.get("YAMLLINT_CONFIG_PATH") || "";
+    this.vscodeSettingsPath = Deno.env.get("VSCODE_SETTINGS_PATH") || "";
   }
 
   private async readYamlLintConfig(): Promise<YamlLintConfig> {

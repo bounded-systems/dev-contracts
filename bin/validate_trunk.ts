@@ -7,8 +7,8 @@ class TrunkValidator {
   private readonly trunkYaml: string;
 
   constructor() {
-    this.devtoolsDir = "/Users/bobby/dev/pushd-devtools";
-    this.trunkYaml = join(this.devtoolsDir, "trunk/.trunk/trunk.yaml");
+    this.devtoolsDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || "";
+    this.trunkYaml = Deno.env.get("TRUNK_YAML_PATH") || "";
   }
 
   private async runCommand(cmd: string[]): Promise<void> {
@@ -42,7 +42,8 @@ class TrunkValidator {
     try {
       // Change to trunk directory and run trunk check
       const originalDir = Deno.cwd();
-      Deno.chdir(join(this.devtoolsDir, "trunk"));
+      const trunkDir = Deno.env.get("TRUNK_TEMPLATE_DIR") || "";
+      Deno.chdir(trunkDir);
       // Run trunk check in the trunk directory
       await this.runCommand(["trunk", "check"]);
       // Return to original directory
