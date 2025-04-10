@@ -43,11 +43,10 @@ class TrunkValidator {
       // Change to trunk directory and run trunk check
       const originalDir = Deno.cwd();
       Deno.chdir(join(this.devtoolsDir, "trunk"));
+      // Run trunk check in the trunk directory
       await this.runCommand(["trunk", "check"]);
+      // Return to original directory
       Deno.chdir(originalDir);
-
-      // Validate configuration
-      await this.runCommand(["trunk", "check", "--config", this.trunkYaml]);
     } catch (error) {
       console.error("Error: trunk.yaml configuration is invalid");
       Deno.exit(1);

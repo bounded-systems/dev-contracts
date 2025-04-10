@@ -120,7 +120,7 @@ export PACKAGE_FILE="${this.devtoolsDir}/runtimes/node/package.json"
       await this.createEnvFile();
 
       console.log(
-        "Setup complete! Please run 'source ${this.devtoolsDir}/.env' to load the environment variables.",
+        `Setup complete! Please run 'source ${this.devtoolsDir}/.env' to load the environment variables.`,
       );
       console.log(
         `Ruby and Node.js environments are now set up in ${this.devtoolsDir}`,
