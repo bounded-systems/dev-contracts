@@ -3,14 +3,13 @@
 # Rule to synchronize enabled linters
 [[rule]]
 name = "SyncEnabledLinters"
-description = "Synchronizes lint.enabled in trunk.yaml based on parsed linter list from mise.toml env var"
+description = "Synchronizes lint.enabled in trunk.yaml based on parsed linter list from mise.toml settings"
 target_path = ["lint", "enabled"]
-# Source path points to the env var containing the JSON string
-source_path = ["env", "DEVTOOLS_TRUNK_ENABLED_LINTERS"]
+# Source path points to the structured list in settings
+source_path = ["settings", "devtools", "trunk", "enabled_linters"]
 transformer_function = "syncLinters"
 priority = 10
-# [rule.context.linterFormatOverrides]
-# git-diff-check = "(name, _version) => name"
+# Context options for formatting specific linters (e.g., git-diff-check has no version)
 [rule.context.linterFormatOptions.git-diff-check]
 noVersionSuffix = true
 

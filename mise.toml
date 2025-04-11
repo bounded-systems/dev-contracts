@@ -3,25 +3,16 @@
 NODE_ENV = "development"
 
 # Trunk configuration
-TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
+TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* trunk.yaml used for transformations
+PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
 
 # DevTools Environment (set by mise)
 PUSHD_DEVTOOLS_DIR = "{{mise.dir}}"
-
-# DevTools custom settings
-DEVTOOLS_TRUNK_ENABLED_LINTERS = """[
-    "standardrb@1.0.0",
-    "yamllint@1.26.3",
-    "git-diff-check@system"
-]"""
 
 [tools]
 # Core Runtime Tool versions
 ruby = "3.3.3"
 node = "20.14.0"
-
-# Linters (Add desired versions)
-yamllint = "1.26.3"
 
 [tasks]
 # Default install task (ensures tools are installed)
@@ -52,3 +43,11 @@ description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 # Enable lockfile for consistent versioning across environments
 [settings]
 lockfile = true
+
+# DevTools specific settings for integration (e.g., with Trunk)
+[settings.devtools.trunk]
+enabled_linters = [
+  { name = "standardrb", version = "1.0.0" },
+  { name = "yamllint", version = "1.26.3" },
+  { name = "git-diff-check" }, # No version needed, it's a system tool
+]

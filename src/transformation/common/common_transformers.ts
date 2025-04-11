@@ -25,46 +25,38 @@ function parseLinterString(linterString: string): { name: string; version?: stri
 
 /**
  * Synchronizes a target list of linters based on a source list.
- * Assumes linters are strings in "name@version" format (or just "name").
+ * Source is expected as Array<{ name: string, version?: string }>
+ * Target is expected as Array<string | Record<string, any>> (typically strings like "name@version" or "name").
  * Context can provide `linterFormatOptions: { [name: string]: { noVersionSuffix?: boolean } }`.
  */
 export function syncLinters(
-  sourceValue: unknown,
+  sourceValue: unknown, // Should be Array<{ name: string, version?: string }>
   targetValue: unknown,
   context?: TransformContext
 ): { newValue: (string | Record<string, any>)[]; changed: boolean } {
   let changed = false;
 
-  // -- Start: Handle JSON string parsing within syncLinters --
-  let sourceLinters: string[] = [];
-  if (typeof sourceValue === 'string') {
-    try {
-      const parsed = JSON.parse(sourceValue);
-      if (Array.isArray(parsed)) {
-        sourceLinters = parsed;
-        console.log("syncLinters: Parsed JSON string from sourceValue.");
-      } else {
-        console.warn("syncLinters: Parsed sourceValue JSON is not an array. Treating as empty.");
+  // Validate and process sourceValue
+  let sourceLinters: { name: string; version?: string }[] = [];
+  if (Array.isArray(sourceValue)) {
+    sourceLinters = sourceValue.filter((item): item is { name: string; version?: string } => {
+      if (typeof item === 'object' && item !== null && typeof item.name === 'string') {
+        return true;
       }
-    } catch (e) {
-      console.error(`syncLinters: Failed to parse sourceValue as JSON: ${e.message}. Treating as empty.`);
-    }
-  } else if (Array.isArray(sourceValue)) {
-    // Assume it's already the correct array format
-    sourceLinters = sourceValue as string[];
+      console.warn(`syncLinters: Skipping invalid source linter item: ${JSON.stringify(item)}`);
+      return false;
+    });
   } else {
-      console.warn("syncLinters: sourceValue is neither a string nor an array. Treating as empty.");
+    console.warn(`syncLinters: sourceValue is not an array. Treating as empty. Value: ${JSON.stringify(sourceValue)}`);
   }
-  // -- End: Handle JSON string parsing --
 
   const targetLinters = Array.isArray(targetValue) ? targetValue as (string | Record<string, any>)[] : [];
   const linterFormatOptions = context?.linterFormatOptions ?? {};
 
   const sourceLinterMap = new Map<string, string | undefined>(); // name -> version
-  sourceLinters.forEach(linterStr => {
-    const parsed = parseLinterString(linterStr);
-    if (parsed) {
-      sourceLinterMap.set(parsed.name, parsed.version);
+  sourceLinters.forEach(linter => {
+    if (linter.name) { // Redundant check due to filter, but safe
+      sourceLinterMap.set(linter.name, linter.version);
     }
   });
 
@@ -76,22 +68,27 @@ export function syncLinters(
     let linterName: string | undefined;
     let linterVersion: string | undefined;
 
+    // Attempt to parse name/version from target string/object
     if (typeof targetLinter === "string") {
       const parsed = parseLinterString(targetLinter);
       if (parsed) {
         linterName = parsed.name;
         linterVersion = parsed.version;
       }
-    } else if (typeof targetLinter === "object" && targetLinter !== null && targetLinter.name) {
-      const parsed = parseLinterString(String(targetLinter.name));
-      if (parsed) {
-        linterName = parsed.name;
-        linterVersion = parsed.version;
-      }
+    } else if (typeof targetLinter === "object" && targetLinter !== null && typeof targetLinter.name === "string") {
+       // If target is already an object { name: ..., ...}, try parsing its name field
+       const parsed = parseLinterString(targetLinter.name); // Handle if name field itself is like "name@version"
+       if (parsed) {
+          linterName = parsed.name;
+          linterVersion = parsed.version ?? (typeof targetLinter.version === 'string' ? targetLinter.version : undefined);
+       } else {
+          linterName = targetLinter.name; // Fallback if name field is just the name
+          linterVersion = typeof targetLinter.version === 'string' ? targetLinter.version : undefined;
+       }
     }
 
     if (!linterName) {
-      newTargetLinters.push(targetLinter); // Keep unparsable entries
+      newTargetLinters.push(targetLinter); // Keep unparsable/unstructured entries
       console.warn(
         `syncLinters: Could not determine name for target linter entry: ${JSON.stringify(targetLinter)}`
       );
@@ -101,27 +98,32 @@ export function syncLinters(
     targetLinterNames.add(linterName);
 
     if (sourceLinterMap.has(linterName)) {
+      // Linter exists in both source and target, check if update needed
       const sourceVersion = sourceLinterMap.get(linterName);
-      let updatedLinterString: string | Record<string, any> = targetLinter; // Default to keeping original
-      let needsUpdate = false;
-
-      // Check for version difference
-      if (sourceVersion && sourceVersion !== linterVersion) {
-          needsUpdate = true;
-      }
-
-      // Apply format override if defined for this linter
       const options = linterFormatOptions[linterName] ?? {};
-      const formattedString = options.noVersionSuffix ? linterName : `${linterName}${sourceVersion ? '@' + sourceVersion : ''}`;
 
-      if (needsUpdate || formattedString !== targetLinter) {
-          console.log(`Updating linter ${linterName}: ${JSON.stringify(targetLinter)} -> ${formattedString}`);
-          updatedLinterString = formattedString;
-          changed = true;
+      // Determine the desired string format based on context and source version
+      const desiredString = options.noVersionSuffix ? linterName : `${linterName}${sourceVersion ? '@' + sourceVersion : ''}`;
+
+      // Check if the current target representation matches the desired string format
+      let currentStringRepresentation: string | undefined;
+      if (typeof targetLinter === 'string') {
+        currentStringRepresentation = targetLinter;
+      } else if (typeof targetLinter === 'object' && targetLinter !== null && typeof targetLinter.name === 'string') {
+         // Reconstruct string from object for comparison, considering noVersionSuffix
+         const namePart = targetLinter.name; // Assume object name is just the base name
+         const versionPart = typeof targetLinter.version === 'string' ? targetLinter.version : undefined;
+         currentStringRepresentation = options.noVersionSuffix ? namePart : `${namePart}${versionPart ? '@' + versionPart : ''}`;
       }
 
-      newTargetLinters.push(updatedLinterString);
-
+      if (currentStringRepresentation !== desiredString) {
+        console.log(`syncLinters: Updating linter ${linterName}: ${JSON.stringify(targetLinter)} -> ${desiredString}`);
+        newTargetLinters.push(desiredString);
+        changed = true;
+      } else {
+        // No change needed, keep the original target entry (string or object)
+        newTargetLinters.push(targetLinter);
+      }
     } else {
       // Linter exists in target but not in source - REMOVE it
       console.log(
@@ -134,11 +136,11 @@ export function syncLinters(
   // Add linters from source that are not in target
   sourceLinterMap.forEach((version, name) => {
     if (!targetLinterNames.has(name)) {
-        const options = linterFormatOptions[name] ?? {};
-        const newLinterString = options.noVersionSuffix ? name : `${name}${version ? '@' + version : ''}`;
-        console.log(`syncLinters: Adding missing linter from source: ${newLinterString}`);
-        newTargetLinters.push(newLinterString);
-        changed = true;
+      const options = linterFormatOptions[name] ?? {};
+      const newLinterString = options.noVersionSuffix ? name : `${name}${version ? '@' + version : ''}`;
+      console.log(`syncLinters: Adding missing linter from source: ${newLinterString}`);
+      newTargetLinters.push(newLinterString);
+      changed = true;
     }
   });
 

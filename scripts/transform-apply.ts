@@ -17,9 +17,17 @@ import type { TransformContext } from "../src/types/transform_rules.ts";
 const SCRIPT_DIR = path.dirname(path.fromFileUrl(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, ".."); // Adjusted path: apply.ts is now directly in scripts/
 const MISE_CONFIG_PATH = path.join(REPO_ROOT, "mise.toml");
-const TEMPLATE_TRUNK_YAML_PATH =
-  Deno.env.get("TRUNK_YAML_PATH") ?? path.join(REPO_ROOT, "templates/trunk/.trunk/trunk.yaml");
-const ROOT_TRUNK_YAML_PATH = path.join(REPO_ROOT, ".trunk/trunk.yaml");
+
+// Template path MUST be provided via environment variable
+const TEMPLATE_TRUNK_YAML_PATH = Deno.env.get("TRUNK_YAML_PATH");
+if (!TEMPLATE_TRUNK_YAML_PATH) {
+  console.error("Error: TRUNK_YAML_PATH environment variable is not set.");
+  console.error("Please define it in your environment or mise.toml pointing to the template trunk.yaml.");
+  Deno.exit(1);
+}
+
+// Root path can be overridden by environment variable, otherwise defaults
+const ROOT_TRUNK_YAML_PATH = Deno.env.get("PUSHD_ROOT_TRUNK_YAML") ?? path.join(REPO_ROOT, ".trunk/trunk.yaml");
 
 // --- Helper Functions ---
 
