@@ -11,19 +11,23 @@
     "quality": {
       "type": "object",
       "properties": {
-        "depends": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "enabled_linters": {
-          "type": "array",
-          "items": {
+        "lint": {
+          "type": "object",
+          "description": "Linting configurations, keyed by linter name.",
+          "additionalProperties": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "version": { "type": "string" }
+              "depends": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Dependencies for the linter, e.g., 'trunk'."
+              },
+              "version": {
+                "type": "string",
+                "description": "Specific version of the linter."
+              }
             },
-            "required": ["name"]
+            "required": ["depends"]
           }
         }
       }
