@@ -16,13 +16,15 @@ downloads:
         cpu:
           x86_64: x86_64
           arm_64: aarch64
-        url: https://github.com/denoland/deno/releases/download/v${version}/deno-${cpu}-${os}.zip
+        url: >-
+          https://github.com/denoland/deno/releases/download/v${version}/deno-${cpu}-${os}.zip
 tools:
   definitions:
     - name: deno
       download: deno
       known_good_version: 2.2.4
-      shims: [deno]
+      shims:
+        - deno
 runtimes:
   enabled:
     - node@20.14.0

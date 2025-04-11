@@ -137,9 +137,15 @@ description = "Run tests for the schema validator"
 
 # New task to transform schemas
 [tasks.transform_schemas]
+run = "deno run -A scripts/update_trunk.ts"
+depends = ["install"]
+description = "Update trunk.yaml to match mise.toml configuration"
+
+# New task to run the old schema transformer script (if needed)
+[tasks.legacy_transform_schemas]
 run = "deno run -A scripts/generate_schema_types.ts --transform"
 depends = ["install"]
-description = "Validate schemas and automatically update trunk.yaml to match mise.toml configuration"
+description = "Legacy task to validate schemas and update trunk.yaml using the old script"
 
 # --- End of Tasks ---
 
