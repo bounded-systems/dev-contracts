@@ -41,8 +41,6 @@ VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 DEVTOOLS_TRUNK_ENABLED_LINTERS = '''[
     "standardrb@1.0.0",
     "yamllint@1.26.3",
-    "prettier@3.0.0",
-    "eslint@8.0.0",
     "git-diff-check@system"
 ]'''
 DEVTOOLS_SCHEMA_MISE = "https://mise.jdx.dev/schema/mise.json"
@@ -55,7 +53,7 @@ _.path = "./node_modules/.bin"
 # Core Runtime Tool versions
 ruby = "3.3.3"
 node = "20.14.0"
-deno = "2.2.4"
+# deno = "2.2.4" # Temporarily removing deno
 # trunk = "1.22.12"
 
 # Linters (Add desired versions)
@@ -64,7 +62,7 @@ deno = "2.2.4"
 # standardrb = "latest" # Example: Replace with specific version like "1.0.0"
 # markdownlint = "latest" # Example: Replace with specific version like "0.41.0"
 # oxipng = "latest"
-yamllint = "latest"
+yamllint = "1.26.3"
 
 # Configure Trunk actions via the custom plugin
 # trunk-actions = ["trunk-check-pre-commit"] # Removed - Replaced by trunk-actions-* entries below

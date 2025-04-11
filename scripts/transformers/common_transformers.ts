@@ -28,7 +28,30 @@ export function syncLinters(
   _context?: TransformContext // Context might be used later for options like 'removeMissing'
 ): { config: TrunkConfig; changed: boolean } {
   let changed = false;
-  const miseLinters = miseConfig.settings?.devtools?.trunk?.enabled_linters ?? [];
+  // Read the JSON string from the env var and parse it
+  const miseLintersJson = miseConfig.env?.DEVTOOLS_TRUNK_ENABLED_LINTERS;
+  let miseLinters: string[] = [];
+  if (miseLintersJson && typeof miseLintersJson === "string") {
+    try {
+      miseLinters = JSON.parse(miseLintersJson);
+      if (!Array.isArray(miseLinters)) {
+        console.warn("Parsed DEVTOOLS_TRUNK_ENABLED_LINTERS is not an array. Defaulting to empty.");
+        miseLinters = [];
+      }
+    } catch (e) {
+      console.error(
+        `Failed to parse JSON from DEVTOOLS_TRUNK_ENABLED_LINTERS: ${e.message}. Defaulting to empty.`
+      );
+      miseLinters = [];
+    }
+  } else {
+    console.warn(
+      "Could not find DEVTOOLS_TRUNK_ENABLED_LINTERS in miseConfig.env or it's not a string. Defaulting to empty linter list."
+    );
+    // Default to empty if not found or not a string
+    miseLinters = [];
+  }
+
   const trunkLinters = trunkConfig.lint?.enabled ?? [];
 
   const miseLinterMap = new Map<string, string | undefined>(); // name -> version
@@ -80,26 +103,36 @@ export function syncLinters(
       const miseVersion = miseLinterMap.get(linterName);
       // Only update if mise specifies a version and it's different
       if (miseVersion && miseVersion !== linterVersion) {
-        const updatedLinter = `${linterName}@${miseVersion}`;
+        // Handle special case for git-diff-check
+        const updatedLinter = linterName === "git-diff-check" ? linterName : `${linterName}@${miseVersion}`;
         console.log(`Updating linter ${linterName}: ${trunkLinter} -> ${updatedLinter}`);
         newTrunkLinters.push(updatedLinter); // Standardize to string format on update
         changed = true;
       } else {
         // Keep the existing entry if versions match or mise doesn't specify one
-        newTrunkLinters.push(trunkLinter);
+        // BUT ensure git-diff-check doesn't have a version suffix
+        const linterToAdd = linterName === "git-diff-check" ? linterName : trunkLinter;
+        if (linterToAdd !== trunkLinter) {
+          console.log(`Correcting ${linterName} format: ${trunkLinter} -> ${linterToAdd}`);
+          changed = true; // Mark changed if we correct the format
+        }
+        newTrunkLinters.push(linterToAdd);
       }
     } else {
-      // Linter exists in trunk but not in mise - keep it for now
-      // Future: Add context flag to remove it?
-      newTrunkLinters.push(trunkLinter);
-      console.log(`Linter ${linterName} found in trunk.yaml but not in mise.toml settings. Kept.`);
+      // Linter exists in trunk but not in mise - REMOVE it
+      console.log(
+        `Linter ${linterName} found in trunk.yaml but not in mise.toml settings. Removing.`
+      );
+      changed = true; // Mark as changed because we are removing an item
+      // By *not* pushing trunkLinter to newTrunkLinters, we effectively remove it.
     }
   });
 
   // Add linters from mise that are not in trunk
   miseLinterMap.forEach((version, name) => {
     if (!trunkLinterNames.has(name)) {
-      const newLinterString = version ? `${name}@${version}` : name; // Handle case where mise might not have version?
+      // Handle special case for git-diff-check
+      const newLinterString = name === "git-diff-check" ? name : (version ? `${name}@${version}` : name);
       console.log(`Adding missing linter from mise.toml: ${newLinterString}`);
       newTrunkLinters.push(newLinterString);
       changed = true;
@@ -173,13 +206,57 @@ export function syncRuntimes(
     }
   }
 
+  // --- Remove runtimes from trunk that are no longer in mise --- //
+  const miseToolNames = new Set(
+    Object.keys(miseTools).map(tool => {
+      // Map mise tool names to trunk runtime types (e.g., nodejs -> node)
+      const runtimeMapping = context?.runtimeMapping ?? {};
+      if (tool in runtimeMapping) return runtimeMapping[tool];
+      if (["nodejs", "node"].includes(tool)) return "node";
+      if (["python"].includes(tool)) return "python";
+      // Add other mappings or return original tool name if no mapping
+      return tool;
+    })
+  );
+
+  const finalTrunkRuntimes = newTrunkRuntimes.filter(rt => {
+    const runtimeType = rt.type;
+    // Also check the original trunkRuntimes in case an update was skipped
+    const wasInOriginalMise = miseToolNames.has(runtimeType);
+
+    if (!wasInOriginalMise && existingRuntimeTypes.has(runtimeType)) {
+      console.log(
+        `Removing runtime ${runtimeType} from trunk.yaml as it's no longer in mise.toml tools.`
+      );
+      changed = true;
+      return false; // Remove it
+    }
+    return true; // Keep it
+  });
+
   // Future: Add logic to remove runtimes present in trunk but not mise? (needs context flag)
+  // ^^^ Implemented above ^^^
 
   if (changed) {
     if (!trunkConfig.runtimes) {
       trunkConfig.runtimes = {};
     }
-    trunkConfig.runtimes.definitions = newTrunkRuntimes;
+    trunkConfig.runtimes.definitions = finalTrunkRuntimes;
+  }
+
+  // --- Synchronize runtimes.enabled list --- //
+  const finalEnabledRuntimes = finalTrunkRuntimes.map(rt => `${rt.type}@${rt.version}`);
+  // Check if the enabled list needs updating
+  const currentEnabledString = JSON.stringify((trunkConfig.runtimes?.enabled ?? []).sort());
+  const finalEnabledString = JSON.stringify(finalEnabledRuntimes.sort());
+
+  if (currentEnabledString !== finalEnabledString) {
+    console.log(`Updating runtimes.enabled: ${currentEnabledString} -> ${finalEnabledString}`);
+    if (!trunkConfig.runtimes) {
+      trunkConfig.runtimes = {}; // Should exist if definitions changed, but safety check
+    }
+    trunkConfig.runtimes.enabled = finalEnabledRuntimes;
+    changed = true; // Mark as changed if enabled list is updated
   }
 
   return { config: trunkConfig, changed };

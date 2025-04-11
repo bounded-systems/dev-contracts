@@ -1,5 +1,5 @@
 // GENERATED FILE - DO NOT EDIT MANUALLY!
-// Timestamp: 2025-04-11T04:55:33.369Z
+// Timestamp: 2025-04-11T05:06:19.480Z
 
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
 import type { TransformContext } from "../types/transform_rules.ts";

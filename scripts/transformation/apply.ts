@@ -17,9 +17,9 @@ import type { TransformContext } from "../types/transform_rules.ts";
 const SCRIPT_DIR = path.dirname(path.fromFileUrl(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", ".."); // Adjust if script moves
 const MISE_CONFIG_PATH = path.join(REPO_ROOT, "mise.toml");
-// Use the environment variable defined in mise.toml or a default
-const TRUNK_YAML_PATH =
+const TEMPLATE_TRUNK_YAML_PATH =
   Deno.env.get("TRUNK_YAML_PATH") ?? path.join(REPO_ROOT, "templates/trunk/.trunk/trunk.yaml");
+const ROOT_TRUNK_YAML_PATH = path.join(REPO_ROOT, ".trunk/trunk.yaml");
 
 // --- Helper Functions ---
 
@@ -58,16 +58,24 @@ async function parseTrunkConfig(filePath: string): Promise<TrunkConfig> {
   }
 }
 
-async function writeTrunkConfig(filePath: string, config: TrunkConfig): Promise<void> {
+async function writeTrunkConfig(
+  filePath: string,
+  config: TrunkConfig,
+  label: string
+): Promise<void> {
   try {
+    // Ensure the directory exists
+    const dirPath = path.dirname(filePath);
+    await Deno.mkdir(dirPath, { recursive: true });
+
     const yamlString = yaml.stringify(config as Record<string, any>, {
       indent: 2, // Standard YAML indentation
       lineWidth: -1, // Avoid automatic line wrapping
     });
     await Deno.writeTextFile(filePath, yamlString);
-    console.log(`Successfully wrote updated Trunk config to ${filePath}`);
+    console.log(`Successfully wrote updated ${label} Trunk config to ${filePath}`);
   } catch (error) {
-    console.error(`Error writing Trunk config (${filePath}):`, error);
+    console.error(`Error writing ${label} Trunk config (${filePath}):`, error);
     throw new Error(`Failed to write updated config to ${filePath}`);
   }
 }
@@ -89,12 +97,14 @@ async function main() {
   }
 
   console.log(`Using MISE config: ${MISE_CONFIG_PATH}`);
-  console.log(`Using TRUNK config: ${TRUNK_YAML_PATH}`);
+  // console.log(`Using TRUNK config template: ${TEMPLATE_TRUNK_YAML_PATH}`); // Less relevant now
+  // console.log(`Applying changes to ROOT TRUNK config: ${ROOT_TRUNK_YAML_PATH}`);
 
   try {
     // 1. Read and Parse configs
     const miseConfig = await parseMiseConfig(MISE_CONFIG_PATH);
-    const originalTrunkConfig = await parseTrunkConfig(TRUNK_YAML_PATH);
+    // Read the *template* config as the base for transformation
+    const originalTrunkConfig = await parseTrunkConfig(TEMPLATE_TRUNK_YAML_PATH);
 
     // 2. Define context (optional, for future use)
     const context: TransformContext = {
@@ -116,7 +126,9 @@ async function main() {
       console.log("Transformations resulted in changes.");
       if (args["dry-run"]) {
         console.log("--- DRY RUN ---");
-        console.log("Updated Trunk Config (changes not written):");
+        console.log(
+          "Updated Trunk Config (changes would be written to template and root .trunk/trunk.yaml):"
+        );
         // Simple diff or just print the new config
         // For a better diff, consider libraries or external tools
         console.log(
@@ -124,7 +136,9 @@ async function main() {
         );
         console.log("--- END DRY RUN ---");
       } else {
-        await writeTrunkConfig(TRUNK_YAML_PATH, updatedTrunkConfig);
+        // Write to both files
+        await writeTrunkConfig(TEMPLATE_TRUNK_YAML_PATH, updatedTrunkConfig, "Template");
+        await writeTrunkConfig(ROOT_TRUNK_YAML_PATH, updatedTrunkConfig, "Root");
       }
     } else {
       console.log("No changes detected after applying transformations.");
