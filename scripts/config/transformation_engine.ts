@@ -98,47 +98,98 @@ function applyCollectionRule<
   const targetArray = rule.ensureTargetArrayExists(outputConfig, context);
   const initialTargetArrayJson = JSON.stringify(targetArray);
 
-  const itemsToProcess = Object.entries(sourceCollection);
+  const itemsToProcess = rule.sourceCollectionAccessor(inputConfig, context);
+  if (itemsToProcess === undefined) {
+    console.warn(`Source collection for rule "${rule.description}" not found. Skipping rule.`);
+    return false;
+  }
+
+  // Determine if source is an array or object to iterate correctly
+  const isSourceArray = Array.isArray(itemsToProcess);
+  const sourceEntries = isSourceArray
+    ? (itemsToProcess as unknown[]).map((value, index) => [index, value]) // Use index as key for arrays
+    : Object.entries(itemsToProcess); // Use object keys for objects
+
   const processedTargetIndices = new Set<number>();
 
-  for (const [sourceKey, sourceValue] of itemsToProcess) {
-    if (rule.skipSourceItems?.includes(sourceKey)) {
-      console.log(`   Skipping source item: ${sourceKey}`);
+  for (const [sourceKey, sourceValue] of sourceEntries) {
+    const itemContext = {
+      ...context, // Inherit base context
+      currentItemKey: sourceKey,
+      currentItemValue: sourceValue,
+      isSourceArray: isSourceArray,
+    };
+
+    if (rule.skipSourceItems?.includes(String(sourceKey))) {
+      console.log(`   Skipping source item with key: ${sourceKey}`);
       continue;
     }
 
-    const targetName = rule.nameMapper ? rule.nameMapper(sourceKey, context) : sourceKey;
-    if (targetName === null) {
-      console.log(`   Skipping source item ${sourceKey} due to name mapper result.`);
-      continue;
+    // Determine the base name for outputFormatter
+    // For objects, usually the key (sourceKey) or mapped key
+    // For arrays, usually derived from the value (sourceValue)
+    let nameForFormatter: string;
+    let version: string | null;
+
+    if (isSourceArray) {
+      // For arrays, versionExtractor operates on the value
+      version = rule.versionExtractor(sourceValue, itemContext);
+      if (version === null) {
+        console.log(
+          `   Could not extract version for source item at index ${sourceKey}. Skipping.`
+        );
+        continue;
+      }
+      // For arrays, derive the name from the value itself (e.g., "eslint" from "eslint@8.0.0")
+      // We assume the versionExtractor primarily gets the version,
+      // and outputFormatter needs the base name. Let's extract the base name here.
+      // This might be better handled by having versionExtractor return {name, version}
+      if (typeof sourceValue === "string") {
+        nameForFormatter = sourceValue.split("@")[0];
+      } else {
+        // Cannot derive name from non-string array value easily
+        console.warn(
+          `   Cannot derive base name for non-string source array item at index ${sourceKey}. Using index.`
+        );
+        nameForFormatter = String(sourceKey); // Fallback to index
+      }
+      // nameMapper is typically NOT used for array sources, as there's no meaningful key to map.
+    } else {
+      // Source is an object
+      // For objects, versionExtractor operates on the value associated with the key
+      version = rule.versionExtractor(sourceValue, itemContext);
+      if (version === null) {
+        console.log(`   Could not extract version for source key ${sourceKey}. Skipping.`);
+        continue;
+      }
+      // For objects, the name usually comes from the key, potentially mapped
+      const mappedName = rule.nameMapper
+        ? rule.nameMapper(String(sourceKey), itemContext)
+        : String(sourceKey);
+      if (mappedName === null) {
+        console.log(`   Skipping source key ${sourceKey} due to name mapper result.`);
+        continue;
+      }
+      nameForFormatter = mappedName;
     }
 
-    const version = rule.versionExtractor(sourceValue, context);
-    if (version === null) {
-      console.log(`   Could not extract version for ${sourceKey}. Skipping.`);
-      continue;
-    }
+    // Now call outputFormatter with the derived name and extracted version
+    const outputItem = rule.outputFormatter(nameForFormatter, version, itemContext);
 
-    const outputItem = rule.outputFormatter(targetName, version, context);
-
-    // Find if item exists in target (match logic might need refinement)
-    // Simple match for now: check if string representation exists
-    // More robust: parse target items if they are complex
+    // Find if item exists in target
     const targetItemJson = JSON.stringify(outputItem);
     const existingTargetIndex = targetArray.findIndex((item, index) => {
-      // Basic check: if output is string, compare directly.
-      // If output is object, might need smarter comparison based on name/id.
+      // Matching logic might need context/rule specific details
+      // For simple string arrays:
       if (typeof outputItem === "string" && typeof item === "string") {
-        // Match name part? Or full string?
-        // Assuming full string match for simple case for now.
-        // Refine: Split target item string and compare name/version?
-        return item === outputItem;
+        // Option 1: Exact match
+        // return item === outputItem;
+        // Option 2: Match base name if version doesn't matter for finding?
+        const itemBaseName = item.split("@")[0];
+        return itemBaseName === nameForFormatter; // Match based on derived name
       }
-      // Add logic for complex object comparison if outputItem is not a string
-      // Example: if (typeof item === 'object' && item.name === targetName) ...
-
-      // Fallback basic JSON compare (might be too strict)
-      return JSON.stringify(item) === targetItemJson;
+      // Add logic for complex object comparison if needed
+      return JSON.stringify(item) === targetItemJson; // Fallback comparison
     });
 
     if (existingTargetIndex === -1) {
@@ -146,7 +197,7 @@ function applyCollectionRule<
       targetArray.push(outputItem);
       console.log(`   Added item: ${targetItemJson}`);
     } else {
-      // Item exists, check if update is needed (compare full item for now)
+      // Item exists (based on name match for strings), check if update needed (full value compare)
       processedTargetIndices.add(existingTargetIndex);
       if (JSON.stringify(targetArray[existingTargetIndex]) !== targetItemJson) {
         console.log(

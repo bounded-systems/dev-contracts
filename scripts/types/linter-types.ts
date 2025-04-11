@@ -3,68 +3,12 @@
 // - https://static.trunk.io/pub/trunk-yaml-schema.json
 // - https://mise.jdx.dev/schema/mise.json
 
+import { KNOWN_LINTER_IDS } from "../schema/linter_ids.ts";
+
 /**
  * Union type of all linter IDs supported by Trunk
  */
-export type LinterId =
-  | "ALL"
-  | "actionlint"
-  | "ansible-lint"
-  | "autopep8"
-  | "bandit"
-  | "black"
-  | "black-py"
-  | "brakeman"
-  | "buf-breaking"
-  | "buf-format"
-  | "buf-lint"
-  | "buildifier"
-  | "cfnlint"
-  | "clang-format"
-  | "clang-tidy"
-  | "clippy"
-  | "cue-fmt"
-  | "detekt"
-  | "detekt-explicit"
-  | "detekt-gradle"
-  | "dotenv-linter"
-  | "eslint"
-  | "flake8"
-  | "git-diff-check"
-  | "gitleaks"
-  | "gofmt"
-  | "goimports"
-  | "golangci-lint"
-  | "hadolint"
-  | "haml-lint"
-  | "include-what-you-use"
-  | "isort"
-  | "ktlint"
-  | "markdownlint"
-  | "mypy"
-  | "prettier"
-  | "pylint"
-  | "rubocop"
-  | "rubocop-fmt"
-  | "rufo"
-  | "rustfmt"
-  | "scalafmt"
-  | "semgrep"
-  | "shellcheck"
-  | "shfmt"
-  | "sql-formatter"
-  | "standardrb"
-  | "stylelint"
-  | "stylelint-fmt"
-  | "svgo"
-  | "taplo"
-  | "taplo-fmt"
-  | "terraform"
-  | "terraform-fmt"
-  | "terraform-validate"
-  | "tflint"
-  | "yamllint"
-  | "yapf";
+export type LinterId = typeof KNOWN_LINTER_IDS extends Set<infer T> ? T : never;
 
 /**
  * Type for a simple linter specification with just ID and version

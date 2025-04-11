@@ -17,6 +17,10 @@ import { validateMiseConfig, validateTrunkConfig } from "../validation/config_va
 import { transformTrunkConfig as applyTrunkTransform } from "../config/config_transformer.ts";
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
 import type { TransformContext } from "../types/transform_rules.ts";
+// Import Ajv for schema validation
+import Ajv from "https://esm.sh/ajv@8";
+import addFormats from "https://esm.sh/ajv-formats@2";
+import { KNOWN_LINTER_IDS } from "../schema/linter_ids.ts"; // Import the known IDs
 
 // Modified version of loadProjectEnv that doesn't exit on errors
 export async function loadEnv(rootDir?: string): Promise<Record<string, string>> {
@@ -46,12 +50,38 @@ export class SchemaValidator {
   private readonly miseConfigPath: string;
   private readonly trunkConfigPath: string;
   private readonly printedConfigPath: string;
+  private ajv: Ajv;
 
   constructor(rootDir: string, miseConfigPath: string, trunkConfigPath: string) {
     this.rootDir = rootDir;
     this.miseConfigPath = path.join(rootDir, miseConfigPath);
     this.trunkConfigPath = path.join(rootDir, trunkConfigPath);
     this.printedConfigPath = path.join(rootDir, "trunk_full_config.yaml");
+
+    // Initialize Ajv
+    this.ajv = new Ajv({
+      allErrors: true,
+      strict: false, // Disable strict mode to allow adding keywords/schemas more easily
+      // Consider setting true and using strict mode options if preferred
+    });
+    addFormats(this.ajv);
+
+    // Add a custom schema fragment for known linter IDs
+    try {
+      const knownLinterIdsArray = Array.from(KNOWN_LINTER_IDS);
+      this.ajv.addSchema(
+        {
+          $id: "#/defs/KnownLinterId", // Unique ID for this schema fragment
+          type: "string",
+          enum: knownLinterIdsArray,
+        },
+        "KnownLinterId"
+      ); // Key used to reference this schema
+      console.log("Custom schema for KnownLinterId added to Ajv.");
+    } catch (e) {
+      console.error("Failed to add custom KnownLinterId schema to Ajv:", e);
+      // Decide how to handle this error - maybe disable enum validation?
+    }
   }
 
   /**
@@ -90,25 +120,95 @@ export class SchemaValidator {
     }
   }
 
-  // Generic schema validation (Placeholder)
+  // Generic schema validation (Implemented)
   async validateAgainstSchema(
     config: any,
-    schemaUrl: string | undefined // Accept potentially undefined URL
-  ): Promise<{ valid: boolean; issues: string[] }> {
-    const issues: string[] = [];
+    schemaUrl: string | undefined
+  ): Promise<{ valid: boolean; issues: any[] }> {
+    // Return Ajv errors or custom messages
+    const issues: any[] = [];
     if (!schemaUrl) {
-      issues.push("Schema URL not provided or found in config.");
+      issues.push({ message: "Schema URL not provided or found in config." });
       return { valid: false, issues };
     }
+
+    let schema: any;
     try {
-      console.log(`Attempting schema validation against: ${schemaUrl}`);
-      // const schema = await this.fetchSchema(schemaUrl);
-      // TODO: Implement actual validation using schema (e.g., with Ajv)
-      console.warn(`Schema validation against ${schemaUrl} not implemented yet.`);
+      console.log(`Fetching schema from ${schemaUrl}...`);
+      schema = await this.fetchSchema(schemaUrl);
     } catch (error) {
-      issues.push(`Failed to fetch or validate against schema ${schemaUrl}: ${error}`);
+      console.error(`Failed to fetch schema from ${schemaUrl}: ${error}`);
+      issues.push({ message: `Failed to fetch schema ${schemaUrl}: ${error}` });
+      return { valid: false, issues };
     }
-    return { valid: issues.length === 0, issues };
+
+    // --- Modify Trunk schema in memory (if it's the Trunk schema) ---
+    // WARNING: This relies HEAVILY on the internal structure of trunk-yaml-schema.json
+    //          and might break if the upstream schema changes.
+    const TRUNK_SCHEMA_URL_PATTERN = "static.trunk.io/pub/trunk-yaml-schema.json"; // Check against this
+    if (schema && schemaUrl?.includes(TRUNK_SCHEMA_URL_PATTERN)) {
+      console.log("Attempting to modify fetched Trunk schema for linter ID enum validation...");
+      try {
+        // Hypothetical path to the simple linter ID definition
+        // *** ADJUST THIS PATH BASED ON ACTUAL SCHEMA INSPECTION ***
+        const pathToLinterIdDef = ["definitions", "linter_id_base"];
+
+        let current = schema;
+        let parent = null;
+        let finalSegment = null;
+
+        for (const segment of pathToLinterIdDef) {
+          if (!current || typeof current !== "object" || !(segment in current)) {
+            console.warn(`Path segment "${segment}" not found in schema. Cannot inject enum.`);
+            current = null;
+            break;
+          }
+          parent = current;
+          finalSegment = segment;
+          current = current[segment];
+        }
+
+        if (current && parent && finalSegment) {
+          // Found the target definition. Wrap it with allOf to add our enum ref.
+          const originalDef = JSON.parse(JSON.stringify(current)); // Deep copy original
+
+          // Replace the original definition with the allOf structure
+          parent[finalSegment] = {
+            allOf: [
+              originalDef, // Keep original constraints (like type: string)
+              { $ref: "#/defs/KnownLinterId" }, // Add reference to our custom enum schema
+            ],
+          };
+          console.log(`Successfully modified schema at path: ${pathToLinterIdDef.join(".")}`);
+        } else {
+          console.warn(
+            "Could not find the target definition path in the Trunk schema to inject linter enum."
+          );
+        }
+      } catch (e) {
+        console.error("Error modifying Trunk schema in memory:", e);
+        // Proceed without modification? Or fail validation?
+      }
+    }
+    // --- End Schema Modification ---
+
+    try {
+      console.log(`Validating config against schema: ${schemaUrl}`);
+      const validate = this.ajv.compile(schema);
+      const valid = validate(config);
+      if (!valid) {
+        console.error(`Schema validation failed for ${schemaUrl}:`, validate.errors);
+        // Add Ajv's detailed errors to our issues list
+        if (validate.errors) {
+          issues.push(...validate.errors);
+        }
+      }
+      return { valid: issues.length === 0, issues };
+    } catch (error) {
+      console.error(`Error during schema compilation or validation for ${schemaUrl}: ${error}`);
+      issues.push({ message: `Error during schema validation process for ${schemaUrl}: ${error}` });
+      return { valid: false, issues };
+    }
   }
 
   /**
@@ -182,17 +282,28 @@ export class SchemaValidator {
         console.warn("Trunk schema URL not found in mise.toml at settings.devtools.schemas.trunk");
       }
 
-      // Proceed only if initial loads were successful (or partially successful if desired)
+      // Proceed only if initial loads were successful
       if (miseConfig && trunkConfig) {
         // --- Schema Validation (Optional - uses URLs from config) ---
-        // console.log("Running schema validation...");
-        // const miseSchemaValidation = await this.validateAgainstSchema(miseConfig, miseSchemaUrl);
-        // const trunkSchemaValidation = await this.validateAgainstSchema(trunkConfig, trunkSchemaUrl);
-        // if (!miseSchemaValidation.valid || !trunkSchemaValidation.valid) {
-        //      console.error("Schema validation failed.");
-        //      // Log specific issues from miseSchemaValidation.issues and trunkSchemaValidation.issues
-        //      overallValid = false;
-        // }
+        console.log("Running schema validation...");
+        const miseSchemaValidation = await this.validateAgainstSchema(miseConfig, miseSchemaUrl);
+        const trunkSchemaValidation = await this.validateAgainstSchema(trunkConfig, trunkSchemaUrl);
+        if (!miseSchemaValidation.valid || !trunkSchemaValidation.valid) {
+          console.error("Schema validation failed.");
+          // Log specific issues - Ajv errors are objects, format them
+          const formatIssues = (url: string | undefined, issues: any[]) => {
+            console.log(`  Schema Issues for ${url || "Unknown Schema"}:`);
+            issues.forEach(issue =>
+              console.log(`    - Path: ${issue.instancePath || "N/A"}, Message: ${issue.message}`)
+            );
+          };
+          if (!miseSchemaValidation.valid) formatIssues(miseSchemaUrl, miseSchemaValidation.issues);
+          if (!trunkSchemaValidation.valid)
+            formatIssues(trunkSchemaUrl, trunkSchemaValidation.issues);
+          overallValid = false;
+        } else {
+          console.log("Schema validation passed.");
+        }
 
         // --- Custom Validation (using imported functions) ---
         console.log("Running custom mise validation...");

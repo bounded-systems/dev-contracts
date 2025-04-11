@@ -3,6 +3,7 @@ import { exists } from "jsr:@std/fs/exists";
 import * as yaml from "jsr:@std/yaml";
 import * as toml from "jsr:@std/toml";
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts"; // Assuming types are correctly defined here or adjust path
+import { KNOWN_LINTER_IDS } from "../schema/linter_ids.ts";
 
 // Helper function to load config files (extracted or adapted from SchemaValidator)
 async function loadConfigFile(filePath: string): Promise<any> {
@@ -34,10 +35,36 @@ export function validateMiseConfig(
   const issues: string[] = [];
 
   try {
-    // Validate that enabled_linters in mise.toml match versions in other places
+    // Validate enabled_linters format and ID
     if (miseConfig.settings?.devtools?.trunk?.enabled_linters) {
       const enabledLinters = miseConfig.settings.devtools.trunk.enabled_linters;
 
+      // Check each linter entry
+      for (const linterEntry of enabledLinters) {
+        if (typeof linterEntry !== "string" || !linterEntry.includes("@")) {
+          issues.push(
+            `Invalid linter format in mise.toml enabled_linters: "${linterEntry}". Expected format "linter-id@version".`
+          );
+          continue; // Skip further checks for this invalid entry
+        }
+
+        const [linterId, version] = linterEntry.split("@");
+
+        // Validate the Linter ID against the known set
+        if (!KNOWN_LINTER_IDS.has(linterId)) {
+          issues.push(
+            `Unknown linter ID "${linterId}" found in mise.toml enabled_linters: "${linterEntry}".`
+          );
+        }
+
+        // Optional: Add version validation (e.g., check if it's 'latest' or a valid semver)
+        if (version.toLowerCase() === "latest") {
+          // This check is also done during analysis, but could be flagged here too
+          // issues.push(`Linter "${linterId}" uses non-pinned version "latest" in mise.toml enabled_linters.`);
+        }
+      }
+
+      // Validate version consistency (existing checks)
       // Check standardrb version matches gem version
       const standardrbLinter = enabledLinters.find(l => l.startsWith("standardrb@"));
       const standardrbGem = miseConfig.settings?.devtools?.ruby?.gems?.find(
