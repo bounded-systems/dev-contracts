@@ -1,4 +1,0 @@
-{
-  "http://json-schema.org/draft-07/schema#": "./external/json-schema-draft-07.json",
-  "https://json-schema.org/draft/2020-12/schema": "./external/json-schema-2020-12.json"
-}

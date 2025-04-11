@@ -6,6 +6,7 @@
     "jsr:@eta-dev/eta@*": "3.5.0",
     "jsr:@std/assert@0.213": "0.213.1",
     "jsr:@std/assert@0.217": "0.217.0",
+    "jsr:@std/assert@0.225.1": "0.225.1",
     "jsr:@std/assert@0.226": "0.226.0",
     "jsr:@std/assert@~0.225.2": "0.225.3",
     "jsr:@std/bytes@0.213": "0.213.1",
@@ -14,11 +15,13 @@
     "jsr:@std/collections@0.224": "0.224.2",
     "jsr:@std/collections@^1.0.10": "1.0.10",
     "jsr:@std/fmt@0.213.0": "0.213.0",
+    "jsr:@std/fmt@0.225": "0.225.6",
     "jsr:@std/fs@*": "1.0.16",
     "jsr:@std/fs@0.213.0": "0.213.0",
     "jsr:@std/fs@0.229": "0.229.3",
     "jsr:@std/fs@0.229.1": "0.229.1",
     "jsr:@std/fs@0.229.3": "0.229.3",
+    "jsr:@std/internal@0.225": "0.225.1",
     "jsr:@std/io@0.213": "0.213.0",
     "jsr:@std/io@0.213.0": "0.213.0",
     "jsr:@std/jsonc@0.217.0": "0.217.0",
@@ -48,7 +51,7 @@
       "integrity": "f7fde219e9a4b331024bcc89bfc5c63b85348cad61ff26a963d893262d92b01c",
       "dependencies": [
         "jsr:@david/which",
-        "jsr:@std/fmt",
+        "jsr:@std/fmt@0.213.0",
         "jsr:@std/fs@0.213.0",
         "jsr:@std/io@0.213.0",
         "jsr:@std/path@0.213.0",
@@ -66,6 +69,13 @@
     },
     "@std/assert@0.217.0": {
       "integrity": "c98e279362ca6982d5285c3b89517b757c1e3477ee9f14eb2fdf80a45aaa9642"
+    },
+    "@std/assert@0.225.1": {
+      "integrity": "7342fa32a6d82c2c7c98ffea566baa9a892d04b22815b9fcf62cedeee5764f9c",
+      "dependencies": [
+        "jsr:@std/fmt@0.225",
+        "jsr:@std/internal"
+      ]
     },
     "@std/assert@0.225.3": {
       "integrity": "b3c2847aecf6955b50644cdb9cf072004ea3d1998dd7579fc0acb99dbb23bd4f"
@@ -91,6 +101,9 @@
     "@std/fmt@0.213.0": {
       "integrity": "4623054b309ee60e37cc3db2bc55385aa129bb899f0c50e912d79a763aee6b6a"
     },
+    "@std/fmt@0.225.6": {
+      "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
+    },
     "@std/fs@0.213.0": {
       "integrity": "607ed7611e61e33179e2a6a7c60c086d6fef3b79438c403c51a336d0ca4e162d",
       "dependencies": [
@@ -113,6 +126,9 @@
     },
     "@std/fs@1.0.16": {
       "integrity": "81878f62b6eeda0bf546197fc3daa5327c132fee1273f6113f940784a468b036"
+    },
+    "@std/internal@0.225.1": {
+      "integrity": "7d8a812be88c2792f15ab9cf46911e521ccca50435948a8f24df5cefda96bde9"
     },
     "@std/io@0.213.0": {
       "integrity": "e78db92000e718c4b37e3c5f8a854a7c8d66cf4f1ab81d2c5c834172e66191cb",
