@@ -1,0 +1,46 @@
+# Pushd DevTools Roadmap
+# This file contains development roadmap information
+
+# Roadmap information
+[roadmap]
+[[roadmap.immediate_priorities]]
+title = "Documentation-Code Consistency"
+items = [
+  "Implement missing scripts referenced in documentation (`setup.ts`, `link-configs.ts`)",
+  "Create validation scripts to ensure README accuracy"
+]
+
+[[roadmap.immediate_priorities]]
+title = "Contract Enforcement"
+items = [
+  "Add runtime validations to ensure contracts are followed",
+  "Implement automated tests for each contract boundary"
+]
+
+[[roadmap.immediate_priorities]]
+title = "Documentation Generation"
+items = [
+  "Add JSDoc/TSDoc comments to all script files",
+  "Create a documentation generator that pulls from mise.toml, scripts, and templates"
+]
+
+[[roadmap.future_enhancements]]
+title = "Configuration Validation Schema"
+items = [
+  "Formal schema definitions for all configuration files",
+  "Runtime validation of configurations against schemas"
+]
+
+[[roadmap.future_enhancements]]
+title = "Integration Testing"
+items = [
+  "Automated tests that verify end-to-end functionality",
+  "CI/CD pipeline to validate changes against contracts"
+]
+
+[[roadmap.future_enhancements]]
+title = "Self-Healing Configuration"
+items = [
+  "Automatic repair of broken symlinks",
+  "Detection and resolution of configuration conflicts"
+] 

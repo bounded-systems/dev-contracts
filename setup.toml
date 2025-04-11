@@ -1,0 +1,68 @@
+# Pushd DevTools Setup
+# This file contains setup instructions and IDE integration information
+
+# Setup information
+[setup]
+[setup.prerequisites]
+devtools = [
+  "Git for cloning this repository",
+  "mise version manager (formerly rtx)"
+]
+target_projects = [
+  "Git",
+  "Unix-like shell environment",
+  "Editor extensions for full functionality"
+]
+
+[[setup.installation]]
+step = "Clone this Repository"
+code = "git clone <repository-url> ~/dev/pushd-devtools"
+
+[[setup.installation]]
+step = "Install mise"
+detail = "Install mise on your system (from https://mise.jdx.dev/)"
+
+[[setup.installation]]
+step = "Install required tools"
+code = "mise install"
+
+[[setup.installation]]
+step = "Set Environment Variable"
+code = """
+export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
+"""
+detail = "Add to your shell configuration file (e.g., `~/.zshrc`)"
+
+[[setup.installation]]
+step = "Linking Configurations"
+detail = "Create symlinks from the templates to your target project"
+code = """
+# From your target project directory
+ln -s "$PUSHD_DEVTOOLS_DIR/templates/vscode" .vscode
+ln -s "$PUSHD_DEVTOOLS_DIR/templates/trunk" .trunk
+"""
+gitignore = """
+.vscode/
+.trunk/
+"""
+
+# IDE integration
+[ide_integration]
+vscode = [
+  "Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension",
+  "The extension will automatically configure other tools to use mise-managed versions"
+]
+jetbrains = [
+  "Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin",
+  "Add mise shims to your PATH"
+]
+
+[ide_integration.vim_neovim]
+code = """
+" Vim
+let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
+"""
+code_alt = """
+-- Neovim
+vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
+""" 
