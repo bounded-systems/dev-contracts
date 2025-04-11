@@ -7,7 +7,7 @@ TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* t
 PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
 
 # DevTools Environment (set by mise)
-PUSHD_DEVTOOLS_DIR = "{{mise.dir}}"
+PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
 [tools]
 # Core Runtime Tool versions
