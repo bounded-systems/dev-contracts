@@ -46,13 +46,15 @@ trunk = "1.22.12"
 prettier = "3.5.3"
 eslint = "9.24.0"
 standardrb = "1.49.0"
-yamllint = "1.37.0"
+markdownlint = "0.44.0"
+git-diff-check = "enabled"
+shellcheck = "0.10.0"
 
 # Add Trunk actions as tools
 # Unlike linters which have versions, actions are just enabled/disabled
 trunk-upgrade-available = "enabled"
-trunk-fmt-pre-commit = "enabled"
 trunk-check-pre-push = "enabled"
+trunk-check-pre-commit = "enabled"
 
 [tasks]
 

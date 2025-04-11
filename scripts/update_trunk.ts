@@ -225,6 +225,9 @@ async function main() {
 
   // Check tools for linters
   if (miseConfig.tools) {
+    // First, collect all enabled linters from the tools
+    const enabledLinters = [];
+
     for (const [toolName, toolVersion] of Object.entries(miseConfig.tools)) {
       // Skip non-linter tools
       if (nonLinterTools.includes(toolName)) {
@@ -233,14 +236,18 @@ async function main() {
 
       // Check if the tool is an approved linter
       if (approvedLinters.includes(toolName)) {
-        const linterString = `${toolName}@${toolVersion}`;
+        const linterVersion = toolVersion === "enabled" ? "" : toolVersion;
+        const linterString = linterVersion ? `${toolName}@${linterVersion}` : toolName;
+        enabledLinters.push({ name: toolName, version: String(linterVersion), linterString });
 
         // Find if linter already exists
         const existingIndex = trunkConfig.lint.enabled.findIndex(lint => {
           if (typeof lint === "string") {
-            return lint.startsWith(`${toolName}@`);
+            return lint === linterString || lint.startsWith(`${toolName}@`);
           } else if (typeof lint === "object" && lint.name) {
-            return String(lint.name).startsWith(`${toolName}@`);
+            return (
+              String(lint.name) === linterString || String(lint.name).startsWith(`${toolName}@`)
+            );
           }
           return false;
         });
@@ -265,6 +272,34 @@ async function main() {
         }
       } else {
         console.log(`Tool "${toolName}" is not in the approved linter list, skipping.`);
+      }
+    }
+
+    // Remove linters that are not in mise.toml tools
+    for (let i = trunkConfig.lint.enabled.length - 1; i >= 0; i--) {
+      const lint = trunkConfig.lint.enabled[i];
+      let lintName;
+
+      if (typeof lint === "string") {
+        lintName = lint.split("@")[0];
+      } else if (typeof lint === "object" && lint.name) {
+        lintName = String(lint.name).split("@")[0];
+      } else {
+        continue; // Skip if we can't determine the name
+      }
+
+      // Check if this linter is in our enabled linters
+      const found = enabledLinters.some(l => l.name === lintName);
+
+      // Skip built-in linters that aren't managed by mise tools
+      if (!found && !approvedLinters.includes(lintName)) {
+        continue;
+      }
+
+      if (!found) {
+        console.log(`Removing linter: ${lint} as it's not enabled in mise.toml`);
+        trunkConfig.lint.enabled.splice(i, 1);
+        changed = true;
       }
     }
   }
