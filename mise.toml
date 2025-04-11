@@ -24,6 +24,21 @@ node = "20.14.0"
 [tasks.install]
 run = "mise install"
 
+# Setup tasks
+[tasks.setup-symlinks]
+run = "deno run -A scripts/setup.ts symlinks"
+depends = ["install"]
+description = "Create symlinks from pushd-devtools templates to target project"
+
+[tasks.setup-env]
+run = "deno run -A scripts/setup.ts env"
+depends = ["install"]
+description = "Configure PUSHD_DEVTOOLS_DIR environment variable in shell configuration"
+
+[tasks.setup-all]
+depends = ["install", "setup-env", "setup-symlinks"]
+description = "Run all setup steps (install tools, configure environment, create symlinks)"
+
 # Trunk tasks
 [tasks.trunk-check]
 run = "trunk check --ci"
@@ -85,6 +100,11 @@ description = "Check if all contract files exist in the project root, including 
 run = "deno test"
 depends = ["install"]
 description = "Run Deno tests"
+
+# Clone task (no dependencies as it's meant to be run before mise is even installed)
+[tasks.clone]
+run = "deno run -A scripts/clone.ts $MISE_ARGS"
+description = "Clone the pushd-devtools repository (pass repo URL and destination path as arguments)"
 
 # Enable lockfile for consistent versioning across environments
 [settings]
