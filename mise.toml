@@ -77,15 +77,15 @@ depends = ["install"]
 description = "Generate TypeScript types from schemas/contracts-schema.json and format using Trunk"
 
 # Validate README Schema Task
-[tasks.validate-schema]
-run = "deno run -A scripts/validate-readme-schema.ts"
-depends = ["generate-contract-types"]
-description = "Validate readme.yml against the JSON schema"
+# [tasks.validate-schema] # REMOVED - Integrated into contracts-validate-structure
+# run = "deno run -A scripts/validate-readme-schema.ts"
+# depends = ["generate-contract-types"]
+# description = "Validate readme.yml against the JSON schema"
 
 # Update README Generation Task to depend on schema generation and run formatter
 [tasks.generate-readme]
 run = "deno run -A scripts/generate-readme.ts && trunk fmt"
-depends = ["install", "generate-contract-types", "validate-schema"]
+depends = ["install", "generate-contract-types"] # REMOVED validate-schema dependency
 description = "Generate README.md from readme.yml and format using Trunk"
 
 # Check Contract Files Task
@@ -147,3 +147,8 @@ depends = ["contracts-prune-structure", "contracts-generate-structure", "contrac
 run = "deno run -A --unstable-fs scripts/delete-empty-dirs.ts"
 description = "Delete empty directories defined in contracts.toml [structure] if allow_empty_directory=false"
 depends = ["install"] # Depends on deno
+
+[tasks.contracts-validate-schemas]
+run = "deno run --allow-read --allow-net scripts/validate-schemas.ts"
+description = "Validates files against schemas defined in contracts.toml"
+sources = ["contracts.toml", "schemas/**/*.json", "scripts/validate-schemas.ts"]

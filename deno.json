@@ -1,6 +1,10 @@
 {
   "imports": {
-    "std/": "https://deno.land/std/",
+    "std/": "https://deno.land/std@0.224.0/",
+    "ajv": "https://esm.sh/ajv@8.17.1",
+    "ajv-formats": "https://esm.sh/ajv-formats@3.0.1",
+    "ajv-errors": "https://esm.sh/ajv-errors@3.0.0",
+    "jsonc-parser": "https://esm.sh/jsonc-parser@3.2.1",
     "zod": "https://deno.land/x/zod/mod.ts"
   },
   "tasks": {

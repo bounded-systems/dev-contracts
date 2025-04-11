@@ -4,6 +4,8 @@ import * as fs from "jsr:@std/fs@^0.229.0";
 import * as toml from "jsr:@std/toml@^0.224.0";
 import { parseArgs } from "jsr:@std/cli@^0.224.0/parse-args";
 import Ajv from "npm:ajv@^8.16.0";
+import { parse as parseYaml } from "https://deno.land/std@0.210.0/yaml/mod.ts"; // Add YAML parser
+import addFormats from "https://esm.sh/ajv-formats@2.1.1"; // Add Ajv formats
 // TODO: Use Deno standard library spinner once available
 // import { Spinner, wait } from "jsr:@wait/wait@^0.1.19"; // Import wait for spinner
 
@@ -32,7 +34,61 @@ interface Contracts {
 
 const ROOT_DIR = path.dirname(path.dirname(path.fromFileUrl(import.meta.url)));
 const CONTRACTS_FILE = path.join(ROOT_DIR, "contracts.toml");
-const SCHEMA_FILE = path.join(ROOT_DIR, "schemas", "contracts-schema.json");
+const CONTRACTS_SCHEMA_FILE = path.join(
+  ROOT_DIR,
+  "schemas",
+  "contracts-schema.json",
+);
+const README_YAML_FILE = path.join(ROOT_DIR, "readme.yml");
+const README_SCHEMA_FILE = path.join(ROOT_DIR, "schemas", "readme-schema.json");
+
+/**
+ * Validates a YAML file against a JSON schema.
+ */
+async function validateYamlFile(
+  yamlPath: string,
+  schemaPath: string,
+  ajv: Ajv,
+): Promise<{ valid: boolean; errors: string[] }> {
+  const results = { valid: false, errors: [] as string[] };
+  console.log(
+    `Validating ${path.basename(yamlPath)} against schema ${
+      path.relative(ROOT_DIR, schemaPath)
+    }...`,
+  );
+  try {
+    const schemaContent = await Deno.readTextFile(schemaPath);
+    const schema = JSON.parse(schemaContent);
+    const yamlContent = await Deno.readTextFile(yamlPath);
+    const yamlData = parseYaml(yamlContent) as Record<string, unknown>;
+
+    const validate = ajv.compile(schema);
+    const isValid = validate(yamlData);
+
+    if (isValid) {
+      console.log(
+        `✅ Schema validation successful for ${path.basename(yamlPath)}.`,
+      );
+      results.valid = true;
+    } else {
+      console.error(
+        `❌ Schema validation failed for ${path.basename(yamlPath)}!`,
+      );
+      (validate.errors || []).forEach((error) => {
+        const message = `- ${error.instancePath || "/"}: ${error.message}`;
+        console.error(message);
+        results.errors.push(message);
+      });
+    }
+  } catch (error) {
+    const message = `Error during YAML validation (${
+      path.basename(yamlPath)
+    }): ${error.message}`;
+    console.error(message);
+    results.errors.push(message);
+  }
+  return results;
+}
 
 async function main() {
   const flags = parseArgs(Deno.args, {
@@ -52,11 +108,15 @@ async function main() {
   }
 
   // --- Add Schema Validation Step ---
+  const ajv = new Ajv({ allErrors: true }); // Use allErrors for detailed YAML errors
+  addFormats(ajv); // Add formats support needed for some schemas
+
+  // 1. Validate contracts.toml schema
   console.log(
     `Validating ${path.basename(CONTRACTS_FILE)} against schema ${
       path.relative(
         ROOT_DIR,
-        SCHEMA_FILE,
+        CONTRACTS_SCHEMA_FILE,
       )
     }...`,
   );
@@ -65,7 +125,7 @@ async function main() {
   let contractsData: Contracts;
 
   try {
-    schemaContent = await Deno.readTextFile(SCHEMA_FILE);
+    schemaContent = await Deno.readTextFile(CONTRACTS_SCHEMA_FILE);
     contractsTomlContent = await Deno.readTextFile(CONTRACTS_FILE);
     contractsData = toml.parse(contractsTomlContent) as Contracts;
   } catch (e) {
@@ -77,24 +137,42 @@ async function main() {
   try {
     schemaJson = JSON.parse(schemaContent);
   } catch (e) {
-    console.error(`Error parsing schema file ${SCHEMA_FILE}: ${e.message}`);
+    console.error(
+      `Error parsing schema file ${CONTRACTS_SCHEMA_FILE}: ${e.message}`,
+    );
     Deno.exit(1);
   }
 
-  const ajv = new Ajv();
-  const validate = ajv.compile(schemaJson);
-  const valid = validate(contractsData);
+  const validateContracts = ajv.compile(schemaJson);
+  const contractsValid = validateContracts(contractsData);
 
-  if (!valid) {
+  if (!contractsValid) {
     console.error(
-      `Schema validation failed for ${path.basename(CONTRACTS_FILE)}:`,
+      `❌ Schema validation failed for ${path.basename(CONTRACTS_FILE)}:`,
     );
-    console.error(validate.errors);
-    // Don't proceed if schema is invalid, even in add-untracked mode
-    console.error("Aborting due to schema validation errors.");
+    console.error(validateContracts.errors);
+    // Don't proceed if contracts schema is invalid
+    console.error("Aborting due to contracts.toml schema validation errors.");
     Deno.exit(1);
   } else {
-    console.log("Schema validation successful.");
+    console.log(
+      `✅ Schema validation successful for ${path.basename(CONTRACTS_FILE)}.`,
+    );
+  }
+
+  // 2. Validate readme.yml schema
+  const readmeValidationResult = await validateYamlFile(
+    README_YAML_FILE,
+    README_SCHEMA_FILE,
+    ajv,
+  );
+  if (!readmeValidationResult.valid) {
+    // Do not exit immediately, collect error and let structure validation continue/fail later
+    validationFailed = true;
+    errors.push(...readmeValidationResult.errors);
+    console.error(
+      "Proceeding with structure validation despite readme.yml schema errors...",
+    );
   }
   // --- End Schema Validation Step ---
 
