@@ -1,13 +1,11 @@
-<!-- markdownlint-disable MD013 -->
-
 # Pushd DevTools
+
+_Last updated: 2025-04-11 by pushd-devtools_
 
 ## Overview
 
-This repository provides a centralized and sandboxed environment for development
-tools, configurations, and their associated runtimes. It enables the use of
-modern linters, formatters, and language servers in projects (e.g., `pushd-web`)
-that may be constrained by older, incompatible runtime versions.
+A centralized and sandboxed environment for development tools, configurations,
+and their associated runtimes
 
 ## Problem Solved
 
@@ -18,8 +16,8 @@ risky, and time-consuming.
 
 ## Solution: Sandboxed & Linked Tooling
 
-`pushd-devtools` acts as a central, up-to-date source for development tools and
-their necessary environments through:
+Sandboxed & Linked Tooling that acts as a central, up-to-date source for
+development tools and their necessary environments through:
 
 1. **Sandboxing:** Tools and runtimes are managed within this repository,
    separate from target projects
@@ -28,15 +26,12 @@ their necessary environments through:
 3. **Git Exclusion:** Target projects exclude these symlinked directories in
    their `.gitignore` files
 
-This approach allows developers to benefit from modern tooling without altering
-the core runtime environment of the projects they are working on.
-
 ## Prerequisites
 
 **For `pushd-devtools` setup:**
 
 - Git for cloning this repository
-- [mise](https://mise.jdx.dev/) version manager (formerly rtx)
+- mise version manager (formerly rtx)
 
 **For Target Projects:**
 
@@ -52,42 +47,27 @@ the core runtime environment of the projects they are working on.
 git clone <repository-url> ~/dev/pushd-devtools
 ```
 
-### 2. Current Setup Process
+### 2. Install mise
 
-**Note: The automated setup process is under development. The following steps
-describe the intended workflow:**
+Install mise on your system (from https://mise.jdx.dev/)
 
-1. Install mise on your system (from https://mise.jdx.dev/)
-2. Clone this repository
-3. Navigate to the repository root
-4. Run `mise install` to install the required tool versions
+### 3. Install required tools
 
-**Implementation Status:** The `setup.ts` script mentioned in previous
-documentation is not yet implemented. Users should manually run `mise install`
-for now.
+```bash
+mise install
+```
 
-### 3. Set Environment Variable
+### 4. Set Environment Variable
 
-Add to your shell configuration file (e.g., `~/.zshrc`):
+Add to your shell configuration file (e.g., `~/.zshrc`)
 
 ```bash
 export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
 ```
 
-Source your profile or restart your shell and verify with:
+### 5. Linking Configurations
 
-```bash
-echo $PUSHD_DEVTOOLS_DIR
-```
-
-### 4. Linking Configurations (Under Development)
-
-**Note: The automated linking process is under development. The following
-describes the intended workflow:**
-
-The `link-configs.ts` script will create symlinks from the templates to your
-target project. Until this script is implemented, you can manually create the
-necessary symlinks:
+Create symlinks from the templates to your target project
 
 ```bash
 # From your target project directory
@@ -104,33 +84,34 @@ Add to your project's `.gitignore`:
 
 ## Tool Configuration
 
-### mise.toml
+### mise_toml
 
 The project uses mise for managing tool versions and defining tasks. Key
 sections include:
 
 ```toml
 [env]
-# Environment variables configuration
+# Project configuration
 NODE_ENV = "development"
-TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
+
+# Trunk configuration
+TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* trunk.yaml used for transformations
+PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
+
+# DevTools Environment (set by mise)
 PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
 [tools]
-# Managed runtime versions
+# Core Runtime Tool versions
 ruby = "3.3.3"
 node = "20.14.0"
 
 [tasks]
-# Predefined tasks for common operations
-install = "mise install"
-trunk-check = "trunk check --ci"
-trunk-fmt = "trunk fmt"
-trunk-upgrade = "trunk upgrade"
+# Default install task (ensures tools are install
 # ... additional tasks
 ```
 
-### Common Tasks
+## Common Tasks
 
 The repository provides several predefined tasks that can be run using
 `mise run`:
@@ -141,6 +122,7 @@ The repository provides several predefined tasks that can be run using
 - `mise run trunk-upgrade` - Upgrade Trunk plugins
 - `mise run sync-trunk-versions` - Sync linter versions from Trunk to mise.toml
 - `mise run transform-apply` - Apply generated transformations
+- `mise run generate-readme` - Generate README.md from readme-schema.yaml
 
 ## IDE Integration
 
@@ -151,12 +133,6 @@ For the best experience:
 - Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension
 - The extension will automatically configure other tools to use mise-managed
   versions
-
-Alternatively, add mise shims to your PATH:
-
-```bash
-eval "$(mise activate zsh --shims)"
-```
 
 ### JetBrains IDEs
 
@@ -184,15 +160,16 @@ vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
 ```
 pushd-devtools/
 ├── mise.toml            # Tool versions, environment variables, and tasks
-├── scripts/             # Helper scripts for setup and configuration
-│   ├── sync-trunk-versions.ts # Syncs versions from Trunk to mise
-│   └── transform-apply.ts     # Applies configuration transformations
-├── templates/           # Configuration templates for symlinks
-│   ├── trunk/           # Trunk.io configuration
-│   └── vscode/          # VS Code settings and extensions
-└── src/                 # Source code for transformations and utilities
-    └── transformation/  # Transformation engine
-        └── engine/      # Core transformation logic
+├── scripts/            # Helper scripts for setup and configuration
+    ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
+    ├── transform-apply.ts            # Applies configuration transformations
+    ├── generate-readme.ts            # Generates README.md from schema
+├── templates/            # Configuration templates for symlinks
+    ├── trunk/            # Trunk.io configuration
+    ├── vscode/            # VS Code settings and extensions
+├── src/            # Source code for transformations and utilities
+    ├── transformation/            # Transformation engine
+        ├── engine/            # Core transformation logic
 ```
 
 **Note:** The `setup.ts` and `link-configs.ts` scripts mentioned in the
@@ -239,7 +216,7 @@ expectations, and guarantees between the various parts of the system.
 
 ### Component Contracts
 
-#### 1. pushd-devtools Repository Contract
+#### pushd-devtools Repository Contract
 
 **Provides:**
 
@@ -260,7 +237,7 @@ expectations, and guarantees between the various parts of the system.
 - Templates will be kept in sync with tool versions
 - Configuration transformations will be bidirectional and consistent
 
-#### 2. Target Project Contract
+#### Target Project Contract
 
 **Provides:**
 
@@ -277,7 +254,7 @@ expectations, and guarantees between the various parts of the system.
 - Will not modify the symlinked configurations directly
 - Will not commit the symlinked configurations to version control
 
-#### 3. mise Tool Manager Contract
+#### mise Tool Manager Contract
 
 **Provides:**
 
@@ -328,16 +305,14 @@ The contracts defined above should be validated and enforced through:
      `link-configs.ts`)
    - Create validation scripts to ensure README accuracy
 
-2. **Contract Enforcement**
+1. **Contract Enforcement**
    - Add runtime validations to ensure contracts are followed
    - Implement automated tests for each contract boundary
 
-3. **Documentation Generation**
+1. **Documentation Generation**
    - Add JSDoc/TSDoc comments to all script files
-   - Create a documentation generator that pulls from:
-     - mise.toml contents
-     - Script documentation
-     - Template specifications
+   - Create a documentation generator that pulls from mise.toml, scripts, and
+     templates
 
 ### Future Enhancements
 
@@ -345,10 +320,10 @@ The contracts defined above should be validated and enforced through:
    - Formal schema definitions for all configuration files
    - Runtime validation of configurations against schemas
 
-2. **Integration Testing**
+1. **Integration Testing**
    - Automated tests that verify end-to-end functionality
    - CI/CD pipeline to validate changes against contracts
 
-3. **Self-Healing Configuration**
+1. **Self-Healing Configuration**
    - Automatic repair of broken symlinks
    - Detection and resolution of configuration conflicts

@@ -51,6 +51,12 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
+# README Generation Task
+[tasks.generate-readme]
+run = "deno run -A scripts/generate-readme.ts"
+depends = ["install"]
+description = "Generate README.md from readme-schema.yaml"
+
 # Deno tasks
 [tasks.deno-test]
 run = "deno test"
