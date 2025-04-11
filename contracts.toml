@@ -188,21 +188,6 @@ description = "Global settings inherited by all subfolders"
 
 [structure.project.ignore_patterns]
 
-[structure.node_modules]
-type = "artifact"
-purpose = "Node.js dependencies"
-ignores = ["git","eslint","prettier","deno"]
-
-[structure.dist]
-type = "artifact"
-purpose = "Build distribution files"
-ignores = ["git","eslint","prettier","deno"]
-
-[structure.build]
-type = "artifact"
-purpose = "Build output directory"
-ignores = ["git","eslint","prettier","deno"]
-
 [structure.coverage]
 type = "artifact"
 purpose = "Test coverage reports"

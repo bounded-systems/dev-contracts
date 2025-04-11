@@ -14,6 +14,8 @@ const flags = parseFlags(Deno.args, {
 
 // Using force flag will include non-existent paths in gitignore without removing from contracts
 const forceIncludeNonExistentPaths = flags.force;
+// Using prune flag will completely remove non-existent paths from contracts.toml
+const pruneNonExistentPaths = flags.prune;
 
 // Get the root directory of the project
 const rootDir = dirname(dirname(new URL(import.meta.url).pathname));
@@ -185,13 +187,61 @@ async function generateGitignore() {
       `Removing ${pathsToRemoveGitIgnore.length} non-existent paths from contracts.toml...`,
     );
 
-    // Modify the contracts object to remove "git" from ignores arrays
+    // Modify the contracts object
     for (const key of pathsToRemoveGitIgnore) {
-      if (structure[key]?.ignores) {
-        structure[key].ignores = structure[key].ignores.filter((
+      if (pruneNonExistentPaths) {
+        // If prune flag is used, completely remove the entry
+        delete structure[key];
+        console.log(
+          `Completely removed non-existent path ${key} from contracts.toml`,
+        );
+      } else if (structure[key]?.ignores) {
+        // Otherwise, just remove "git" from ignores array
+        const filteredIgnores = structure[key].ignores.filter((
           ignore: string,
         ) => ignore !== "git");
-        console.log(`Removed "git" ignore from ${key}`);
+
+        if (filteredIgnores.length === 0) {
+          // If ignores array becomes empty, remove the property entirely
+          delete structure[key].ignores;
+          console.log(`Removed empty ignores property from ${key}`);
+        } else {
+          // Otherwise, update with the filtered array
+          structure[key].ignores = filteredIgnores;
+          console.log(`Removed "git" ignore from ${key}`);
+        }
+      }
+    }
+
+    // Process ignore_patterns similarly (only if not pruning)
+    if (!pruneNonExistentPaths) {
+      for (const [key, value] of Object.entries(structure)) {
+        if (typeof value === "object" && value.ignore_patterns) {
+          for (
+            const [pattern, ignores] of Object.entries(value.ignore_patterns)
+          ) {
+            if (Array.isArray(ignores) && ignores.includes("git")) {
+              const filteredIgnores = (ignores as string[]).filter((i) =>
+                i !== "git"
+              );
+              if (filteredIgnores.length === 0) {
+                // If pattern's ignores becomes empty, remove the pattern
+                delete value.ignore_patterns[pattern];
+                console.log(
+                  `Removed empty pattern ${pattern} from ${key}.ignore_patterns`,
+                );
+              } else {
+                value.ignore_patterns[pattern] = filteredIgnores;
+              }
+            }
+          }
+
+          // If ignore_patterns object is now empty, remove it entirely
+          if (Object.keys(value.ignore_patterns).length === 0) {
+            delete value.ignore_patterns;
+            console.log(`Removed empty ignore_patterns from ${key}`);
+          }
+        }
       }
     }
 
@@ -230,6 +280,7 @@ Usage: deno run --allow-read --allow-write scripts/generate-gitignore.ts [option
 
 Options:
   -f, --force    Include non-existent paths in .gitignore without removing from contracts.toml
+  -p, --prune    Completely remove non-existent paths from contracts.toml instead of just removing git ignores
   -h, --help     Show this help message
 `);
   Deno.exit(0);
