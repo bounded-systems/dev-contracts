@@ -102,9 +102,22 @@ description = "Run Deno tests"
 
 # New Task: Validate Test Coverage
 [tasks.validate-coverage]
-run = "deno run --allow-read src/contracts/quality/coverage/validate.ts"
+# run = "deno run --allow-read src/contracts/quality/coverage/validate.ts"
+run = "deno run --allow-read src/contracts/quality/coverage/runner.ts" # Updated to use runner
 depends = ["install"]
 description = "Check that all .ts files have a corresponding .test.ts file"
+
+# New Task: Generate Test Stubs
+[tasks.coverage-codegen]
+# run = "deno run --allow-read --allow-write src/contracts/quality/coverage/codegen.ts"
+run = "deno run --allow-read=.,templates --allow-write src/contracts/quality/coverage/codegen.ts" # Added read access to templates
+depends = ["install"]
+description = "Generate placeholder .test.ts files for missing tests"
+
+# New Task: Ensure Coverage (Codegen + Validate)
+[tasks.coverage-ensure]
+depends = ["coverage-codegen", "validate-coverage"]
+description = "Generate missing test stubs and then validate test coverage"
 
 # Clone task (no dependencies as it's meant to be run before mise is even installed)
 [tasks.clone]

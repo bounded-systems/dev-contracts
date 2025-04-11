@@ -7,10 +7,6 @@
     "jsonc-parser": "https://esm.sh/jsonc-parser@3.2.1",
     "zod": "https://deno.land/x/zod/mod.ts"
   },
-  "tasks": {
-    "test": "deno test --allow-all scripts/**/*.test.ts",
-    "validate-coverage": "deno run --allow-read src/contracts/quality/coverage/validate.ts"
-  },
   "compilerOptions": {
     "lib": ["deno.window"]
   }
