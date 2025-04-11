@@ -12,7 +12,7 @@ import { stringify as stringifyYaml } from "https://deno.land/std@0.219.0/yaml/m
 
 // Paths
 const MISE_PATH = "./mise.toml";
-const SCHEMA_PATH = "./readme-schema.yaml";
+const SCHEMA_PATH = "./readme.yml";
 
 interface MiseToml {
   _: {
@@ -150,30 +150,44 @@ interface ReadmeSchema {
 function convertStructure(
   miseStructure: MiseToml["_"]["contracts"]["structure"],
 ): SchemaStructureItem[] {
-  const result: SchemaStructureItem[] = [];
+  const result: SchemaStructureItem[] = {};
+  const pathMap: Record<string, SchemaStructureItem> = {};
 
-  // Process each top-level item
+  // First pass: process all entries and create a flattened map
   for (const [path, details] of Object.entries(miseStructure)) {
     if (details.description) {
+      const cleanPath = path.replace(/^"/, "").replace(/"$/, "");
       const item: SchemaStructureItem = {
-        path: path.replace(/^"/, "").replace(/"$/, ""), // Remove quotes from path if present
+        path: cleanPath.split(".").pop() || cleanPath,
         description: details.description,
       };
+      pathMap[cleanPath] = item;
 
-      // Add children if they exist
-      if (details.children && details.children.length > 0) {
-        item.children = details.children.map((child) => ({
-          path: child.path,
-          description: child.description,
-          ...(child.children && { children: child.children }),
-        }));
+      // Top-level entries go directly into result
+      if (!cleanPath.includes(".")) {
+        result[cleanPath] = item;
       }
-
-      result.push(item);
     }
   }
 
-  return result;
+  // Second pass: build the hierarchy
+  for (const [path, item] of Object.entries(pathMap)) {
+    if (path.includes(".")) {
+      const parts = path.split(".");
+      const parentPath = parts.slice(0, -1).join(".");
+      const parent = pathMap[parentPath];
+
+      if (parent) {
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(item);
+      }
+    }
+  }
+
+  // Convert the result object to array format
+  return Object.values(result);
 }
 
 /**
@@ -206,7 +220,7 @@ async function generateSchema() {
 
     // Create the schema object
     const schema: ReadmeSchema = {
-      $schema: "pushd:readme/v1",
+      $schema: "file:schemas/readme-schema.json",
       contracts: miseToml._.contracts.definitions.items,
       project: miseToml._.project,
       setup: miseToml._.setup,

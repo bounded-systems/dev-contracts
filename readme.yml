@@ -1,5 +1,5 @@
 # README schema for pushd-devtools
-$schema: 'pushd:readme/v1'
+$schema: 'file:schemas/readme-schema.json'
 contracts:
   - id: repo-contract
     title: pushd-devtools Repository Contract
@@ -122,10 +122,13 @@ tasks:
     description: 'Apply generated transformations (e.g., mise.toml -> trunk.yaml)'
   - id: generate-schema
     command: mise run generate-schema
-    description: Generate readme-schema.yaml from mise.toml
+    description: Generate readme.yml from mise.toml
+  - id: validate-schema
+    command: mise run validate-schema
+    description: Validate readme.yml against the JSON schema
   - id: generate-readme
     command: mise run generate-readme
-    description: Generate README.md from readme-schema.yaml
+    description: Generate README.md from readme.yml
   - id: check-contracts
     command: mise run check-contracts
     description: Check if all contract files exist in the project root
@@ -153,31 +156,22 @@ ide_integration:
       -- Neovim
       vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
 structure:
-  - path: mise.toml
-    description: 'Tool versions, environment variables, and tasks'
   - path: scripts
     description: Helper scripts for setup and configuration
-    children:
-      - path: sync-trunk-versions.ts
-        description: Syncs versions from Trunk to mise
-      - path: transform-apply.ts
-        description: Applies configuration transformations
-      - path: generate-readme.ts
-        description: Generates README.md from schema
   - path: src
     description: Source code for transformations and utilities
     children:
-      - path: transformation/
+      - path: transformation
         description: Transformation engine
         children:
-          - path: engine/
+          - path: engine
             description: Core transformation logic
   - path: templates
     description: Configuration templates for symlinks
     children:
-      - path: trunk/
+      - path: trunk
         description: Trunk.io configuration
-      - path: vscode/
+      - path: vscode
         description: VS Code settings and extensions
 roadmap:
   immediate_priorities:

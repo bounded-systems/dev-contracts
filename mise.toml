@@ -55,13 +55,19 @@ description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 [tasks.generate-schema]
 run = "deno run -A scripts/generate-schema-from-mise.ts"
 depends = ["install"]
-description = "Generate readme-schema.yaml from mise.toml"
+description = "Generate readme.yml from mise.toml"
+
+# Validate README Schema Task
+[tasks.validate-schema]
+run = "deno run -A scripts/validate-readme-schema.ts"
+depends = ["generate-schema"]
+description = "Validate readme.yml against the JSON schema"
 
 # Update README Generation Task to depend on schema generation
 [tasks.generate-readme]
 run = "deno run -A scripts/generate-readme.ts"
-depends = ["install", "generate-schema"]
-description = "Generate README.md from readme-schema.yaml"
+depends = ["install", "generate-schema", "validate-schema"]
+description = "Generate README.md from readme.yml"
 
 # Check Contract Files Task
 [tasks.check-contracts]
@@ -312,7 +318,7 @@ files = {}
 
 [_.contracts.structure."README.md"]
 type = "artifact"
-depends_on = ["readme-schema.yaml"]
+depends_on = ["readme.yml"]
 purpose = "Generated documentation"
 
 [_.contracts.structure."deno.json"]
@@ -330,7 +336,7 @@ affects = [".trunk/trunk.yaml"]
 purpose = "Source of truth for tool versions and tasks"
 description = "Tool versions, environment variables, and tasks"
 
-[_.contracts.structure."readme-schema.yaml"]
+[_.contracts.structure."readme.yml"]
 type = "contract"
 affects = ["README.md"]
 purpose = "Schema for README generation"
@@ -343,30 +349,40 @@ purpose = "Runtime environments"
 type = "static"
 purpose = "Container for transformation scripts"
 description = "Helper scripts for setup and configuration"
-children = [
-  { path = "sync-trunk-versions.ts", description = "Syncs versions from Trunk to mise" },
-  { path = "transform-apply.ts", description = "Applies configuration transformations" },
-  { path = "generate-readme.ts", description = "Generates README.md from schema" }
-]
+
+[_.contracts.structure."scripts.sync-trunk-versions.ts"]
+description = "Syncs versions from Trunk to mise"
+
+[_.contracts.structure."scripts.transform-apply.ts"]
+description = "Applies configuration transformations"
+
+[_.contracts.structure."scripts.generate-readme.ts"]
+description = "Generates README.md from schema"
+
+[_.contracts.structure."scripts.generate-schema-from-mise.ts"]
+description = "Generates readme.yml from mise.toml"
 
 [_.contracts.structure."src"]
 type = "static"
 purpose = "Source code for transformation logic"
 description = "Source code for transformations and utilities"
-children = [
-  { path = "transformation/", description = "Transformation engine", children = [
-    { path = "engine/", description = "Core transformation logic" }
-  ]}
-]
+
+[_.contracts.structure."src.transformation"]
+description = "Transformation engine"
+
+[_.contracts.structure."src.transformation.engine"]
+description = "Core transformation logic"
 
 [_.contracts.structure."templates"]
 type = "contract"
 purpose = "Source templates for symlinked configurations"
 description = "Configuration templates for symlinks"
-children = [
-  { path = "trunk/", description = "Trunk.io configuration" },
-  { path = "vscode/", description = "VS Code settings and extensions" }
-]
+
+[_.contracts.structure."templates.trunk"]
+description = "Trunk.io configuration"
+
+[_.contracts.structure."templates.vscode"]
+description = "VS Code settings and extensions"
 
 [_.contracts.structure."tests"]
 type = "static"
