@@ -27,10 +27,13 @@
                 "description": "Specific version of the linter."
               }
             },
-            "required": ["depends"]
+            "required": ["depends"],
+            "additionalProperties": false
           }
         }
-      }
+      },
+      "required": ["lint"],
+      "additionalProperties": false
     },
     "external_files": {
       "type": "object",
@@ -65,74 +68,92 @@
           "type": "object",
           "properties": {
             "allow_empty_directory": { "type": "boolean" }
-          }
+          },
+          "required": ["allow_empty_directory"],
+          "additionalProperties": false
         }
-      }
+      },
+      "required": ["structure"],
+      "additionalProperties": false
     },
     "structure": {
       "type": "object",
-      "description": "Repository structure contracts",
-      "required": [],
+      "description": "Repository structure contracts. Keys are file/directory paths.",
       "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["type", "purpose"],
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["file", "directory", "symlink"]
-              },
-              "purpose": { "type": "string" },
-              "description": { "type": "string" },
-              "depends_on": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "affects": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "ignores": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": ["git", "contract"]
-                }
-              },
-              "ignore_patterns": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["description"],
-            "properties": {
-              "description": { "type": "string" }
-            }
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "patternProperties": {
-        "^.+$": {
-          "oneOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        }
+        "$ref": "#/$defs/StructureValue"
       }
+    }
+  },
+  "required": ["schema", "quality", "rules", "structure"],
+  "additionalProperties": false,
+  "$defs": {
+    "StructureEntry": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["file", "directory", "symlink"]
+        },
+        "purpose": { "type": "string" },
+        "description": { "type": "string" },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "affects": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ignores": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["git", "contract"]
+          }
+        },
+        "ignore_patterns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "DescriptionEntry": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "GlobalEntry": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "ignore_patterns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "StructureValue": {
+      "description": "Defines the allowed value types for entries under the 'structure' key.",
+      "oneOf": [
+        { "$ref": "#/$defs/StructureEntry" },
+        { "$ref": "#/$defs/DescriptionEntry" },
+        { "$ref": "#/$defs/GlobalEntry" },
+        { "type": "object", "maxProperties": 0 },
+        { "type": "string" }
+      ]
     }
   }
 }
