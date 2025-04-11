@@ -142,7 +142,7 @@ async function main() {
     );
 
     if (denoIndex !== -1 && denoIndex !== undefined) {
-      console.log(`Removing 'deno' from runtimes.enabled as it's not a supported runtime`);
+      console.log("Removing 'deno' from runtimes.enabled as it's not a supported runtime");
       trunkConfig.runtimes.enabled.splice(denoIndex, 1);
       changed = true;
     }
