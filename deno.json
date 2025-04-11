@@ -9,5 +9,8 @@
   },
   "compilerOptions": {
     "lib": ["deno.window"]
+  },
+  "tasks": {
+    "test": "deno test --allow-read --allow-net --allow-write ."
   }
 }
