@@ -29,7 +29,6 @@ NODE_PACKAGE_VAR = "PACKAGE_FILE"
 # Trunk configuration
 TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
 TRUNK_TEMPLATE_DIR = "templates/trunk"
-TRUNK_CLI_VERSION = "1.22.12"
 
 # YAML schema configuration
 YAMLLINT_CONFIG_PATH = ".yamllint"
@@ -50,6 +49,20 @@ markdownlint = "0.44.0"
 git-diff-check = "enabled"
 shellcheck = "0.10.0"
 oxipng = "9.1.4"
+js-yaml = "4.1.0"
+ts-node = "10.9.2"
+typescript = "5.3.3"
+types-js-yaml = "4.0.9"
+yamllint = "1.37.0"
+debug = "latest"
+
+# Deno imports
+std = "0.224.0"
+zod = "latest"
+std-fs = "0.229.3"
+std-path = "0.225.0"
+std-yaml = "0.224.0"
+std-toml = "0.224.0"
 
 # Add Trunk actions as tools
 # Unlike linters which have versions, actions are just enabled/disabled
@@ -160,59 +173,3 @@ description = "Update trunk.yaml to match mise.toml configuration"
 run = "deno run -A scripts/generate_schema_types.ts --transform"
 depends = ["install"]
 description = "Legacy task to validate schemas and update trunk.yaml using the old script"
-
-[settings]
-# Add any mise specific settings here, like experimental = true
-# ... keep existing settings if any ...
-
-[settings.devtools]
-description = "Central configuration for generating project files."
-
-[settings.devtools.ruby]
-# The Ruby version is taken from the main [tools] section (e.g., tools.ruby)
-source = "https://rubygems.org"
-gems = [
-  # From runtimes/ruby/Gemfile & trunk.yaml
-  { name = "standardrb", version = "1.49.0", groups = [
-    "lint",
-  ] }, # Matches trunk
-  { name = "yamllint", version = "1.37.0", groups = [
-    "lint",
-  ] }, # Matches trunk
-  { name = "debug", version = "latest", groups = [
-    "development",
-  ] },
-  # Add other gems like rubocop, etc. here if needed, ensure versions match trunk if applicable
-]
-
-[settings.devtools.node]
-# The Node version is taken from the main [tools] section (e.g., tools.nodejs)
-package_name = "pushd-devtools-node-runtime"
-package_version = "1.0.0" # Corresponds to runtimes/node/package.json
-description = "Node.js runtime for Pushd DevTools"
-private = true
-dependencies = [
-  # From runtimes/node/package.json
-  { name = "js-yaml", version = "^4.1.0" },
-]
-dev_dependencies = [
-  # From runtimes/node/package.json & trunk.yaml
-  { name = "prettier", version = "3.5.3" },        # Matches trunk
-  { name = "ts-node", version = "^10.9.2" },
-  { name = "typescript", version = "^5.3.3" },
-  { name = "@types/js-yaml", version = "^4.0.9" },
-  { name = "eslint", version = "9.24.0" },         # Matches trunk
-]
-
-[settings.devtools.deno]
-# The Deno version is taken from the main [tools] section (e.g., tools.deno)
-imports = [
-  # From scripts/deno.json
-  { name = "std/", url = "https://deno.land/std@0.224.0/" }, # Pinned std version
-  { name = "zod", url = "https://deno.land/x/zod/mod.ts" },
-  # Imports needed for generate_configs.ts script itself
-  { name = "jsr:@std/fs/exists", url = "jsr:@std/fs@^0.229.3/exists" },
-  { name = "jsr:@std/path", url = "jsr:@std/path@^0.225.0" },
-  { name = "jsr:@std/yaml", url = "jsr:@std/yaml@^0.224.0" },
-  { name = "jsr:@std/toml", url = "jsr:@std/toml@^0.224.0" },
-]
