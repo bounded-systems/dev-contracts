@@ -18,6 +18,7 @@ ROADMAP_FILE = "roadmap.toml"
 # Core Runtime Tool versions
 ruby = "3.3.3"
 node = "20.14.0"
+deno = "latest"
 
 [tasks]
 # Default install task (ensures tools are installed)
@@ -114,3 +115,26 @@ lockfile = true
 run = "deno run -A scripts/generate-gitignore.ts"
 depends = ["install"]
 description = "Generate .gitignore file from contracts.toml structure"
+
+[tasks.contracts-validate-structure]
+run = "deno run -A --unstable-fs scripts/validate-contracts-structure.ts"
+description = "Validate that the repository structure matches contracts.toml (including schema check)"
+
+[tasks.contracts-generate-structure]
+run = "deno run -A --unstable-fs scripts/generate-contracts-structure.ts"
+description = "Create missing files/directories defined in contracts.toml [structure] (skips symlinks)"
+depends = ["install"]
+
+[tasks.contracts-prune-structure]
+run = "deno run -A --unstable-fs scripts/prune-contracts-structure.ts"
+description = "Remove entries from contracts.toml [structure] that do not exist on the filesystem"
+depends = ["install"]
+
+[tasks.contracts-sort-structure]
+run = "deno run -A scripts/sort-contracts-structure.ts"
+description = "Sort and deduplicate the [structure] section in contracts.toml"
+depends = ["install"]
+
+[tasks.contracts-clean]
+description = "Prune, generate, and sort the contracts.toml [structure] section"
+depends = ["contracts-prune-structure", "contracts-generate-structure", "contracts-sort-structure"]
