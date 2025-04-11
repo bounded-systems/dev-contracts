@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Pushd DevTools
 
 ## Overview
@@ -137,7 +139,10 @@ This script will:
 
 _(This step relates to your code editor configuration)_
 
-- **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Shopify.ruby-lsp`, `sorbet.sorbet-vscode-extension`, `redhat.vscode-yaml`). Reload VS Code after creating the symlinks. The settings defined in `.vscode/settings.json` (via the symlink) should now be active, utilizing the `PUSHD_DEVTOOLS_DIR` variable.
+- **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Shopify.ruby-lsp`,
+  `sorbet.sorbet-vscode-extension`, `redhat.vscode-yaml`). Reload VS Code after creating the symlinks.
+  The settings defined in `.vscode/settings.json` (via the symlink) should now be active,
+  utilizing the `PUSHD_DEVTOOLS_DIR` variable.
 - **Other Editors:** Adapt the configuration as needed for your editor of choice, potentially leveraging the `.trunk/` directory if using Trunk CLI directly.
 
 ### 6. IDE Integration with mise

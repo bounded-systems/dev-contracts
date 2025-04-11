@@ -34,44 +34,39 @@ TRUNK_TEMPLATE_DIR = "templates/trunk"
 YAMLLINT_CONFIG_PATH = ".yamllint"
 VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 
+# List of tool names from [tools] to be enabled in trunk.yaml
+# TRUNK_LINTER_TOOL_NAMES = '["prettier", "eslint", "standardrb", "markdownlint", "git-diff-check", "oxipng", "yamllint", "deno"]' # Removed - Replaced by trunk-config-* entries in [tools]
+
 # Path enhancement for node binaries
 _.path = "./node_modules/.bin"
 
 [tools]
-# Tool versions
+# Core Runtime Tool versions
 ruby = "3.3.3"
 node = "20.14.0"
 deno = "2.2.4"
 trunk = "1.22.12"
 
-# Add linters as tools
+# Trunk Linter Tool versions (managed by mise for Trunk compatibility)
 prettier = "3.5.3"
 eslint = "9.24.0"
 standardrb = "1.49.0"
 markdownlint = "0.44.0"
-git-diff-check = "enabled"
-shellcheck = "0.10.0"
-oxipng = "9.1.4"
-js-yaml = "4.1.0"
-ts-node = "10.9.2"
-typescript = "5.3.3"
-types-js-yaml = "4.0.9"
+git-diff-check = "enabled" # Special case - mise doesn't manage version, but update script needs it
+oxipng = "cargo:oxipng@9.1.4"
 yamllint = "1.37.0"
-debug = "latest"
+
+# Configure Trunk actions via the custom plugin
+# trunk-actions = ["trunk-check-pre-commit"] # Removed - Replaced by trunk-actions-* entries below
 
 # Deno imports
-std = "0.224.0"
-zod = "latest"
-std-fs = "0.229.3"
-std-path = "0.225.0"
-std-yaml = "0.224.0"
-std-toml = "0.224.0"
+## TODO: Define custom tool structure for non-mise installable tools like Deno imports
 
 # Add Trunk actions as tools
-# Unlike linters which have versions, actions are just enabled/disabled
-trunk-upgrade-available = "enabled"
-trunk-check-pre-push = "enabled"
-trunk-check-pre-commit = "enabled"
+## TODO: Define custom tool structure for non-mise installable tools like Trunk actions
+
+## Trunk Actions (Configuration Only)
+# TODO: Define configuration for Trunk actions here
 
 [tasks]
 # Default install task (ensures tools are installed)
@@ -172,6 +167,40 @@ depends = ["config_generate"]
 run = "deno run -A scripts/run_installs.ts"
 description = "Generate configs and install dependencies"
 
+# Type Generation Task
+[tasks.generate_types]
+run = "deno run -A scripts/generate_types.ts"
+description = "Generate TypeScript types from mise.json and trunk-yaml-schema.json schemas"
+depends = ["install"] # Depends on deno being installed
+
 # Enable lockfile for consistent versioning across environments
 [settings]
 lockfile = true
+
+[settings.trunk]
+
+[settings.trunk.actions]
+trunk-check-pre-commit = true
+
+[settings.trunk.linters]
+# Enable/disable specific linters managed in [tools] for use with Trunk
+prettier = true
+eslint = true
+standardrb = true
+markdownlint = true
+git-diff-check = true
+oxipng = true
+yamllint = true
+deno = true
+
+# Alias local plugins using the [alias] section and path prefix
+[alias]
+
+# Hooks to run after specific mise events
+[hooks]
+# Run the trunk update script after any tool installation/update
+postinstall = '''
+echo "Running postinstall hook: Updating trunk.yaml..."
+deno run -A scripts/update_trunk.ts
+echo "Postinstall hook finished."
+'''
