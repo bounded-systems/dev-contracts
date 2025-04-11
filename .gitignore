@@ -1,0 +1,32 @@
+# Local mise configuration - not to be committed
+mise.local.toml
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Ruby
+.bundle/
+vendor/
+
+# Deno
+.deno/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# mise cache directory but NOT the bootstrap script
+.mise/
+!bin/mise 

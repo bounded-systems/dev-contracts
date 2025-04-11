@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Method 1: Use the bootstrap script we generated
+      - name: Install with bootstrap script
+        run: |
+          ./bin/mise install
+
+      # Method 2: Use the mise-action (alternative approach)
+      # - uses: jdx/mise-action@v2
+      #   with:
+      #     install: true
+      #     cache: true
+
+      # Run tests with mise
+      - name: Run tests
+        run: |
+          ./bin/mise run deno_test
+
+      # Check code formatting
+      - name: Check formatting
+        run: |
+          ./bin/mise run trunk_fmt
+
+      # Run linters
+      - name: Run linters
+        run: |
+          ./bin/mise run trunk_check

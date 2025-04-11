@@ -140,6 +140,51 @@ _(This step relates to your code editor configuration)_
 - **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Shopify.ruby-lsp`, `sorbet.sorbet-vscode-extension`, `redhat.vscode-yaml`). Reload VS Code after creating the symlinks. The settings defined in `.vscode/settings.json` (via the symlink) should now be active, utilizing the `PUSHD_DEVTOOLS_DIR` variable.
 - **Other Editors:** Adapt the configuration as needed for your editor of choice, potentially leveraging the `.trunk/` directory if using Trunk CLI directly.
 
+### 6. IDE Integration with mise
+
+For the best development experience, you'll want your IDE to use the tools managed by mise. Here are some approaches for various editors:
+
+#### VS Code
+
+Using the VSCode extension for mise is recommended:
+
+- Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension
+- It will automatically configure other extensions to use tools from mise
+- You'll get task integration and environment variable support
+
+Alternatively, add mise shims to your PATH in your shell profile:
+
+```bash
+# ~/.zprofile or ~/.bashrc
+eval "$(mise activate zsh --shims)"
+```
+
+#### JetBrains IDEs (IntelliJ, WebStorm, etc.)
+
+There are two main options:
+
+- Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin
+- Add mise shims to your PATH in your shell profile
+
+For SDK configuration:
+
+1. Go to Project Settings → SDK
+2. Look for versions provided by mise
+
+#### Vim/Neovim
+
+Add mise shims to your PATH in your initialization file:
+
+```vim
+" Vim
+let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
+```
+
+```lua
+-- Neovim
+vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
+```
+
 ## Included Tools & Configurations (via Templates)
 
 - **`.vscode/`**: Contains VS Code settings (`settings.json`) and potentially extension recommendations (`extensions.json`) tailored for projects using these devtools. Configures formatters, linters, language servers (Ruby LSP, Sorbet), and JSON/YAML validation using Trunk.

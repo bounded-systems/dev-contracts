@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -e
+
+#MISE description="Greet a user with a friendly message"
+#USAGE flag "-g --greeting <greeting>" help="The greeting word to use" {
+#USAGE   choices "hi" "hello" "hey" "howdy"
+#USAGE }
+#USAGE flag "-u --user <user>" help="The user to greet"
+#USAGE flag "--emoji <emoji>" help="The emoji to use" default="👋"
+#USAGE arg "<message>" help="Additional greeting message"
+
+# Print all the options passed as environment variables with usage_ prefix
+echo "All available options:"
+env | grep usage_ | sort
+
+# Use the greeting options to create a personalized message
+echo "${usage_emoji} ${usage_greeting}, ${usage_user}! ${usage_message}" 

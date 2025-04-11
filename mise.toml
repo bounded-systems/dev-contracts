@@ -34,6 +34,9 @@ TRUNK_TEMPLATE_DIR = "templates/trunk"
 YAMLLINT_CONFIG_PATH = ".yamllint"
 VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 
+# Path enhancement for node binaries
+_.path = "./node_modules/.bin"
+
 [tools]
 # Tool versions
 ruby = "3.3.3"
@@ -71,47 +74,71 @@ trunk-check-pre-push = "enabled"
 trunk-check-pre-commit = "enabled"
 
 [tasks]
+# Default install task (ensures tools are installed)
+[tasks.install]
+run = "mise install"
 
-# Tasks migrated from scripts/deno.json
-[tasks.test]
+# Deno test tasks
+[tasks.deno_test]
 run = "deno test --allow-run --allow-read --allow-env"
 depends = ["install"]
 
-[tasks.test_watch]
+[tasks.deno_test_watch]
 run = "deno test --allow-run --allow-read --allow-env --watch"
 depends = ["install"]
 description = "Run tests in watch mode"
 
-[tasks.test_coverage]
+[tasks.deno_test_coverage]
 run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && deno coverage coverage"
 depends = ["install"]
 description = "Run tests and generate coverage report"
 
-# Tasks for standalone scripts
+[tasks.deno_test_schemas]
+run = "deno test --allow-read --allow-write --allow-net --allow-env --no-check scripts/generate_schema_types.test.ts"
+depends = ["install"]
+description = "Run tests for the schema validator"
+
+# Setup and configuration tasks
 [tasks.setup]
 run = "deno run -A scripts/setup.ts"
 depends = ["install"]
 description = "Run initial project setup"
 
-[tasks.link_configs]
+[tasks.config_link]
 run = "deno run -A scripts/link-configs.ts"
 depends = ["install"]
 description = "Link configuration files"
 
-[tasks.validate_trunk]
-run = "deno run -A scripts/validate_trunk.ts"
+[tasks.config_generate]
+run = "deno run -A scripts/generate_configs.ts"
 depends = ["install"]
-description = "Validate Trunk configuration"
+description = "Generate config files from mise.toml"
 
-[tasks.sync_yaml_schemas]
-run = "deno run -A scripts/sync_yaml_schemas.ts"
-depends = ["install"]
-description = "Sync YAML schemas"
-
-[tasks.generate_env]
+[tasks.config_generate_env]
 run = "deno run -A scripts/generate_env.ts"
 depends = ["install"]
 description = "Generate environment file"
+
+# Schema and validation tasks
+[tasks.schema_validate]
+run = "deno run -A scripts/generate_schema_types.ts"
+depends = ["install"]
+description = "Validate schemas, generate TypeScript interfaces, and ensure consistency between mise.toml and trunk.yaml"
+
+[tasks.schema_transform]
+run = "deno run -A scripts/update_trunk.ts"
+depends = ["install"]
+description = "Update trunk.yaml to match mise.toml configuration"
+
+[tasks.schema_legacy_transform]
+run = "deno run -A scripts/generate_schema_types.ts --transform"
+depends = ["install"]
+description = "Legacy task to validate schemas and update trunk.yaml using the old script"
+
+[tasks.schema_sync_yaml]
+run = "deno run -A scripts/sync_yaml_schemas.ts"
+depends = ["install"]
+description = "Sync YAML schemas"
 
 # Trunk tasks
 [tasks.trunk_check]
@@ -129,47 +156,22 @@ run = "trunk upgrade"
 depends = ["install"]
 description = "Upgrade Trunk plugins"
 
-# Consistency Check
+[tasks.trunk_validate]
+run = "deno run -A scripts/validate_trunk.ts"
+depends = ["install"]
+description = "Validate Trunk configuration"
+
+# Project-wide validation and updates
 [tasks.sync_validate]
 run = "deno run -A scripts/sync_validate.ts"
 depends = ["install"]
 description = "Validate and sync configuration files"
 
-# Config Generation
-[tasks.generate_configs]
-run = "deno run -A scripts/generate_configs.ts"
-depends = ["install"]
-description = "Generate config files from mise.toml"
-
 [tasks.update_all]
-depends = ["generate_configs"]
+depends = ["config_generate"]
 run = "deno run -A scripts/run_installs.ts"
 description = "Generate configs and install dependencies"
 
-# Default install task (ensures tools are installed)
-[tasks.install]
-run = "mise install"
-
-# New task to validate schemas and generate types
-[tasks.validate_schemas]
-run = "deno run -A scripts/generate_schema_types.ts"
-depends = ["install"]
-description = "Validate schemas, generate TypeScript interfaces, and ensure consistency between mise.toml and trunk.yaml"
-
-# New task to run schema validator tests
-[tasks.test_schemas]
-run = "deno test --allow-read --allow-write --allow-net --allow-env --no-check scripts/generate_schema_types.test.ts"
-depends = ["install"]
-description = "Run tests for the schema validator"
-
-# New task to transform schemas
-[tasks.transform_schemas]
-run = "deno run -A scripts/update_trunk.ts"
-depends = ["install"]
-description = "Update trunk.yaml to match mise.toml configuration"
-
-# New task to run the old schema transformer script (if needed)
-[tasks.legacy_transform_schemas]
-run = "deno run -A scripts/generate_schema_types.ts --transform"
-depends = ["install"]
-description = "Legacy task to validate schemas and update trunk.yaml using the old script"
+# Enable lockfile for consistent versioning across environments
+[settings]
+lockfile = true
