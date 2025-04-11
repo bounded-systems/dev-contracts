@@ -20,17 +20,17 @@ node = "20.14.0"
 run = "mise install"
 
 # Trunk tasks
-[tasks.trunk_check]
+[tasks.trunk-check]
 run = "trunk check --ci"
 depends = ["install"]
 description = "Run Trunk checks"
 
-[tasks.trunk_fmt]
+[tasks.trunk-fmt]
 run = "trunk fmt"
 depends = ["install"]
 description = "Format code using Trunk"
 
-[tasks.trunk_upgrade]
+[tasks.trunk-upgrade]
 run = "trunk upgrade"
 depends = ["install"]
 description = "Upgrade Trunk plugins"
