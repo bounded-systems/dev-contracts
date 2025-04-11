@@ -1,6 +1,8 @@
 # Pushd DevTools Contracts
 # This file contains the contract definitions and repository structure information
 
+schema = "./schemas/contracts-schema.json"
+
 # Project information
 [project]
 name = "Pushd DevTools"
@@ -38,8 +40,8 @@ setup = "setup.toml"
 roadmap = "roadmap.toml"
 
 # Contract definitions
-[contracts.definitions]
-[[contracts.definitions.items]]
+[definitions]
+[[definitions.items]]
 id = "repo-contract"
 title = "pushd-devtools Repository Contract"
 provides = [
@@ -59,7 +61,7 @@ guarantees = [
   "Configuration transformations will be bidirectional and consistent"
 ]
 
-[[contracts.definitions.items]]
+[[definitions.items]]
 id = "target-project-contract"
 title = "Target Project Contract"
 provides = [
@@ -75,7 +77,7 @@ guarantees = [
   "Will not commit the symlinked configurations to version control"
 ]
 
-[[contracts.definitions.items]]
+[[definitions.items]]
 id = "mise-contract"
 title = "mise Tool Manager Contract"
 provides = [
@@ -94,26 +96,26 @@ guarantees = [
 ]
 
 # Repository structure contracts
-[contracts.structure]
+[structure]
 
-[contracts.structure.".git"]
+[structure.".git"]
 type = "artifact"
 purpose = "Git version control data"
 ignores = ["deno"]
 
-[contracts.structure.".github"]
+[structure.".github"]
 type = "contract"
 purpose = "GitHub workflows and configuration"
 
-[contracts.structure.".gitignore"]
+[structure.".gitignore"]
 type = "contract"
 purpose = "Defines files excluded from version control"
 
-[contracts.structure.".ruby-lsp"]
+[structure.".ruby-lsp"]
 type = "artifact"
 purpose = "Ruby language server configuration"
 
-[contracts.structure.".trunk"]
+[structure.".trunk"]
 type = "artifact"
 depends_on = ["templates/trunk/", "mise.toml"]
 affects = ["mise.toml"]
@@ -121,105 +123,105 @@ purpose = "Generated/symlinked Trunk configuration"
 files = {}
 ignores = ["git"]
 
-[contracts.structure.".vscode"]
+[structure.".vscode"]
 type = "artifact"
 depends_on = ["templates/vscode/"]
 purpose = "Symlinked VSCode configuration"
 files = {}
 ignores = ["git"]
 
-[contracts.structure.".idea"]
+[structure.".idea"]
 type = "artifact"
 purpose = "IntelliJ IDEA configuration files"
 ignores = ["git"]
 
-[contracts.structure."README.md"]
+[structure."README.md"]
 type = "artifact"
 depends_on = ["readme.yml"]
 purpose = "Generated documentation"
 
-[contracts.structure."deno.json"]
+[structure."deno.json"]
 type = "contract"
 purpose = "Deno runtime configuration"
 
-[contracts.structure."deno.lock"]
+[structure."deno.lock"]
 type = "artifact"
 depends_on = ["deno.json"]
 purpose = "Locked Deno dependencies"
 
-[contracts.structure."mise.toml"]
+[structure."mise.toml"]
 type = "contract"
 affects = [".trunk/trunk.yaml"]
 purpose = "Source of truth for tool versions and tasks"
 description = "Tool versions, environment variables, and tasks"
 
-[contracts.structure."readme.yml"]
+[structure."readme.yml"]
 type = "contract"
 affects = ["README.md"]
 purpose = "Schema for README generation"
 
-[contracts.structure."runtimes"]
+[structure."runtimes"]
 type = "static"
 purpose = "Runtime environments"
 
-[contracts.structure."scripts"]
+[structure."scripts"]
 type = "static"
 purpose = "Container for transformation scripts"
 description = "Helper scripts for setup and configuration"
 
-[contracts.structure."scripts.sync-trunk-versions.ts"]
+[structure."scripts.sync-trunk-versions.ts"]
 description = "Syncs versions from Trunk to mise"
 
-[contracts.structure."scripts.transform-apply.ts"]
+[structure."scripts.transform-apply.ts"]
 description = "Applies configuration transformations"
 
-[contracts.structure."scripts.generate-readme.ts"]
+[structure."scripts.generate-readme.ts"]
 description = "Generates README.md from schema"
 
-[contracts.structure."scripts.generate-schema-from-mise.ts"]
+[structure."scripts.generate-schema-from-mise.ts"]
 description = "Generates readme.yml from mise.toml"
 
-[contracts.structure."src"]
+[structure."src"]
 type = "static"
 purpose = "Source code for transformation logic"
 description = "Source code for transformations and utilities"
 
-[contracts.structure."src.transformation"]
+[structure."src.transformation"]
 description = "Transformation engine"
 
-[contracts.structure."src.transformation.engine"]
+[structure."src.transformation.engine"]
 description = "Core transformation logic"
 
-[contracts.structure."templates"]
+[structure."templates"]
 type = "contract"
 purpose = "Source templates for symlinked configurations"
 description = "Configuration templates for symlinks"
 
-[contracts.structure."templates.trunk"]
+[structure."templates.trunk"]
 description = "Trunk.io configuration"
 
-[contracts.structure."templates.vscode"]
+[structure."templates.vscode"]
 description = "VS Code settings and extensions"
 
-[contracts.structure."tests"]
+[structure."tests"]
 type = "static"
 purpose = "Test files"
 
-[contracts.structure."types"]
+[structure."types"]
 type = "static"
 purpose = "TypeScript type definitions"
 ignores = ["deno", "lint"]
 
 # TypeScript-specific ignore patterns
-[contracts.structure."types".ignore_patterns]
+[structure."types".ignore_patterns]
 "*.d.ts.map" = ["git", "deno"]
 "generated/" = ["git", "lint"]
 
 # Add a new global section for common ignore patterns
-[contracts.structure.global]
+[structure.global]
 description = "Global settings inherited by all subfolders"
 
-[contracts.structure.global.ignore_patterns]
+[structure.global.ignore_patterns]
 # IDE and editor files
 "*.sublime-*" = ["git", "contracts"]
 "*.swp" = ["git"]
@@ -240,50 +242,50 @@ description = "Global settings inherited by all subfolders"
 "*.log" = ["git"]
 
 # New section for project root-specific ignore patterns - keeping any patterns that don't have clear structure entries
-[contracts.structure.project.ignore_patterns]
+[structure.project.ignore_patterns]
 # Empty now that we've moved patterns to their respective structure entries
 
-[contracts.structure."node_modules"]
+[structure."node_modules"]
 type = "artifact"
 purpose = "Node.js dependencies"
 ignores = ["git", "eslint", "prettier", "deno"]
 
-[contracts.structure."dist"]
+[structure."dist"]
 type = "artifact"
 purpose = "Build distribution files"
 ignores = ["git", "eslint", "prettier", "deno"]
 
-[contracts.structure."build"]
+[structure."build"]
 type = "artifact"
 purpose = "Build output directory"
 ignores = ["git", "eslint", "prettier", "deno"]
 
-[contracts.structure."coverage"]
+[structure."coverage"]
 type = "artifact"
 purpose = "Test coverage reports"
 ignores = ["eslint", "prettier"]
 
-[contracts.structure."vendor"]
+[structure."vendor"]
 type = "artifact"
 purpose = "Vendored dependencies"
 ignores = ["eslint"]
 
-[contracts.structure.".deno"]
+[structure.".deno"]
 type = "artifact"
 purpose = "Deno cache directory"
 ignores = ["git"]
 
-[contracts.structure."logs"]
+[structure."logs"]
 type = "artifact"
 purpose = "Log files directory"
 ignores = ["git"]
 
-[contracts.structure."tmp"]
+[structure."tmp"]
 type = "artifact"
 purpose = "Temporary files directory"
 ignores = ["git"]
 
-[contracts.structure."temp"]
+[structure."temp"]
 type = "artifact"
 purpose = "Temporary files directory"
 ignores = ["git"]

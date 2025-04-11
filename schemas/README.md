@@ -7,6 +7,30 @@ This directory contains schema definitions for validating README-related files.
 - `readme-schema.json`: JSON Schema definition for validating the structure of
   readme.yml
 
+## Available Schemas
+
+### readme-schema.json
+
+This schema defines the structure of the `readme.yml` file, which is used to
+generate the project's README.md.
+
+### contracts-schema.json
+
+This schema defines the structure of the `contracts.toml` file, which contains
+the contract definitions and repository structure information.
+
+The schema primarily focuses on:
+
+- Structure section: Defines the repository structure contracts
+- Other sections are defined but optional
+
+To use this schema in your contracts.toml file, add the following line at the
+top of the file:
+
+```toml
+schema = "./schemas/contracts-schema.json"
+```
+
 ## Workflow
 
 The project uses a multi-step process for README management:
