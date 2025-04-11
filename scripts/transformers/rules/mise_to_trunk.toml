@@ -1,0 +1,33 @@
+# Rules to transform trunk.yaml based on mise.toml
+
+# Rule to synchronize enabled linters
+[[rule]]
+name = "SyncEnabledLinters"
+description = "Synchronizes lint.enabled in trunk.yaml with settings.devtools.trunk.enabled_linters in mise.toml"
+# Target path within the target config (trunk.yaml)
+target_path = ["lint", "enabled"]
+# Source path within the source config (mise.toml) - For context, not direct value transfer
+source_path = ["settings", "devtools", "trunk", "enabled_linters"]
+# Function from common_transformers.ts to execute
+# The function receives (trunkConfig, miseConfig, context)
+transformer_function = "syncLinters"
+# Priority can be used to order rule execution if needed
+priority = 10
+
+# Rule to synchronize runtime definitions
+[[rule]]
+name = "SyncRuntimeDefinitions"
+description = "Synchronizes runtimes.definitions in trunk.yaml with tools in mise.toml"
+target_path = ["runtimes", "definitions"]
+source_path = ["tools"] # Refers to the whole tools table in mise.toml
+transformer_function = "syncRuntimes"
+priority = 20
+
+# Rule to update the trunk config version field (if applicable)
+[[rule]]
+name = "UpdateTrunkVersionField"
+description = "Updates the top-level 'version' field in trunk.yaml based on mise.toml tools.trunk"
+target_path = ["version"]
+source_path = ["tools", "trunk"]
+transformer_function = "updateTrunkVersion"
+priority = 30 

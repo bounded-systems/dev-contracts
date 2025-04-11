@@ -12,9 +12,9 @@ import {
   fetchSupportedRuntimes,
   buildRuntimeMapping,
 } from "../utils/trunk_utils.ts";
+import { applyMiseToTrunkRules } from "../transformers/generated_transformers.ts";
 import type { ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo as PrintedTrunkConfig } from "../types/trunk.ts";
 import { validateMiseConfig, validateTrunkConfig } from "../validation/config_validators.ts";
-import { transformTrunkConfig as applyTrunkTransform } from "../config/config_transformer.ts";
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
 import type { TransformContext } from "../types/transform_rules.ts";
 // Import Ajv for schema validation
@@ -448,13 +448,11 @@ export class SchemaValidator {
       }
 
       // --- Apply Transformation ---
-      // Apply the transformation (which now takes objects and context)
-      const { config: transformedConfig, changed } = await applyTrunkTransform(
+      // Apply the generated transformation rules defined in mise_to_trunk.toml
+      const { config: transformedConfig, changed } = await applyMiseToTrunkRules(
         trunkConfig,
         miseConfig,
         transformContext // Pass the prepared context
-        // Note: applyTrunkTransform itself needs to be updated to accept context
-        //       and pass it to applyTransformRules.
       );
 
       if (changed) {
