@@ -1,25 +1,20 @@
 schema = "./schemas/contracts-schema.json"
 
-[project]
-name = "Pushd DevTools"
-description = "A centralized and sandboxed environment for development tools, configurations, and their associated runtimes"
-problem_statement = "Core projects often rely on specific, sometimes outdated, runtime versions. This\ndependency can prevent the adoption of newer development tools which require\nmore recent runtimes. Upgrading core project runtimes directly can be complex,\nrisky, and time-consuming.\n"
-solution = "Sandboxed & Linked Tooling that acts as a central, up-to-date source for development tools and\ntheir necessary environments through:\n\n1. **Sandboxing:** Tools and runtimes are managed within this repository,\n   separate from target projects\n2. **Symlinking:** Configuration directories (`.vscode` and `.trunk`) are\n   maintained as templates and symlinked into target projects\n3. **Git Exclusion:** Target projects exclude these symlinked directories in\n   their `.gitignore` files\n"
+[quality]
+depends = ["trunk"]
 
-[devtools.trunk]
-
-[[devtools.trunk.enabled_linters]]
+[[quality.enabled_linters]]
 name = "standardrb"
 version = "1.3.0"
 
-[[devtools.trunk.enabled_linters]]
+[[quality.enabled_linters]]
 name = "yamllint"
 version = "1.37.0"
 
-[[devtools.trunk.enabled_linters]]
+[[quality.enabled_linters]]
 name = "git-diff-check"
 
-[[devtools.trunk.enabled_linters]]
+[[quality.enabled_linters]]
 name = "deno"
 version = "2.2.8"
 

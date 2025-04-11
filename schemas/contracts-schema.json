@@ -4,6 +4,67 @@
   "description": "Schema for defining the contracts.toml file structure",
   "type": "object",
   "properties": {
+    "schema": {
+      "type": "string",
+      "description": "Path to the JSON schema file for validation."
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "depends": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "enabled_linters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "version": { "type": "string" }
+            },
+            "required": ["name"]
+          }
+        }
+      }
+    },
+    "external_files": {
+      "type": "object",
+      "properties": {
+        "setup": { "type": "string" },
+        "roadmap": { "type": "string" }
+      }
+    },
+    "definitions": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "provides": { "type": "array", "items": { "type": "string" } },
+              "expects": { "type": "array", "items": { "type": "string" } },
+              "guarantees": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "title", "provides", "expects", "guarantees"]
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "structure": {
+          "type": "object",
+          "properties": {
+            "allow_empty_directory": { "type": "boolean" }
+          }
+        }
+      }
+    },
     "structure": {
       "type": "object",
       "description": "Repository structure contracts",
