@@ -37,6 +37,17 @@ VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 # List of tool names from [tools] to be enabled in trunk.yaml
 # TRUNK_LINTER_TOOL_NAMES = '["prettier", "eslint", "standardrb", "markdownlint", "git-diff-check", "oxipng", "yamllint", "deno"]' # Removed - Replaced by trunk-config-* entries in [tools]
 
+# DevTools custom settings
+DEVTOOLS_TRUNK_ENABLED_LINTERS = '''[
+    "standardrb@1.0.0",
+    "yamllint@1.26.3",
+    "prettier@3.0.0",
+    "eslint@8.0.0",
+    "git-diff-check@system"
+]'''
+DEVTOOLS_SCHEMA_MISE = "https://mise.jdx.dev/schema/mise.json"
+DEVTOOLS_SCHEMA_TRUNK = "https://static.trunk.io/pub/trunk-yaml-schema.json"
+
 # Path enhancement for node binaries
 _.path = "./node_modules/.bin"
 
@@ -45,14 +56,14 @@ _.path = "./node_modules/.bin"
 ruby = "3.3.3"
 node = "20.14.0"
 deno = "2.2.4"
-trunk = "1.22.12"
+# trunk = "1.22.12"
 
 # Linters (Add desired versions)
-prettier = "latest" # Example: Replace with specific version like "3.3.2"
-eslint = "latest"    # Example: Replace with specific version like "9.8.0"
-standardrb = "latest" # Example: Replace with specific version like "1.0.0"
-markdownlint = "latest" # Example: Replace with specific version like "0.41.0"
-oxipng = "latest"
+# prettier = "latest" # Example: Replace with specific version like "3.3.2"
+# eslint = "latest"    # Example: Replace with specific version like "9.8.0"
+# standardrb = "latest" # Example: Replace with specific version like "1.0.0"
+# markdownlint = "latest" # Example: Replace with specific version like "0.41.0"
+# oxipng = "latest"
 yamllint = "latest"
 
 # Configure Trunk actions via the custom plugin
@@ -172,14 +183,20 @@ run = "deno run -A scripts/generate_types.ts"
 description = "Generate TypeScript types from mise.json and trunk-yaml-schema.json schemas"
 depends = ["install"] # Depends on deno being installed
 
+# Validation Task (using transformation engine)
+[tasks.validate]
+run = "deno run -A scripts/transformation/engine.ts $MISE_ARGS"
+depends = ["install"]
+description = "Run validation and transformation using the engine"
+
 # Enable lockfile for consistent versioning across environments
 [settings]
 lockfile = true
 
-[settings.trunk]
+# [settings.trunk]
 
-[settings.trunk.actions]
-trunk-check-pre-commit = true
+# [settings.trunk.actions]
+# trunk-check-pre-commit = true
 
 # Alias local plugins using the [alias] section and path prefix
 [alias]
@@ -187,23 +204,23 @@ trunk-check-pre-commit = true
 # Hooks to run after specific mise events
 [hooks]
 # Run the trunk update script after any tool installation/update
-postinstall = '''
-echo "Running postinstall hook: Updating trunk.yaml..."
-deno run -A scripts/update_trunk.ts
-echo "Postinstall hook finished."
-'''
+# postinstall = \'\'\'
+# echo "Running postinstall hook: Updating trunk.yaml..."
+# deno run -A scripts/update_trunk.ts
+# echo "Postinstall hook finished."
+# \'\'\'
 
-[settings.devtools.trunk]
-# List of linters enabled via mise, will be synced to trunk.yaml
-enabled_linters = [
-    "standardrb@1.0.0",
-    "yamllint@1.26.3",
-    "prettier@3.0.0", # Version should match package.json
-    "eslint@8.0.0", # Version should match package.json
-    "git-diff-check@system", # Uses system git
-]
+# [settings.devtools.trunk] # Removed
+# # List of linters enabled via mise, will be synced to trunk.yaml # Removed
+# enabled_linters = [ # Removed
+#     "standardrb@1.0.0", # Removed
+#     "yamllint@1.26.3", # Removed
+#     "prettier@3.0.0", # Version should match package.json # Removed
+#     "eslint@8.0.0", # Version should match package.json # Removed
+#     "git-diff-check@system", # Uses system git # Removed
+# ] # Removed
 
-# Example: Define schema locations within mise.toml
-[settings.devtools.schemas]
-mise = "https://mise.jdx.dev/schema/mise.json"
-trunk = "https://static.trunk.io/pub/trunk-yaml-schema.json"
+# Example: Define schema locations within mise.toml # Removed
+# [settings.devtools.schemas] # Removed
+# mise = "https://mise.jdx.dev/schema/mise.json" # Removed
+# trunk = "https://static.trunk.io/pub/trunk-yaml-schema.json" # Removed
