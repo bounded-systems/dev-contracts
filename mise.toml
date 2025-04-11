@@ -47,15 +47,6 @@ node = "20.14.0"
 deno = "2.2.4"
 trunk = "1.22.12"
 
-# Trunk Linter Tool versions (managed by mise for Trunk compatibility)
-prettier = "3.5.3"
-eslint = "9.24.0"
-standardrb = "1.49.0"
-markdownlint = "0.44.0"
-git-diff-check = "enabled" # Special case - mise doesn't manage version, but update script needs it
-oxipng = "cargo:oxipng@9.1.4"
-yamllint = "1.37.0"
-
 # Configure Trunk actions via the custom plugin
 # trunk-actions = ["trunk-check-pre-commit"] # Removed - Replaced by trunk-actions-* entries below
 
@@ -181,17 +172,6 @@ lockfile = true
 
 [settings.trunk.actions]
 trunk-check-pre-commit = true
-
-[settings.trunk.linters]
-# Enable/disable specific linters managed in [tools] for use with Trunk
-prettier = true
-eslint = true
-standardrb = true
-markdownlint = true
-git-diff-check = true
-oxipng = true
-yamllint = true
-deno = true
 
 # Alias local plugins using the [alias] section and path prefix
 [alias]
