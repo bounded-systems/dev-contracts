@@ -1,12 +1,12 @@
 import { assertEquals, assertExists } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { SchemaValidator } from "./generate_schema_types.ts";
+import { SchemaValidator } from "../schema/generate_schema_types_new.ts";
 import * as path from "jsr:@std/path";
 import { exists } from "jsr:@std/fs/exists";
 import * as yaml from "jsr:@std/yaml";
 
 // Import loadEnv from generate_schema_types.ts
 // We'll need to export it in that file
-import { loadEnv } from "./generate_schema_types.ts";
+import { loadEnv } from "../schema/generate_schema_types_new.ts";
 
 const TEST_DIR = Deno.makeTempDirSync({ prefix: "schema_validator_test_" });
 

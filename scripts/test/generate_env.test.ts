@@ -1,10 +1,8 @@
-import {
-  assertEquals,
-  assertExists,
-  assert,
-} from "https://deno.land/std/testing/asserts.ts";
+import { assertEquals, assertExists, assert } from "https://deno.land/std/testing/asserts.ts";
 import { join } from "https://deno.land/std/path/mod.ts";
-import { syncTrunkEnvironment, generateEnvFiles } from "./generate_env.ts";
+import * as yaml from "jsr:@std/yaml";
+import { parse as parseDotenv } from "jsr:@std/dotenv";
+import { syncTrunkEnvironment, generateEnvFiles } from "../config/generate_env.ts";
 
 // --- Mocking Setup ---
 
@@ -103,7 +101,7 @@ async function setupTestEnvironment() {
   Deno.writeTextFile = async (
     path: string | URL,
     data: string | ReadableStream<string>,
-    options?: Deno.WriteFileOptions,
+    options?: Deno.WriteFileOptions
   ): Promise<void> => {
     const pathStr = path instanceof URL ? path.pathname : path.toString();
     console.log(`Mock writeTextFile: ${pathStr}`);
@@ -149,102 +147,62 @@ Deno.test(
       const envVars = await syncTrunkEnvironment(trunkYamlPath);
 
       // Verify Ruby environment variables
-      assertEquals(
-        envVars["BUNDLE_GEMFILE"],
-        `${MOCK_BASE_DIR}/runtimes/ruby/Gemfile`,
-      );
-      assertEquals(
-        envVars["BUNDLE_PATH"],
-        `${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`,
-      );
+      assertEquals(envVars["BUNDLE_GEMFILE"], `${MOCK_BASE_DIR}/runtimes/ruby/Gemfile`);
+      assertEquals(envVars["BUNDLE_PATH"], `${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`);
       assertEquals(envVars["BUNDLE_WITHOUT"], "production:staging");
-      assertEquals(
-        envVars["GEM_HOME"],
-        `${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`,
-      );
+      assertEquals(envVars["GEM_HOME"], `${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`);
 
       // Verify Node environment variables
       assertEquals(envVars["NODE_ENV"], "development");
-      assertEquals(
-        envVars["PACKAGE_FILE"],
-        `${MOCK_BASE_DIR}/runtimes/node/package.json`,
-      );
+      assertEquals(envVars["PACKAGE_FILE"], `${MOCK_BASE_DIR}/runtimes/node/package.json`);
     } finally {
       await cleanupTestEnvironment();
     }
-  },
+  }
 );
 
-Deno.test(
-  "generateEnvFiles - creates environment files for Ruby and Node",
-  async () => {
-    await setupTestEnvironment();
+Deno.test("generateEnvFiles - creates environment files for Ruby and Node", async () => {
+  await setupTestEnvironment();
 
-    try {
-      // generateEnvFiles should now work correctly as loadProjectEnv uses MOCK_BASE_DIR
-      await generateEnvFiles(MOCK_BASE_DIR);
+  try {
+    // generateEnvFiles should now work correctly as loadProjectEnv uses MOCK_BASE_DIR
+    await generateEnvFiles(MOCK_BASE_DIR);
 
-      // Verify Ruby environment file content in mockFiles
-      const rubyEnvPath = join(
-        MOCK_BASE_DIR,
-        mockProjectEnv.RUBY_RUNTIME_DIR,
-        ".env",
-      );
-      const rubyEnvContent = mockFiles.get(rubyEnvPath);
+    // Verify Ruby environment file content in mockFiles
+    const rubyEnvPath = join(MOCK_BASE_DIR, mockProjectEnv.RUBY_RUNTIME_DIR, ".env");
+    const rubyEnvContent = mockFiles.get(rubyEnvPath);
 
-      assertExists(
-        rubyEnvContent,
-        `Ruby env file should exist at ${rubyEnvPath}`,
-      );
-      // Check specific vars based on prefix and home var
-      assert(
-        rubyEnvContent.includes(
-          `BUNDLE_GEMFILE=${MOCK_BASE_DIR}/runtimes/ruby/Gemfile`,
-        ),
-        "Ruby env missing BUNDLE_GEMFILE",
-      );
-      assert(
-        rubyEnvContent.includes(
-          `BUNDLE_PATH=${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`,
-        ),
-        "Ruby env missing BUNDLE_PATH",
-      );
-      assert(
-        rubyEnvContent.includes(`BUNDLE_WITHOUT=production:staging`),
-        "Ruby env missing BUNDLE_WITHOUT",
-      );
-      assert(
-        rubyEnvContent.includes(
-          `GEM_HOME=${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`,
-        ),
-        "Ruby env missing GEM_HOME",
-      );
+    assertExists(rubyEnvContent, `Ruby env file should exist at ${rubyEnvPath}`);
+    // Check specific vars based on prefix and home var
+    assert(
+      rubyEnvContent.includes(`BUNDLE_GEMFILE=${MOCK_BASE_DIR}/runtimes/ruby/Gemfile`),
+      "Ruby env missing BUNDLE_GEMFILE"
+    );
+    assert(
+      rubyEnvContent.includes(`BUNDLE_PATH=${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`),
+      "Ruby env missing BUNDLE_PATH"
+    );
+    assert(
+      rubyEnvContent.includes(`BUNDLE_WITHOUT=production:staging`),
+      "Ruby env missing BUNDLE_WITHOUT"
+    );
+    assert(
+      rubyEnvContent.includes(`GEM_HOME=${MOCK_BASE_DIR}/runtimes/ruby/vendor/bundle`),
+      "Ruby env missing GEM_HOME"
+    );
 
-      // Verify Node environment file content in mockFiles
-      const nodeEnvPath = join(
-        MOCK_BASE_DIR,
-        mockProjectEnv.NODE_RUNTIME_DIR,
-        ".env",
-      );
-      const nodeEnvContent = mockFiles.get(nodeEnvPath);
+    // Verify Node environment file content in mockFiles
+    const nodeEnvPath = join(MOCK_BASE_DIR, mockProjectEnv.NODE_RUNTIME_DIR, ".env");
+    const nodeEnvContent = mockFiles.get(nodeEnvPath);
 
-      assertExists(
-        nodeEnvContent,
-        `Node env file should exist at ${nodeEnvPath}`,
-      );
-      // Check specific vars based on prefix and package var
-      assert(
-        nodeEnvContent.includes(`NODE_ENV=development`),
-        "Node env missing NODE_ENV",
-      );
-      assert(
-        nodeEnvContent.includes(
-          `PACKAGE_FILE=${MOCK_BASE_DIR}/runtimes/node/package.json`,
-        ),
-        "Node env missing PACKAGE_FILE",
-      );
-    } finally {
-      await cleanupTestEnvironment();
-    }
-  },
-);
+    assertExists(nodeEnvContent, `Node env file should exist at ${nodeEnvPath}`);
+    // Check specific vars based on prefix and package var
+    assert(nodeEnvContent.includes(`NODE_ENV=development`), "Node env missing NODE_ENV");
+    assert(
+      nodeEnvContent.includes(`PACKAGE_FILE=${MOCK_BASE_DIR}/runtimes/node/package.json`),
+      "Node env missing PACKAGE_FILE"
+    );
+  } finally {
+    await cleanupTestEnvironment();
+  }
+});

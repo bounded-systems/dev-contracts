@@ -2,10 +2,11 @@ import {
   assertEquals,
   assertExists,
   assert,
-  assertStringIncludes
+  assertStringIncludes,
 } from "https://deno.land/std/testing/asserts.ts";
-import { join } from "https://deno.land/std/path/mod.ts";
-import { DevToolsSetup } from "./setup.ts";
+import { join, dirname, fromFileUrl } from "jsr:@std/path";
+import { DevToolsSetup } from "../setup/setup.ts";
+import { exists } from "jsr:@std/fs";
 // Use Deno namespace for types like CommandOutput, FileInfo
 
 // Define a type for the mock environment
@@ -77,9 +78,7 @@ class MockCommand extends Deno.Command {
       } else {
         return {
           stdout: new Uint8Array(),
-          stderr: new Uint8Array(
-            new TextEncoder().encode(`No version set for ${tool}`),
-          ),
+          stderr: new Uint8Array(new TextEncoder().encode(`No version set for ${tool}`)),
           success: false,
           code: 1,
           signal: null,
@@ -163,10 +162,7 @@ async function setupTestEnvironment() {
     }
     throw new Deno.errors.NotFound(`Mock FS: Path not found: ${pathStr}`);
   };
-  Deno.mkdir = async (
-    path: string | URL,
-    options?: Deno.MkdirOptions,
-  ): Promise<void> => {
+  Deno.mkdir = async (path: string | URL, options?: Deno.MkdirOptions): Promise<void> => {
     const pathStr = path.toString();
     console.log(`Mock mkdir: ${pathStr}`);
     mockFs.set(pathStr, { isDirectory: true });
@@ -175,12 +171,11 @@ async function setupTestEnvironment() {
       let current = "";
       // Ensure leading slash is handled if path is absolute
       const startsWithSlash = pathStr.startsWith("/");
-      const parts = pathStr.split("/").filter((p) => p);
+      const parts = pathStr.split("/").filter(p => p);
       for (const part of parts) {
         current = join(current, part);
         // Add leading slash back if original path had it
-        const checkPath =
-          startsWithSlash && !current.startsWith("/") ? "/" + current : current;
+        const checkPath = startsWithSlash && !current.startsWith("/") ? "/" + current : current;
         if (!mockFs.has(checkPath)) {
           console.log(`Mock mkdir recursive: ${checkPath}`);
           mockFs.set(checkPath, { isDirectory: true });
@@ -192,21 +187,16 @@ async function setupTestEnvironment() {
       }
     }
   };
-  Deno.remove = async (
-    path: string | URL,
-    options?: Deno.RemoveOptions,
-  ): Promise<void> => {
+  Deno.remove = async (path: string | URL, options?: Deno.RemoveOptions): Promise<void> => {
     const pathStr = path.toString();
     console.log(`Mock remove: ${pathStr}`);
     if (options?.recursive) {
       // Simple recursive mock: remove all paths starting with this one
-      const keysToRemove = [...mockFs.keys()].filter((key) =>
-        key.startsWith(pathStr),
-      );
+      const keysToRemove = [...mockFs.keys()].filter(key => key.startsWith(pathStr));
       console.log(
-        `Mock remove recursive: removing ${keysToRemove.length} keys starting with ${pathStr}`,
+        `Mock remove recursive: removing ${keysToRemove.length} keys starting with ${pathStr}`
       );
-      keysToRemove.forEach((key) => mockFs.delete(key));
+      keysToRemove.forEach(key => mockFs.delete(key));
     } else {
       if (!mockFs.delete(pathStr)) {
         // Throw NotFound if the specific file doesn't exist, matching Deno behavior
@@ -228,7 +218,7 @@ async function setupTestEnvironment() {
  nodejs = "${mockEnv.NODE_VERSION}"
  ruby = "${mockEnv.RUBY_VERSION}"`;
     }
-     if (pathStr.endsWith("trunk.yaml")) {
+    if (pathStr.endsWith("trunk.yaml")) {
       // Basic mock trunk config for checkTrunkRuntimes
       return `version: 0.1
 cli: { version: ${mockEnv.TRUNK_CLI_VERSION} }
@@ -244,15 +234,10 @@ lint:
     // Simulate .env.project if needed, although loadProjectEnv mock is preferred
     // if (pathStr.endsWith(".env.project")) { ... }
 
-    throw new Deno.errors.NotFound(
-      `Mock readTextFile: Path not found: ${pathStr}`,
-    );
+    throw new Deno.errors.NotFound(`Mock readTextFile: Path not found: ${pathStr}`);
   };
 
-  Deno.writeTextFile = async (
-    path: string | URL,
-    data: string | BufferSource,
-  ): Promise<void> => {
+  Deno.writeTextFile = async (path: string | URL, data: string | BufferSource): Promise<void> => {
     const pathStr = path.toString();
     console.log(`Mock writeTextFile: ${pathStr}`);
     mockFilesContent.set(pathStr, data.toString());
@@ -260,9 +245,7 @@ lint:
 
   // Mock loadProjectEnv to return mockEnv directly
   // This avoids needing to mock Deno.readTextFile for .env.project specifically
-  (DevToolsSetup.prototype as any).loadProjectEnv = async (): Promise<
-    Record<string, string>
-  > => {
+  (DevToolsSetup.prototype as any).loadProjectEnv = async (): Promise<Record<string, string>> => {
     console.log("Using mock loadProjectEnv");
     return Promise.resolve(mockEnv);
   };
@@ -307,7 +290,7 @@ async function cleanupTestEnvironment() {
     if (!(error instanceof Deno.errors.NotFound)) {
       console.warn(
         `Cleanup warning: Could not remove test temp dir (${mockEnv.PUSHD_DEVTOOLS_DIR}):`,
-        error,
+        error
       );
     }
   }
@@ -337,21 +320,9 @@ Deno.test("DevToolsSetup - getToolVersion (using mise)", async () => {
   const nodeVersion = (setup as any).getToolVersion("nodejs");
   const denoVersion = (setup as any).getToolVersion("deno");
 
-  assertEquals(
-    rubyVersion,
-    mockEnv.RUBY_VERSION,
-    "Ruby version should match mock",
-  );
-  assertEquals(
-    nodeVersion,
-    mockEnv.NODE_VERSION,
-    "Node version should match mock",
-  );
-  assertEquals(
-    denoVersion,
-    mockEnv.DENO_VERSION,
-    "Deno version should match mock",
-  );
+  assertEquals(rubyVersion, mockEnv.RUBY_VERSION, "Ruby version should match mock");
+  assertEquals(nodeVersion, mockEnv.NODE_VERSION, "Node version should match mock");
+  assertEquals(denoVersion, mockEnv.DENO_VERSION, "Deno version should match mock");
   await cleanupTestEnvironment();
 });
 
@@ -362,7 +333,7 @@ Deno.test("DevToolsSetup - setupRuby (creates Gemfile)", async () => {
   const gemfilePath = join(
     mockEnv.PUSHD_DEVTOOLS_DIR,
     mockEnv.RUBY_RUNTIME_DIR,
-    mockEnv.GEMFILE_NAME,
+    mockEnv.GEMFILE_NAME
   );
 
   await (setup as any).setupRuby();
@@ -381,16 +352,13 @@ Deno.test("DevToolsSetup - setupNode (creates package.json)", async () => {
   const packageJsonPath = join(
     mockEnv.PUSHD_DEVTOOLS_DIR,
     mockEnv.NODE_RUNTIME_DIR,
-    mockEnv.PACKAGE_JSON_NAME,
+    mockEnv.PACKAGE_JSON_NAME
   );
 
   await (setup as any).setupNode();
 
   // Check if package.json was created
-  assert(
-    mockFilesContent.has(packageJsonPath),
-    "package.json should have been created",
-  );
+  assert(mockFilesContent.has(packageJsonPath), "package.json should have been created");
   const pkgContent = mockFilesContent.get(packageJsonPath)!;
   assertStringIncludes(pkgContent, `"node": "${mockEnv.NODE_VERSION}"`);
 

@@ -1,11 +1,10 @@
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std/testing/asserts.ts";
+import { assertEquals, assertExists } from "https://deno.land/std/testing/asserts.ts";
 import { join } from "https://deno.land/std/path/mod.ts";
-import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
+import * as yaml from "jsr:@std/yaml";
 import { parse as parseJson } from "https://deno.land/std@0.224.0/jsonc/mod.ts";
-import { SchemaSyncer } from "./sync_yaml_schemas.ts";
+
+import { SchemaSyncer } from "../schema/sync_yaml_schemas.ts";
+import { loadProjectEnv } from "../setup/setup.ts"; // Also update this if needed
 
 // Define a type for the mock environment
 interface MockEnv {
@@ -91,7 +90,7 @@ async function setupTestEnvironment() {
   Deno.writeTextFile = async (
     path: string | URL,
     data: string | ReadableStream<string>,
-    options?: Deno.WriteFileOptions,
+    options?: Deno.WriteFileOptions
   ): Promise<void> => {
     const pathStr = path instanceof URL ? path.pathname : path.toString();
     console.log(`Mock writeTextFile: ${pathStr}`);
@@ -128,13 +127,10 @@ Deno.test("SchemaSyncer - initialization", async () => {
   assertExists(syncer, "SchemaSyncer instance should be created");
 
   // Verify paths are calculated correctly based on mocked Deno.env[PUSHD_DEVTOOLS_DIR] and projectEnv
-  assertEquals(
-    (syncer as any).yamllintPath,
-    join(MOCK_ROOT_DIR, mockEnv.YAMLLINT_CONFIG_PATH),
-  );
+  assertEquals((syncer as any).yamllintPath, join(MOCK_ROOT_DIR, mockEnv.YAMLLINT_CONFIG_PATH));
   assertEquals(
     (syncer as any).vscodeSettingsPath,
-    join(MOCK_ROOT_DIR, mockEnv.VSCODE_SETTINGS_PATH),
+    join(MOCK_ROOT_DIR, mockEnv.VSCODE_SETTINGS_PATH)
   );
 
   await cleanupTestEnvironment();
@@ -146,16 +142,9 @@ Deno.test("SchemaSyncer - readYamlLintConfig", async () => {
   const config = await (syncer as any).readYamlLintConfig();
 
   assertExists(config.schemas, "Schemas property should exist");
-  assertEquals(
-    config.schemas.length,
-    2,
-    "Should read 2 schemas from mock yamllint config",
-  );
+  assertEquals(config.schemas.length, 2, "Should read 2 schemas from mock yamllint config");
   assertEquals(config.schemas[0].pattern, "workflows/*.yml");
-  assertEquals(
-    config.schemas[1].schema,
-    "https://json.schemastore.org/github-action.json",
-  );
+  assertEquals(config.schemas[1].schema, "https://json.schemastore.org/github-action.json");
 
   await cleanupTestEnvironment();
 });
@@ -165,11 +154,7 @@ Deno.test("SchemaSyncer - readVSCodeSettings", async () => {
   const syncer = new SchemaSyncer(mockEnv);
   const settings = await (syncer as any).readVSCodeSettings();
 
-  assertEquals(
-    settings["json.validate.enable"],
-    true,
-    "JSON validation should be enabled",
-  );
+  assertEquals(settings["json.validate.enable"], true, "JSON validation should be enabled");
   assertExists(settings["yaml.schemas"], "yaml.schemas should exist");
 
   await cleanupTestEnvironment();
@@ -188,24 +173,12 @@ Deno.test("SchemaSyncer - convertSchemas", async () => {
   };
   const convertedSchemas = (syncer as any).convertSchemas(mockYamlConfig);
 
-  assertEquals(
-    Object.keys(convertedSchemas).length,
-    2,
-    "Should convert to 2 schema entries",
-  );
+  assertEquals(Object.keys(convertedSchemas).length, 2, "Should convert to 2 schema entries");
   assertExists(convertedSchemas["s1"], "Schema s1 should exist");
-  assertEquals(
-    convertedSchemas["s1"].length,
-    1,
-    "Schema s1 should have 1 pattern (last one wins)",
-  ); // Assuming last wins based on implementation
+  assertEquals(convertedSchemas["s1"].length, 1, "Schema s1 should have 1 pattern (last one wins)"); // Assuming last wins based on implementation
   assertEquals(convertedSchemas["s1"][0], "p3");
   assertExists(convertedSchemas["s2"], "Schema s2 should exist");
-  assertEquals(
-    convertedSchemas["s2"].length,
-    1,
-    "Schema s2 should have 1 pattern",
-  );
+  assertEquals(convertedSchemas["s2"].length, 1, "Schema s2 should have 1 pattern");
   assertEquals(convertedSchemas["s2"][0], "p2");
 
   await cleanupTestEnvironment();
@@ -236,19 +209,12 @@ Deno.test("SchemaSyncer - writeVSCodeSettings", async () => {
     }
     const settingsObj = writtenJson as Record<string, any>; // Assert as object
 
-    assertEquals(
-      settingsObj["newKey"],
-      "newValue",
-      "New key should be present",
-    );
-    assertExists(
-      settingsObj["yaml.schemas"]["new/schema"],
-      "New schema should be present",
-    );
+    assertEquals(settingsObj["newKey"], "newValue", "New key should be present");
+    assertExists(settingsObj["yaml.schemas"]["new/schema"], "New schema should be present");
     assertEquals(
       settingsObj["yaml.schemas"]["new/schema"][0],
       "new/pattern",
-      "New pattern should be present",
+      "New pattern should be present"
     );
   } catch (e) {
     // Add type guard for error message
@@ -268,18 +234,12 @@ Deno.test("SchemaSyncer - sync (full integration)", async () => {
   await syncer.sync();
 
   // Verify the content of the mock VSCode settings file
-  const finalSettingsContent = mockFiles.get(
-    join(MOCK_ROOT_DIR, mockEnv.VSCODE_SETTINGS_PATH),
-  );
-  assertExists(
-    finalSettingsContent,
-    "VSCode settings file should have been written",
-  );
+  const finalSettingsContent = mockFiles.get(join(MOCK_ROOT_DIR, mockEnv.VSCODE_SETTINGS_PATH));
+  assertExists(finalSettingsContent, "VSCode settings file should have been written");
 
   try {
     // Assert content is not null/undefined before parsing
-    if (!finalSettingsContent)
-      throw new Error("Final settings content is empty");
+    if (!finalSettingsContent) throw new Error("Final settings content is empty");
     const parsedSettings = parseJson(finalSettingsContent); // Use JSONC parser
 
     // Type guard for object
@@ -288,10 +248,7 @@ Deno.test("SchemaSyncer - sync (full integration)", async () => {
     }
     const finalSettings = parsedSettings as Record<string, any>; // Assert as object
 
-    assertExists(
-      finalSettings["yaml.schemas"],
-      "yaml.schemas should exist in final settings",
-    );
+    assertExists(finalSettings["yaml.schemas"], "yaml.schemas should exist in final settings");
 
     const expectedSchema1 = "https://json.schemastore.org/github-workflow.json";
     const expectedSchema2 = "https://json.schemastore.org/github-action.json";
@@ -305,27 +262,17 @@ Deno.test("SchemaSyncer - sync (full integration)", async () => {
     }
     const schemasObj = finalSettings["yaml.schemas"] as Record<string, any>;
 
-    assertEquals(
-      Object.keys(schemasObj).length,
-      2,
-      "Should have 2 schemas after sync",
-    );
-    assertExists(
-      schemasObj[expectedSchema1],
-      "GitHub Workflow schema should exist",
-    );
+    assertEquals(Object.keys(schemasObj).length, 2, "Should have 2 schemas after sync");
+    assertExists(schemasObj[expectedSchema1], "GitHub Workflow schema should exist");
     assertEquals(schemasObj[expectedSchema1], ["workflows/*.yml"]);
-    assertExists(
-      schemasObj[expectedSchema2],
-      "GitHub Action schema should exist",
-    );
+    assertExists(schemasObj[expectedSchema2], "GitHub Action schema should exist");
     assertEquals(schemasObj[expectedSchema2], ["actions/*.yaml"]);
 
     // Check if other settings are preserved
     assertEquals(
       finalSettings["json.validate.enable"],
       true,
-      "Original json.validate.enable should be preserved",
+      "Original json.validate.enable should be preserved"
     );
   } catch (e) {
     // Add type guard for error message

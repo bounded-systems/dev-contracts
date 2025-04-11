@@ -27,7 +27,7 @@ import { exists } from "jsr:@std/fs/exists";
 import { type MiseConfig } from "../types/mise.ts";
 // TrunkConfig type might be large/complex; adjust import if needed
 // For now, let's assume a top-level TrunkConfig type was generated.
-import { type TrunkConfig } from "../../types/trunk.ts";
+import { type TrunkConfig } from "../types/trunk.ts";
 import { KNOWN_NON_LINTERS, BUILT_IN_LINTERS } from "../utils/constants.ts";
 
 // YAML stringify options to preserve formatting

@@ -4,7 +4,12 @@ import { exists } from "jsr:@std/fs/exists";
 import * as path from "jsr:@std/path";
 import * as yaml from "jsr:@std/yaml";
 import * as toml from "jsr:@std/toml";
-import { fetchSupportedRuntimes, extractToolVersion, buildRuntimeMapping } from "./trunk_utils.ts";
+import {
+  fetchSupportedRuntimes,
+  extractToolVersion,
+  buildRuntimeMapping,
+} from "../utils/trunk_utils.ts";
+import type { MiseConfig, TrunkConfig } from "../types/trunk.ts"; // Assuming combined types
 
 // Default file paths
 const DEFAULT_MISE_CONFIG_PATH = "mise.toml";

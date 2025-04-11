@@ -4,7 +4,10 @@ import {
   assertRejects,
 } from "https://deno.land/std/testing/asserts.ts";
 import { join } from "https://deno.land/std/path/mod.ts";
-import { TrunkValidator } from "./validate_trunk.ts";
+import { TrunkValidator } from "../validate/validate_trunk.ts";
+import { assert, assertThrowsAsync } from "jsr:@std/assert";
+import * as path from "jsr:@std/path";
+import { exists } from "jsr:@std/fs/exists";
 
 // Define a type for the mock environment
 interface MockEnv {
@@ -56,22 +59,16 @@ class MockCommand extends Deno.Command {
       args: this.args,
       options: this.options,
     });
-    console.log(
-      `MockCommand: new Deno.Command("${cmd}", ${JSON.stringify(options)})`,
-    );
+    console.log(`MockCommand: new Deno.Command("${cmd}", ${JSON.stringify(options)})`);
   }
 
   override output(): Promise<Deno.CommandOutput> {
-    console.log(
-      `MockCommand: output() called for ${this.cmd} ${this.args.join(" ")}`,
-    );
+    console.log(`MockCommand: output() called for ${this.cmd} ${this.args.join(" ")}`);
     // Simulate specific command failures/successes based on test needs
     if (this.cmd === "which" && this.args[0] === "trunk") {
       // Simulate trunk found
       return Promise.resolve({
-        stdout: new Uint8Array(
-          new TextEncoder().encode("/usr/local/bin/trunk"),
-        ),
+        stdout: new Uint8Array(new TextEncoder().encode("/usr/local/bin/trunk")),
         stderr: new Uint8Array(),
         success: true,
         code: 0,
@@ -100,9 +97,7 @@ class MockCommand extends Deno.Command {
 
   // Add outputSync if needed, though validate_trunk.ts seems async
   override outputSync(): Deno.CommandOutput {
-    console.warn(
-      `MockCommand: outputSync() called unexpectedly for ${this.cmd}`,
-    );
+    console.warn(`MockCommand: outputSync() called unexpectedly for ${this.cmd}`);
     // Default sync success if called unexpectedly
     return {
       stdout: new Uint8Array(),
@@ -136,10 +131,7 @@ async function setupTestEnvironment() {
   Deno.env.set("PUSHD_DEVTOOLS_DIR", mockEnv.PUSHD_DEVTOOLS_DIR);
 
   // Populate mock file system (only the trunk.yaml)
-  const trunkYamlPath = join(
-    mockEnv.PUSHD_DEVTOOLS_DIR,
-    mockEnv.TRUNK_YAML_PATH,
-  );
+  const trunkYamlPath = join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_YAML_PATH);
   mockFs.set(trunkYamlPath, { isDirectory: false }); // Mark as existing file
   console.log(`Mock FS: Added file ${trunkYamlPath}`);
 
@@ -180,8 +172,7 @@ async function setupTestEnvironment() {
   };
 
   Deno.chdir = (directory: string | URL): void => {
-    const dirStr =
-      directory instanceof URL ? directory.pathname : directory.toString();
+    const dirStr = directory instanceof URL ? directory.pathname : directory.toString();
     console.log(`Mock chdir: ${dirStr}`);
     // Here, we could validate if the target dir exists in mockFs if needed
     mockCurrentDir = dirStr;
@@ -233,11 +224,11 @@ Deno.test("TrunkValidator - initialization", async () => {
   assertEquals((validator as any).devtoolsDir, mockEnv.PUSHD_DEVTOOLS_DIR);
   assertEquals(
     (validator as any).trunkYaml,
-    join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_YAML_PATH),
+    join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_YAML_PATH)
   );
   assertEquals(
     (validator as any).trunkTemplateDir,
-    join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_TEMPLATE_DIR),
+    join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_TEMPLATE_DIR)
   );
   await cleanupTestEnvironment();
 });
@@ -248,9 +239,7 @@ Deno.test("TrunkValidator - checkTrunkInstalled (Success)", async () => {
   // Should not throw
   await (validator as any).checkTrunkInstalled();
 
-  const whichCall = commandCalls.find(
-    (c) => c.cmd === "which" && c.args[0] === "trunk",
-  );
+  const whichCall = commandCalls.find(c => c.cmd === "which" && c.args[0] === "trunk");
   assertExists(whichCall, "'which trunk' command should have been called");
 
   await cleanupTestEnvironment();
@@ -283,7 +272,7 @@ Deno.test("TrunkValidator - checkTrunkInstalled (Failure)", async () => {
       await (validator as any).checkTrunkInstalled();
     },
     ExitCalledError,
-    "Deno.exit called with code: 1",
+    "Deno.exit called with code: 1"
   );
 
   await cleanupTestEnvironment();
@@ -300,10 +289,7 @@ Deno.test("TrunkValidator - checkTrunkYamlExists (Success)", async () => {
 Deno.test("TrunkValidator - checkTrunkYamlExists (Failure)", async () => {
   await setupTestEnvironment();
   // Remove the file from mock FS for this test
-  const trunkYamlPath = join(
-    mockEnv.PUSHD_DEVTOOLS_DIR,
-    mockEnv.TRUNK_YAML_PATH,
-  );
+  const trunkYamlPath = join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_YAML_PATH);
   mockFs.delete(trunkYamlPath);
   console.log(`Mock FS: Removed file ${trunkYamlPath} for failure test`);
 
@@ -315,7 +301,7 @@ Deno.test("TrunkValidator - checkTrunkYamlExists (Failure)", async () => {
       await (validator as any).checkTrunkYamlExists();
     },
     ExitCalledError,
-    "Deno.exit called with code: 1",
+    "Deno.exit called with code: 1"
   );
 
   await cleanupTestEnvironment();
@@ -324,23 +310,18 @@ Deno.test("TrunkValidator - checkTrunkYamlExists (Failure)", async () => {
 Deno.test("TrunkValidator - validateTrunkConfig (Success)", async () => {
   await setupTestEnvironment();
   const validator = new TrunkValidator(mockEnv);
-  const expectedTemplateDir = join(
-    mockEnv.PUSHD_DEVTOOLS_DIR,
-    mockEnv.TRUNK_TEMPLATE_DIR,
-  );
+  const expectedTemplateDir = join(mockEnv.PUSHD_DEVTOOLS_DIR, mockEnv.TRUNK_TEMPLATE_DIR);
 
   // Should not throw/exit
   await (validator as any).validateTrunkConfig();
 
   // Verify trunk check command was run in the correct directory
-  const trunkCheckCall = commandCalls.find(
-    (c) => c.cmd === "trunk" && c.args[0] === "check",
-  );
+  const trunkCheckCall = commandCalls.find(c => c.cmd === "trunk" && c.args[0] === "check");
   assertExists(trunkCheckCall, "'trunk check' command should have been called");
   assertEquals(
     trunkCheckCall.options?.cwd,
     expectedTemplateDir,
-    "'trunk check' should run in template dir",
+    "'trunk check' should run in template dir"
   );
 
   await cleanupTestEnvironment();
@@ -357,9 +338,7 @@ Deno.test("TrunkValidator - validateTrunkConfig (Failure)", async () => {
           success: false,
           code: 1,
           stdout: new Uint8Array(),
-          stderr: new Uint8Array(
-            new TextEncoder().encode("Trunk check failed"),
-          ),
+          stderr: new Uint8Array(new TextEncoder().encode("Trunk check failed")),
           signal: null,
         });
       }
@@ -375,7 +354,7 @@ Deno.test("TrunkValidator - validateTrunkConfig (Failure)", async () => {
       await (validator as any).validateTrunkConfig();
     },
     ExitCalledError,
-    "Deno.exit called with code: 1",
+    "Deno.exit called with code: 1"
   );
 
   await cleanupTestEnvironment();
@@ -388,12 +367,8 @@ Deno.test("TrunkValidator - validate (Full Success)", async () => {
   await validator.validate();
 
   // Verify key commands were called
-  assertExists(
-    commandCalls.find((c) => c.cmd === "which" && c.args[0] === "trunk"),
-  );
-  assertExists(
-    commandCalls.find((c) => c.cmd === "trunk" && c.args[0] === "check"),
-  );
+  assertExists(commandCalls.find(c => c.cmd === "which" && c.args[0] === "trunk"));
+  assertExists(commandCalls.find(c => c.cmd === "trunk" && c.args[0] === "check"));
 
   await cleanupTestEnvironment();
 });

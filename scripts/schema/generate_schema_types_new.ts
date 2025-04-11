@@ -9,7 +9,7 @@ import {
   resolveRef,
   normalizeSchema
 } from "../utils/trunk_utils.ts";
-import type { ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo as PrintedTrunkConfig } from "../../types/trunk.ts";
+import type { ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo as PrintedTrunkConfig } from "../types/trunk.ts";
 
 // Modified version of loadProjectEnv that doesn't exit on errors
 export async function loadEnv(rootDir?: string): Promise<Record<string, string>> {

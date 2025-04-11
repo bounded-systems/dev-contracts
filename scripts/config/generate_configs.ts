@@ -1,15 +1,15 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env
 
+import { join } from "jsr:@std/path";
 import { exists } from "jsr:@std/fs/exists";
-import * as path from "jsr:@std/path";
 import * as yaml from "jsr:@std/yaml";
 import * as toml from "jsr:@std/toml";
-import { loadProjectEnv as originalLoadProjectEnv } from "./setup.ts";
+import { loadProjectEnv as originalLoadProjectEnv } from "../setup/setup.ts";
 import { 
   fetchSupportedRuntimes,
   extractToolVersion,
   buildRuntimeMapping
-} from "./trunk_utils.ts";
+} from "../utils/trunk_utils.ts";
 
 // YAML stringify options for consistent output
 const yamlOptions = {
@@ -77,9 +77,9 @@ export class SchemaValidator {
 
   constructor(rootDir: string, miseConfigPath: string, trunkConfigPath: string) {
     this.rootDir = rootDir;
-    this.miseConfigPath = path.join(rootDir, miseConfigPath);
-    this.trunkConfigPath = path.join(rootDir, trunkConfigPath);
-    this.typesDir = path.join(rootDir, "scripts/types");
+    this.miseConfigPath = join(rootDir, miseConfigPath);
+    this.trunkConfigPath = join(rootDir, trunkConfigPath);
+    this.typesDir = join(rootDir, "scripts/types");
   }
 
   /**
@@ -105,7 +105,7 @@ export class SchemaValidator {
     }
 
     const fileContent = await Deno.readTextFile(filePath);
-    const fileExt = path.extname(filePath).toLowerCase();
+    const fileExt = join(filePath).extname().toLowerCase();
 
     if (fileExt === ".yaml" || fileExt === ".yml") {
       return yaml.parse(fileContent);
@@ -672,10 +672,10 @@ export class ConfigGenerator {
   constructor(rootDir: string, projectEnv: Record<string, string>) {
     this.rootDir = rootDir;
     this.projectEnv = projectEnv;
-    this.miseConfigPath = path.join(rootDir, projectEnv.TOOL_VERSIONS_NAME);
+    this.miseConfigPath = join(rootDir, projectEnv.TOOL_VERSIONS_NAME);
     // Use TRUNK_YAML_PATH for the output path
-    this.trunkConfigPath = path.join(rootDir, projectEnv.TRUNK_YAML_PATH);
-    this.typesDir = path.join(rootDir, "scripts/types");
+    this.trunkConfigPath = join(rootDir, projectEnv.TRUNK_YAML_PATH);
+    this.typesDir = join(rootDir, "scripts/types");
 
     // Ensure essential paths from projectEnv are available
     if (!projectEnv.TOOL_VERSIONS_NAME || !projectEnv.TRUNK_YAML_PATH) {
@@ -712,7 +712,7 @@ export class ConfigGenerator {
     }
 
     const fileContent = await Deno.readTextFile(filePath);
-    const fileExt = path.extname(filePath).toLowerCase();
+    const fileExt = join(filePath).extname().toLowerCase();
 
     try {
       if (fileExt === ".yaml" || fileExt === ".yml") {
@@ -852,7 +852,7 @@ export interface MiseConfig {
   [key: string]: any; // Allow other top-level keys
 }
 `;
-    const typesPath = path.join(this.typesDir, "linter-types.ts");
+    const typesPath = join(this.typesDir, "linter-types.ts");
     await Deno.writeTextFile(typesPath, typesContent);
     console.log(`Generated TypeScript types at: ${typesPath}`);
   }
@@ -863,7 +863,7 @@ export interface MiseConfig {
  */
 async generateTrunkConfig(): Promise<boolean> {
   // Ensure the output directory exists
-  const trunkDir = path.dirname(this.trunkConfigPath);
+  const trunkDir = join(this.trunkConfigPath);
   if (!(await exists(trunkDir))) {
     await Deno.mkdir(trunkDir, { recursive: true });
     console.log(`Created directory: ${trunkDir}`);
@@ -1398,9 +1398,7 @@ async generateAndValidate(): Promise<boolean> {
         // Adjust cwd if TRUNK_TEMPLATE_DIR is not the project root
         // Assuming TRUNK_TEMPLATE_DIR is `templates/trunk` and trunk.yaml is at `templates/trunk/.trunk/trunk.yaml`,
         // we should run trunk check from the `templates/trunk` directory.
-        const trunkCheckRunDir = path.isAbsolute(trunkTemplateDir)
-                                    ? trunkTemplateDir
-                                    : path.join(this.rootDir, trunkTemplateDir);
+        const trunkCheckRunDir = join(trunkTemplateDir);
         
         // Check if the directory actually exists before running
         if (await exists(trunkCheckRunDir)) {
@@ -1448,8 +1446,8 @@ async generateAndValidate(): Promise<boolean> {
 async function main() {
   try {
     // Determine root directory robustly
-    const scriptDir = path.dirname(path.fromFileUrl(import.meta.url));
-    const inferredRootDir = path.resolve(scriptDir, ".."); // Assumes script is in ROOT/scripts
+    const scriptDir = join(import.meta.url);
+    const inferredRootDir = join(scriptDir, ".."); // Assumes script is in ROOT/scripts
     const rootDir = Deno.env.get("PUSHD_DEVTOOLS_DIR") || inferredRootDir;
     console.log(`Using root directory: ${rootDir}`);
 
@@ -1463,8 +1461,8 @@ async function main() {
     const miseConfigPath = projectEnv["TOOL_VERSIONS_NAME"];
     const trunkConfigPath = projectEnv["TRUNK_YAML_PATH"]; // This is the OUTPUT path
 
-    console.log(`Using mise.toml path: ${path.join(rootDir, miseConfigPath)}`);
-    console.log(`Using trunk.yaml output path: ${path.join(rootDir, trunkConfigPath)}`);
+    console.log(`Using mise.toml path: ${join(rootDir, miseConfigPath)}`);
+    console.log(`Using trunk.yaml output path: ${join(rootDir, trunkConfigPath)}`);
 
 
     // Create generator and run generation & validation
