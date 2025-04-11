@@ -1,11 +1,11 @@
 version: 0.1
 cli:
-  version: 1.22.11
+  version: 1.22.12
 plugins:
   sources:
     - id: trunk
       ref: v1.6.7
-      uri: "https://github.com/trunk-io/plugins"
+      uri: 'https://github.com/trunk-io/plugins'
 downloads:
   - name: deno
     downloads:

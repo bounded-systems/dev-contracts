@@ -36,6 +36,26 @@ async function main() {
   // Track changes
   let changed = false;
 
+  // Update CLI version from mise.toml
+  if (miseConfig.env?.TRUNK_CLI_VERSION) {
+    console.log("Checking Trunk CLI version...");
+
+    // Ensure cli section exists
+    if (!trunkConfig.cli) {
+      trunkConfig.cli = { version: miseConfig.env.TRUNK_CLI_VERSION };
+      console.log(`Setting Trunk CLI version to ${miseConfig.env.TRUNK_CLI_VERSION}`);
+      changed = true;
+    } else if (trunkConfig.cli.version !== miseConfig.env.TRUNK_CLI_VERSION) {
+      console.log(
+        `Updating Trunk CLI version from ${trunkConfig.cli.version} to ${miseConfig.env.TRUNK_CLI_VERSION}`
+      );
+      trunkConfig.cli.version = miseConfig.env.TRUNK_CLI_VERSION;
+      changed = true;
+    } else {
+      console.log(`Trunk CLI version ${trunkConfig.cli.version} already matches mise.toml`);
+    }
+  }
+
   // Special handling for Deno - add to tools.definitions instead of runtimes
   if (miseConfig.tools?.deno) {
     console.log("Setting up Deno in tools.definitions...");
@@ -195,6 +215,7 @@ async function main() {
     "ktlint",
     "markdownlint",
     "mypy",
+    "oxipng",
     "prettier",
     "pylint",
     "rubocop",

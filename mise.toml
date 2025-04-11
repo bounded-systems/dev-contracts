@@ -49,6 +49,7 @@ standardrb = "1.49.0"
 markdownlint = "0.44.0"
 git-diff-check = "enabled"
 shellcheck = "0.10.0"
+oxipng = "9.1.4"
 
 # Add Trunk actions as tools
 # Unlike linters which have versions, actions are just enabled/disabled
