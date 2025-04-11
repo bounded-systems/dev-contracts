@@ -2,6 +2,18 @@
 
 import { parse as parseTOML } from "https://deno.land/std/toml/mod.ts";
 import { dirname, join } from "https://deno.land/std/path/mod.ts";
+import { parse as parseFlags } from "https://deno.land/std/flags/mod.ts";
+import { stringify as stringifyTOML } from "https://deno.land/std/toml/mod.ts";
+
+// Parse command line arguments
+const flags = parseFlags(Deno.args, {
+  boolean: ["force", "f", "help", "h"],
+  default: { force: false },
+  alias: { f: "force", h: "help" },
+});
+
+// Using force flag will include non-existent paths in gitignore without removing from contracts
+const forceIncludeNonExistentPaths = flags.force;
 
 // Get the root directory of the project
 const rootDir = dirname(dirname(new URL(import.meta.url).pathname));
@@ -31,7 +43,33 @@ function formatPath(path: string): string {
 }
 
 /**
+ * Checks if a path exists in the filesystem
+ * Returns true if the path exists or if it's a pattern
+ * (patterns contain wildcards and can't be directly checked)
+ */
+async function pathExistsOrIsPattern(path: string): Promise<boolean> {
+  // If path contains wildcards, consider it a pattern
+  if (path.includes("*") || path.includes("?")) {
+    return true;
+  }
+
+  // Check if the path exists
+  try {
+    const fullPath = join(rootDir, path);
+    await Deno.stat(fullPath);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return false;
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
+/**
  * Generates a .gitignore file based on the contracts.toml structure
+ * and automatically removes non-existent paths from contracts.toml
  */
 async function generateGitignore() {
   console.log("Generating .gitignore from contracts.toml...");
@@ -40,8 +78,8 @@ async function generateGitignore() {
   const contractsContent = await Deno.readTextFile(contractsPath);
   const contracts = parseTOML(contractsContent);
 
-  if (!contracts.contracts?.structure) {
-    throw new Error("Contracts structure not found in contracts.toml");
+  if (!contracts.structure) {
+    throw new Error("Structure not found in contracts.toml");
   }
 
   const gitignoreLines = [
@@ -53,8 +91,10 @@ async function generateGitignore() {
   ];
 
   // Extract paths with git ignores
-  const structure = contracts.contracts.structure;
+  const structure = contracts.structure;
   const pathsToIgnore = new Set<string>();
+  const nonExistentPaths = new Set<string>();
+  const pathsToRemoveGitIgnore: string[] = [];
 
   // Process each structure entry
   for (const [key, value] of Object.entries(structure)) {
@@ -69,7 +109,21 @@ async function generateGitignore() {
       Array.isArray(value.ignores) &&
       value.ignores.includes("git")
     ) {
-      pathsToIgnore.add(path);
+      if (await pathExistsOrIsPattern(path)) {
+        // Path exists, add to gitignore
+        pathsToIgnore.add(path);
+      } else {
+        // Path doesn't exist
+        nonExistentPaths.add(path);
+
+        if (forceIncludeNonExistentPaths) {
+          // If force flag is used, include in gitignore anyway
+          pathsToIgnore.add(path);
+        } else {
+          // Otherwise, remove git from ignores in contracts.toml
+          pathsToRemoveGitIgnore.push(key);
+        }
+      }
     }
   }
 
@@ -84,6 +138,7 @@ async function generateGitignore() {
 
     for (const [pattern, ignores] of Object.entries(globalPatterns)) {
       if (Array.isArray(ignores) && ignores.includes("git")) {
+        // All patterns with wildcards are considered existing
         gitignoreLines.push(pattern);
       }
     }
@@ -97,6 +152,7 @@ async function generateGitignore() {
 
     for (const [pattern, ignores] of Object.entries(projectPatterns)) {
       if (Array.isArray(ignores) && ignores.includes("git")) {
+        // All patterns with wildcards are considered existing
         gitignoreLines.push(pattern);
       }
     }
@@ -114,16 +170,69 @@ async function generateGitignore() {
           // Format as directory/pattern if it's a specific directory
           const formattedKey = key.replace(/^["'](.+)["']$/, "$1");
           if (formattedKey !== "global" && formattedKey !== "project") {
-            gitignoreLines.push(`${formattedKey}/${pattern}`);
+            const combinedPattern = `${formattedKey}/${pattern}`;
+            // All patterns with wildcards are considered existing
+            gitignoreLines.push(combinedPattern);
           }
         }
       }
     }
   }
 
+  // Remove non-existent paths from contracts.toml
+  if (pathsToRemoveGitIgnore.length > 0) {
+    console.log(
+      `Removing ${pathsToRemoveGitIgnore.length} non-existent paths from contracts.toml...`,
+    );
+
+    // Modify the contracts object to remove "git" from ignores arrays
+    for (const key of pathsToRemoveGitIgnore) {
+      if (structure[key]?.ignores) {
+        structure[key].ignores = structure[key].ignores.filter((
+          ignore: string,
+        ) => ignore !== "git");
+        console.log(`Removed "git" ignore from ${key}`);
+      }
+    }
+
+    // Write the updated contracts file
+    const updatedContractsContent = stringifyTOML(contracts);
+    await Deno.writeTextFile(contractsPath, updatedContractsContent);
+    console.log(`Updated contracts.toml with removed ignores`);
+  }
+
+  // Report on non-existent paths
+  if (nonExistentPaths.size > 0) {
+    if (forceIncludeNonExistentPaths) {
+      console.warn(
+        `Warning: Including the following non-existent paths in .gitignore:\n${
+          Array.from(nonExistentPaths).join("\n")
+        }`,
+      );
+    } else {
+      console.warn(
+        `Warning: Removed git ignores for the following non-existent paths:\n${
+          Array.from(nonExistentPaths).join("\n")
+        }`,
+      );
+    }
+  }
+
   // Write the gitignore file
   await Deno.writeTextFile(gitignorePath, gitignoreLines.join("\n"));
   console.log(`Generated .gitignore at ${gitignorePath}`);
+}
+
+// Display help if needed
+if (flags.help) {
+  console.log(`
+Usage: deno run --allow-read --allow-write scripts/generate-gitignore.ts [options]
+
+Options:
+  -f, --force    Include non-existent paths in .gitignore without removing from contracts.toml
+  -h, --help     Show this help message
+`);
+  Deno.exit(0);
 }
 
 // Run the function

@@ -1,18 +1,13 @@
 # THIS FILE IS GENERATED FROM contracts.toml
 # DO NOT EDIT DIRECTLY - CHANGES WILL BE OVERWRITTEN
-# Last generated: 2025-04-11T17:01:34.749Z
+# Last generated: 2025-04-11T17:15:10.821Z
 
 # Generated from contracts.structure with 'ignores = ["git"]'
-.deno
-.idea
 .trunk
 .vscode
 build/
 dist/
-logs/
 node_modules/
-temp/
-tmp/
 
 # Global ignore patterns
 *.sublime-*
