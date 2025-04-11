@@ -4,179 +4,154 @@
 
 ## Overview
 
-This repository provides a centralized and sandboxed environment for development tools, configurations, and their associated runtimes (like Ruby). It enables the use of modern linters, formatters, and language servers in projects (e.g., `pushd-web`) that may be constrained by older, incompatible runtime versions.
+This repository provides a centralized and sandboxed environment for development
+tools, configurations, and their associated runtimes. It enables the use of
+modern linters, formatters, and language servers in projects (e.g., `pushd-web`)
+that may be constrained by older, incompatible runtime versions.
 
 ## Problem Solved
 
-Core projects often rely on specific, sometimes outdated, runtime versions (e.g., a specific Ruby version). This dependency can prevent the adoption of newer development tools (linters, formatters, language servers, etc.) which require more recent runtimes. Upgrading the core project runtimes directly can be complex, risky, and time-consuming.
+Core projects often rely on specific, sometimes outdated, runtime versions. This
+dependency can prevent the adoption of newer development tools which require
+more recent runtimes. Upgrading core project runtimes directly can be complex,
+risky, and time-consuming.
 
 ## Solution: Sandboxed & Linked Tooling
 
-`pushd-devtools` acts as a central, up-to-date source for these development tools and their necessary environments. It achieves this through a few key mechanisms:
+`pushd-devtools` acts as a central, up-to-date source for development tools and
+their necessary environments through:
 
-1.  **Sandboxing:** Tools and their runtimes are managed within this repository, separate from the target project's environment.
-2.  **Symlinking:** Key configuration directories (currently `.vscode` for editor settings and `.trunk` for Trunk.io tooling) are maintained as templates within this repository. A setup process symlinks these directories directly into the target project (e.g., `pushd-web`).
-3.  **Git Exclusion:** Target projects are expected to have `.vscode/` and `.trunk/` listed in their `.gitignore` files. This prevents the symlinked configurations from being committed to the target project's repository, maintaining the separation.
+1. **Sandboxing:** Tools and runtimes are managed within this repository,
+   separate from target projects
+2. **Symlinking:** Configuration directories (`.vscode` and `.trunk`) are
+   maintained as templates and symlinked into target projects
+3. **Git Exclusion:** Target projects exclude these symlinked directories in
+   their `.gitignore` files
 
-This approach allows developers to benefit from modern tooling without altering the core runtime environment of the projects they are working on.
-
-## Core Concept & Expectations
-
-- **This Repo (`pushd-devtools`)**: Manages tool versions (`mise.toml`), configurations (`templates/`), and setup scripts (`scripts/`). You only set this up _once_ on your machine.
-- **Target Project (e.g., `pushd-web`)**: Uses the tools provided by `pushd-devtools` via symlinked configuration files (`.vscode/`, `.trunk/`).
-- **Separation**: The target project _does not_ directly depend on or include the runtimes (Node, Ruby) managed by `pushd-devtools`. Its own runtime dependencies remain unchanged.
-- **Workflow**: Set up `pushd-devtools` -> Set an environment variable pointing to it -> Run a script _in_ your target project to link the configurations.
-- **Updates**: Tool versions and configurations are updated centrally by pulling changes in `pushd-devtools`.
-- **Prerequisites**: You need `mise` to manage this repository's tools. Target projects primarily need Git and a shell for the linking process.
+This approach allows developers to benefit from modern tooling without altering
+the core runtime environment of the projects they are working on.
 
 ## Prerequisites
 
-**For `pushd-devtools` setup (on your development machine):**
+**For `pushd-devtools` setup:**
 
-- Git (for cloning this repository).
-- [mise (formerly rtx)](https://mise.jdx.dev/) version manager. This is the primary requirement for _this_ repository. The setup script uses `mise` to install necessary runtimes like Deno, Node, and Ruby _within the context of this project_.
+- Git for cloning this repository
+- [mise](https://mise.jdx.dev/) version manager (formerly rtx)
 
-**For Target Projects (e.g., `pushd-web`):**
+**For Target Projects:**
 
-- Git (to manage the project and its `.gitignore`).
-- A Unix-like shell environment (Bash, Zsh, etc.) capable of creating symbolic links (`ln -s`). This is needed for the configuration linking script.
-- Potentially specific editor extensions (e.g., VS Code extensions for Trunk.io, Ruby LSP, Sorbet, YAML) to utilize the provided configurations.
-
-_(Note: Target projects do **not** need to have the specific Node.js or Ruby versions defined in `pushd-devtools/mise.toml` installed directly, as the tools will run using the sandboxed versions managed here via `mise`.)_
+- Git
+- Unix-like shell environment
+- Editor extensions for full functionality
 
 ## Setup & Usage
 
-The setup involves cloning this repository, running a setup script to install tools, setting an environment variable, and then running a linking script in your target projects.
-
-```mermaid
-graph TD
-    A[Start: Developer Machine] --> B(Clone pushd-devtools);
-    B --> C{In pushd-devtools dir};
-    C --> D[Run setup.ts<br>(mise install tools)];
-    D --> E[Set PUSHD_DEVTOOLS_DIR<br>env var globally];
-    E --> F{In Target Project dir<br>(e.g., pushd-web)};
-    F --> G[Run link-configs.ts<br>(using PUSHD_DEVTOOLS_DIR)];
-    G --> H[Symlinks created in Target Project:<br>.vscode -> .../templates/.vscode<br>.trunk -> .../templates/.trunk];
-    H --> I{Ensure .gitignore<br>in Target Project};
-    I --> J[Add .vscode/ & .trunk/];
-    H --> K[Editor (e.g., VS Code)<br>uses symlinked configs];
-    J --> K;
-```
-
 ### 1. Clone this Repository
-
-_(This step is performed once on your development machine)_
-
-Choose a stable location on your development machine to clone this repository. For example:
 
 ```bash
 git clone <repository-url> ~/dev/pushd-devtools
 ```
 
-_(Replace `<repository-url>` with the actual URL)_
-
 ### 2. Run Initial Setup Script
 
-_(This step is performed within your local clone of `pushd-devtools`)_
-
-Navigate to the root directory of your cloned `pushd-devtools` repository. This script uses `mise` to install the correct versions of Deno, Node.js, Ruby, etc., as defined in `mise.toml`.
-
 ```bash
-cd /path/to/your/pushd-devtools/clone
+cd ~/dev/pushd-devtools
 deno run -A scripts/setup.ts
 ```
 
-This script will:
+### 3. Set Environment Variable
 
-- Check if `mise` is installed.
-- Run `mise install` to install the required tool versions.
-- Provide instructions for the next step (setting the environment variable).
-
-### 3. Set Environment Variable (Crucial)
-
-_(This step modifies your shell configuration)_
-
-After the setup script completes successfully, it will remind you to set the `PUSHD_DEVTOOLS_DIR` environment variable. This variable is essential for the VS Code settings and the linking script to find this repository.
-
-Add the following line to your shell configuration file (e.g., `~/.zshrc`, `~/.bashrc`, `~/.profile`, or `~/.config/fish/config.fish`), replacing the path with the **absolute path** to where you cloned `pushd-devtools`:
+Add to your shell configuration file (e.g., `~/.zshrc`):
 
 ```bash
-export PUSHD_DEVTOOLS_DIR="/absolute/path/to/your/pushd-devtools/clone"
-# Example: export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
+export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
 ```
 
-**Important:** Remember to source your profile (e.g., `source ~/.zshrc`) or restart your shell session for the variable to take effect. Verify it's set correctly using `echo $PUSHD_DEVTOOLS_DIR` **before proceeding to the next step.**
+Source your profile or restart your shell and verify with:
+
+```bash
+echo $PUSHD_DEVTOOLS_DIR
+```
 
 ### 4. Link Configurations into Target Project
 
-_(This step is performed within the root directory of each target project, e.g., `pushd-web`)_
-
-For each project where you want to use these development tools (e.g., `pushd-web`), navigate to the project's **root directory** in your terminal. Then, run the linking script using Deno. **Ensure the `PUSHD_DEVTOOLS_DIR` environment variable is set and exported in the shell session you use to run this command.**
+From within your target project directory:
 
 ```bash
-# Ensure you are in the target project's directory (e.g., ~/dev/pushd-web)
-# Verify the env var is set: echo $PUSHD_DEVTOOLS_DIR
-
-# Run the linking script (use the actual path from PUSHD_DEVTOOLS_DIR)
 deno run -A --unstable-fs "$PUSHD_DEVTOOLS_DIR/scripts/link-configs.ts"
 ```
 
-This script will:
-
-- Check if the `PUSHD_DEVTOOLS_DIR` environment variable is set.
-- Prompt you if existing `.vscode` or `.trunk` directories/symlinks need to be removed or overwritten.
-- Create symbolic links from `pushd-devtools/templates/*` to `.vscode` and `.trunk` in your current (target project) directory.
-- Remind you to add `.vscode/` and `.trunk/` to your project's `.gitignore` file.
-
-**Gitignore:** Remember to add or ensure the following lines are present in the target project's `.gitignore` file:
+Add to your project's `.gitignore`:
 
 ```gitignore
 .vscode/
 .trunk/
 ```
 
-### 5. Editor Integration
+## Tool Configuration
 
-_(This step relates to your code editor configuration)_
+### mise.toml
 
-- **VS Code:** Ensure you have the necessary extensions installed (e.g., `Trunk.io`, `Shopify.ruby-lsp`,
-  `sorbet.sorbet-vscode-extension`, `redhat.vscode-yaml`). Reload VS Code after creating the symlinks.
-  The settings defined in `.vscode/settings.json` (via the symlink) should now be active,
-  utilizing the `PUSHD_DEVTOOLS_DIR` variable.
-- **Other Editors:** Adapt the configuration as needed for your editor of choice, potentially leveraging the `.trunk/` directory if using Trunk CLI directly.
+The project uses mise for managing tool versions and defining tasks. Key
+sections include:
 
-### 6. IDE Integration with mise
+```toml
+[env]
+# Environment variables configuration
+NODE_ENV = "development"
+TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
+PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
-For the best development experience, you'll want your IDE to use the tools managed by mise. Here are some approaches for various editors:
+[tools]
+# Managed runtime versions
+ruby = "3.3.3"
+node = "20.14.0"
 
-#### VS Code
+[tasks]
+# Predefined tasks for common operations
+install = "mise install"
+trunk-check = "trunk check --ci"
+trunk-fmt = "trunk fmt"
+trunk-upgrade = "trunk upgrade"
+# ... additional tasks
+```
 
-Using the VSCode extension for mise is recommended:
+### Common Tasks
+
+The repository provides several predefined tasks that can be run using
+`mise run`:
+
+- `mise run install` - Install all required tools
+- `mise run trunk-check` - Run Trunk checks
+- `mise run trunk-fmt` - Format code using Trunk
+- `mise run trunk-upgrade` - Upgrade Trunk plugins
+- `mise run sync-trunk-versions` - Sync linter versions from Trunk to mise.toml
+- `mise run transform-apply` - Apply generated transformations
+
+## IDE Integration
+
+### VS Code
+
+For the best experience:
 
 - Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension
-- It will automatically configure other extensions to use tools from mise
-- You'll get task integration and environment variable support
+- The extension will automatically configure other tools to use mise-managed
+  versions
 
-Alternatively, add mise shims to your PATH in your shell profile:
+Alternatively, add mise shims to your PATH:
 
 ```bash
-# ~/.zprofile or ~/.bashrc
 eval "$(mise activate zsh --shims)"
 ```
 
-#### JetBrains IDEs (IntelliJ, WebStorm, etc.)
+### JetBrains IDEs
 
-There are two main options:
+Options:
 
 - Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin
-- Add mise shims to your PATH in your shell profile
+- Add mise shims to your PATH
 
-For SDK configuration:
-
-1. Go to Project Settings → SDK
-2. Look for versions provided by mise
-
-#### Vim/Neovim
+### Vim/Neovim
 
 Add mise shims to your PATH in your initialization file:
 
@@ -190,29 +165,51 @@ let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
 vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
 ```
 
-## Included Tools & Configurations (via Templates)
+## Project Structure
 
-- **`.vscode/`**: Contains VS Code settings (`settings.json`) and potentially extension recommendations (`extensions.json`) tailored for projects using these devtools. Configures formatters, linters, language servers (Ruby LSP, Sorbet), and JSON/YAML validation using Trunk.
-- **`.trunk/`**: Contains the `trunk.yaml` configuration file for the Trunk.io toolchain manager. This defines the specific linters, formatters, and other tools managed by Trunk.
-- **`mise.toml`**: Defines runtime versions managed by `mise` (`[tools]`), project-specific environment variables (`[env]`), and runnable project tasks (`[tasks]`).
+```
+pushd-devtools/
+├── mise.toml            # Tool versions, environment variables, and tasks
+├── scripts/             # Helper scripts for setup and configuration
+│   ├── setup.ts         # Initial setup script
+│   ├── link-configs.ts  # Script to create symlinks in target projects
+│   ├── sync-trunk-versions.ts # Syncs versions from Trunk to mise
+│   └── transform-apply.ts     # Applies configuration transformations
+├── templates/           # Configuration templates for symlinks
+│   ├── trunk/           # Trunk.io configuration
+│   └── vscode/          # VS Code settings and extensions
+└── src/                 # Source code for transformations and utilities
+```
 
 ## Managing & Updating Tools
 
-All tool definitions, configurations, and runtime management happen **within this `pushd-devtools` repository**. To update the tools for all linked projects:
+To update tools for all linked projects:
 
-1.  Pull the latest changes in your local clone of `pushd-devtools`.
-    ```bash
-    cd $PUSHD_DEVTOOLS_DIR
-    git pull origin main # Or the relevant branch
-    ```
-2.  If the Trunk configuration (`templates/trunk/.trunk/trunk.yaml`) has changed, you might need to let Trunk install/update tools. This usually happens automatically when Trunk runs (e.g., via the VS Code extension or CLI).
-3.  Restart your editor or relevant language servers if necessary.
+1. Pull the latest changes:
+   ```bash
+   cd $PUSHD_DEVTOOLS_DIR
+   git pull origin main
+   ```
 
-Contributions or changes to the tooling setup should be made via pull requests to this repository.
+2. Sync versions if needed:
+   ```bash
+   mise run sync-trunk-versions
+   ```
 
-## Project Structure
+3. Apply transformations:
+   ```bash
+   mise run transform-apply
+   ```
 
-- **`templates/`**: Contains the configuration artifacts (`.vscode/` and `.trunk/`) intended to be symlinked into target projects.
-- **`scripts/`**: Contains helper scripts (`setup.ts`, `link-configs.ts`) for automating the setup and linking process.
-- **`mise.toml`**: Defines project tools/runtimes, environment variables, and common tasks.
-- **Other Files (e.g., `README.md`)**: Project documentation.
+4. Restart your editor if necessary
+
+## Trunk Integration
+
+The repository includes configuration for Trunk.io tooling:
+
+- Linters are defined in both `mise.toml` under `[_.devtools.trunk]` and in the
+  Trunk template
+- When updating linter versions, use `mise run sync-trunk-versions` to keep
+  configurations in sync
+- Custom transformations between mise.toml and trunk.yaml are handled by the
+  transform scripts
