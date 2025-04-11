@@ -42,6 +42,11 @@ deno = "2.2.4"
 nodejs = "20.14.0"
 ruby = "3.3.3"
 trunk = "1.22.12"
+# Add linters as tools
+prettier = "3.5.3"
+eslint = "9.24.0"
+standardrb = "1.49.0"
+yamllint = "1.37.0"
 
 [tasks]
 
@@ -211,13 +216,8 @@ imports = [
 [settings.devtools.trunk]
 # The Trunk CLI version is taken from the main [tools] section (e.g., tools.trunk)
 # The Ruby and Node runtime versions for Trunk are also taken from the main [tools] section.
-enabled_linters = [
-  # Should match versions defined in ruby.gems and node.dev_dependencies above
-  "standardrb@1.49.0",
-  "yamllint@1.37.0",
-  "prettier@3.5.3",
-  "eslint@9.24.0",
-]
+# Linters are now defined in the tools section above and will be enabled
+# if they are in the approved linter list
 actions_enabled = [
   "trunk-upgrade-available",
   "trunk-fmt-pre-commit",

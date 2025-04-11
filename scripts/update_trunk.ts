@@ -39,7 +39,7 @@ async function main() {
   // Special handling for Deno - add to tools.definitions instead of runtimes
   if (miseConfig.tools?.deno) {
     console.log("Setting up Deno in tools.definitions...");
-    
+
     // Ensure tools.definitions exists
     if (!trunkConfig.tools) {
       trunkConfig.tools = { definitions: [] };
@@ -48,21 +48,21 @@ async function main() {
       trunkConfig.tools.definitions = [];
       changed = true;
     }
-    
+
     const denoVersion = miseConfig.tools.deno;
     if (typeof denoVersion === "string") {
       // Check if Deno already exists in tools.definitions
       const existingDenoIndex = trunkConfig.tools.definitions.findIndex(
         tool => tool.name === "deno"
       );
-      
+
       if (existingDenoIndex === -1) {
         // Add Deno to tools.definitions
         trunkConfig.tools.definitions.push({
           name: "deno",
           download: "deno",
           known_good_version: denoVersion,
-          shims: ["deno"]
+          shims: ["deno"],
         });
         console.log(`Added Deno ${denoVersion} to tools.definitions`);
         changed = true;
@@ -94,8 +94,8 @@ async function main() {
 
     // Map mise tool names to trunk runtime names
     const toolMapping = {
-      "nodejs": "node",
-      "ruby": "ruby"
+      nodejs: "node",
+      ruby: "ruby",
       // Removed "deno": "deno" as it's not supported by Trunk
     };
 
@@ -137,10 +137,10 @@ async function main() {
     }
 
     // Remove deno from runtimes if it exists (since it should be in tools.definitions instead)
-    const denoIndex = trunkConfig.runtimes?.enabled?.findIndex(r => 
-      typeof r === "string" && r.startsWith("deno@")
+    const denoIndex = trunkConfig.runtimes?.enabled?.findIndex(
+      r => typeof r === "string" && r.startsWith("deno@")
     );
-    
+
     if (denoIndex !== -1 && denoIndex !== undefined) {
       console.log(`Removing 'deno' from runtimes.enabled as it's not a supported runtime`);
       trunkConfig.runtimes.enabled.splice(denoIndex, 1);
@@ -149,49 +149,122 @@ async function main() {
   }
 
   // Update linters
-  if (miseConfig.settings?.devtools?.trunk?.enabled_linters) {
-    console.log("Updating linters from mise.toml settings...");
+  console.log("Updating linters from mise.toml tools...");
 
-    if (!trunkConfig.lint) {
-      trunkConfig.lint = { enabled: [] };
-      changed = true;
-    } else if (!trunkConfig.lint.enabled) {
-      trunkConfig.lint.enabled = [];
-      changed = true;
-    }
+  if (!trunkConfig.lint) {
+    trunkConfig.lint = { enabled: [] };
+    changed = true;
+  } else if (!trunkConfig.lint.enabled) {
+    trunkConfig.lint.enabled = [];
+    changed = true;
+  }
 
-    // Update each linter
-    for (const linter of miseConfig.settings.devtools.trunk.enabled_linters) {
-      const [linterName, linterVersion] = linter.split("@");
-      const linterString = `${linterName}@${linterVersion}`;
+  // Approved linter list from trunk-yaml-schema.json
+  const approvedLinters = [
+    "actionlint",
+    "ansible-lint",
+    "autopep8",
+    "bandit",
+    "black",
+    "black-py",
+    "brakeman",
+    "buf-breaking",
+    "buf-format",
+    "buf-lint",
+    "buildifier",
+    "cfnlint",
+    "clang-format",
+    "clang-tidy",
+    "clippy",
+    "cue-fmt",
+    "detekt",
+    "detekt-explicit",
+    "detekt-gradle",
+    "dotenv-linter",
+    "eslint",
+    "flake8",
+    "git-diff-check",
+    "gitleaks",
+    "gofmt",
+    "goimports",
+    "golangci-lint",
+    "hadolint",
+    "haml-lint",
+    "include-what-you-use",
+    "isort",
+    "ktlint",
+    "markdownlint",
+    "mypy",
+    "prettier",
+    "pylint",
+    "rubocop",
+    "rubocop-fmt",
+    "rufo",
+    "rustfmt",
+    "scalafmt",
+    "semgrep",
+    "shellcheck",
+    "shfmt",
+    "sql-formatter",
+    "standardrb",
+    "stylelint",
+    "stylelint-fmt",
+    "svgo",
+    "taplo",
+    "taplo-fmt",
+    "terraform",
+    "terraform-fmt",
+    "terraform-validate",
+    "tflint",
+    "yamllint",
+    "yapf",
+  ];
 
-      // Find if linter already exists
-      const existingIndex = trunkConfig.lint.enabled.findIndex(lint => {
-        if (typeof lint === "string") {
-          return lint.startsWith(`${linterName}@`);
-        } else if (typeof lint === "object" && lint.name) {
-          return String(lint.name).startsWith(`${linterName}@`);
-        }
-        return false;
-      });
+  // Excluded tools that should not be treated as linters
+  const nonLinterTools = ["deno", "nodejs", "ruby", "trunk"];
 
-      if (existingIndex === -1) {
-        trunkConfig.lint.enabled.push(linterString);
-        console.log(`Added linter: ${linterString}`);
-        changed = true;
-      } else {
-        const existing = trunkConfig.lint.enabled[existingIndex];
-        if (typeof existing === "string" && existing !== linterString) {
-          console.log(`Updating linter from ${existing} to ${linterString}`);
-          trunkConfig.lint.enabled[existingIndex] = linterString;
-          changed = true;
-        } else if (typeof existing === "object" && existing.name !== linterString) {
-          console.log(`Updating linter from ${existing.name} to ${linterString}`);
-          trunkConfig.lint.enabled[existingIndex] = linterString;
+  // Check tools for linters
+  if (miseConfig.tools) {
+    for (const [toolName, toolVersion] of Object.entries(miseConfig.tools)) {
+      // Skip non-linter tools
+      if (nonLinterTools.includes(toolName)) {
+        continue;
+      }
+
+      // Check if the tool is an approved linter
+      if (approvedLinters.includes(toolName)) {
+        const linterString = `${toolName}@${toolVersion}`;
+
+        // Find if linter already exists
+        const existingIndex = trunkConfig.lint.enabled.findIndex(lint => {
+          if (typeof lint === "string") {
+            return lint.startsWith(`${toolName}@`);
+          } else if (typeof lint === "object" && lint.name) {
+            return String(lint.name).startsWith(`${toolName}@`);
+          }
+          return false;
+        });
+
+        if (existingIndex === -1) {
+          trunkConfig.lint.enabled.push(linterString);
+          console.log(`Added linter: ${linterString}`);
           changed = true;
         } else {
-          console.log(`Linter ${linterString} already exists and is up to date.`);
+          const existing = trunkConfig.lint.enabled[existingIndex];
+          if (typeof existing === "string" && existing !== linterString) {
+            console.log(`Updating linter from ${existing} to ${linterString}`);
+            trunkConfig.lint.enabled[existingIndex] = linterString;
+            changed = true;
+          } else if (typeof existing === "object" && existing.name !== linterString) {
+            console.log(`Updating linter from ${existing.name} to ${linterString}`);
+            trunkConfig.lint.enabled[existingIndex] = linterString;
+            changed = true;
+          } else {
+            console.log(`Linter ${linterString} already exists and is up to date.`);
+          }
         }
+      } else {
+        console.log(`Tool "${toolName}" is not in the approved linter list, skipping.`);
       }
     }
   }
