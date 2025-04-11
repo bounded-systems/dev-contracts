@@ -70,17 +70,23 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
-# Generate Contract Types from Schema Task (Temporary/Failed attempt)
-[tasks.generate-contract-types]
-run = "deno run -A src/contracts/generate-types-from-schema.ts && trunk fmt"
+# Generate Contract Types Task
+[tasks.generate-types]
+run = "deno run --allow-read --allow-write --allow-run scripts/types/generate.ts"
 depends = ["install"]
-description = "Generate TypeScript types from schemas/contracts-schema.json and format using Trunk"
+description = "Generate TypeScript .d.ts files for specified source directories (src/contracts, scripts)"
 
-# Validate README Schema Task
-# [tasks.validate-schema] # REMOVED - Integrated into contracts-validate-structure
-# run = "deno run -A scripts/validate-readme-schema.ts"
-# depends = ["generate-contract-types"]
-# description = "Validate readme.yml against the JSON schema"
+# Validate Type Definition Coverage Task
+[tasks.validate-types-coverage]
+# Pass MISE_WORKSPACE_ROOT environment variable to the script
+run = "MISE_WORKSPACE_ROOT={{env.PWD}} deno run --allow-read --allow-env scripts/types/validate.ts"
+depends = ["install"]
+description = "Validate that all .ts files in src/contracts and scripts have corresponding .d.ts files in types"
+
+# Ensure Type Definition Coverage (Generate + Validate)
+[tasks.ensure-types]
+depends = ["generate-types", "validate-types-coverage"]
+description = "Generate type definitions and then validate coverage"
 
 # Update README Generation Task to depend on schema generation and run formatter
 [tasks.generate-readme]
