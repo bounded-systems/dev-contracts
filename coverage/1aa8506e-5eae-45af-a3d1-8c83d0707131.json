@@ -1,0 +1,85 @@
+{
+  "scriptId": "319",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/downloader.test.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 4998, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "globalThis.fetch",
+      "ranges": [
+        { "startOffset": 379, "endOffset": 1106, "count": 4 },
+        { "startOffset": 526, "endOffset": 977, "count": 3 },
+        { "startOffset": 977, "endOffset": 1104, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "setupDownloaderTest",
+      "ranges": [{ "startOffset": 1139, "endOffset": 1365, "count": 4 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "teardownDownloaderTest",
+      "ranges": [
+        { "startOffset": 1366, "endOffset": 1712, "count": 4 },
+        { "startOffset": 1490, "endOffset": 1710, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1800, "endOffset": 2680, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2743, "endOffset": 3440, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3507, "endOffset": 4134, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 3753, "endOffset": 3811, "count": 1 },
+        { "startOffset": 3805, "endOffset": 3810, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 3940, "endOffset": 3990, "count": 1 },
+        { "startOffset": 3984, "endOffset": 3989, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4200, "endOffset": 4898, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 4515, "endOffset": 4573, "count": 1 },
+        { "startOffset": 4567, "endOffset": 4572, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 4704, "endOffset": 4754, "count": 1 },
+        { "startOffset": 4748, "endOffset": 4753, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "scriptId": "319",
+  "url": "file:///Users/bobby/dev/pushd-devtools/scripts/roadmap/validator.test.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 3633, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 353, "endOffset": 506, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 616, "endOffset": 795, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 897, "endOffset": 1056, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 1176, "endOffset": 1340, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 1461, "endOffset": 1626, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 1756, "endOffset": 1924, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 2045, "endOffset": 2214, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 2332, "endOffset": 2498, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 2607, "endOffset": 2768, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 2877, "endOffset": 3040, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 3156, "endOffset": 3326, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fn",
+      "ranges": [{ "startOffset": 3448, "endOffset": 3628, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

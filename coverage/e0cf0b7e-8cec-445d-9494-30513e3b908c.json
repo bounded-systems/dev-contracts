@@ -1,0 +1,71 @@
+{
+  "scriptId": "322",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/config.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 7673, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "parseScriptArgs",
+      "ranges": [{ "startOffset": 468, "endOffset": 1138, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "readOptionalJsonc",
+      "ranges": [
+        { "startOffset": 1290, "endOffset": 2096, "count": 6 },
+        { "startOffset": 1408, "endOffset": 1448, "count": 4 },
+        { "startOffset": 1448, "endOffset": 2094, "count": 3 },
+        { "startOffset": 1511, "endOffset": 1688, "count": 2 },
+        { "startOffset": 1688, "endOffset": 2090, "count": 1 },
+        { "startOffset": 1856, "endOffset": 2090, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "readOptionalToml",
+      "ranges": [
+        { "startOffset": 2245, "endOffset": 3326, "count": 6 },
+        { "startOffset": 2362, "endOffset": 2397, "count": 2 },
+        { "startOffset": 2397, "endOffset": 2552, "count": 0 },
+        { "startOffset": 2552, "endOffset": 2592, "count": 2 },
+        { "startOffset": 2592, "endOffset": 3324, "count": 5 },
+        { "startOffset": 2655, "endOffset": 2832, "count": 4 },
+        { "startOffset": 2832, "endOffset": 3320, "count": 1 },
+        { "startOffset": 2907, "endOffset": 3086, "count": 0 },
+        { "startOffset": 3197, "endOffset": 3212, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "loadConfigs",
+      "ranges": [
+        { "startOffset": 3680, "endOffset": 7672, "count": 6 },
+        { "startOffset": 4003, "endOffset": 4023, "count": 5 },
+        { "startOffset": 4023, "endOffset": 4465, "count": 1 },
+        { "startOffset": 4121, "endOffset": 4229, "count": 0 },
+        { "startOffset": 4304, "endOffset": 4414, "count": 0 },
+        { "startOffset": 4470, "endOffset": 4779, "count": 1 },
+        { "startOffset": 4585, "endOffset": 4600, "count": 0 },
+        { "startOffset": 5133, "endOffset": 5138, "count": 5 },
+        { "startOffset": 5138, "endOffset": 5492, "count": 1 },
+        { "startOffset": 5253, "endOffset": 5268, "count": 0 },
+        { "startOffset": 5576, "endOffset": 6902, "count": 3 },
+        { "startOffset": 5687, "endOffset": 5798, "count": 1 },
+        { "startOffset": 5798, "endOffset": 6281, "count": 2 },
+        { "startOffset": 5948, "endOffset": 6139, "count": 1 },
+        { "startOffset": 6139, "endOffset": 6273, "count": 0 },
+        { "startOffset": 6281, "endOffset": 6466, "count": 1 },
+        { "startOffset": 6466, "endOffset": 6898, "count": 2 },
+        { "startOffset": 6637, "endOffset": 6662, "count": 0 },
+        { "startOffset": 6902, "endOffset": 7229, "count": 3 },
+        { "startOffset": 6928, "endOffset": 7229, "count": 1 },
+        { "startOffset": 7229, "endOffset": 7276, "count": 4 },
+        { "startOffset": 7276, "endOffset": 7671, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

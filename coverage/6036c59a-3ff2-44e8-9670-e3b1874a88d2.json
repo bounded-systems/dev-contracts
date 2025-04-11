@@ -1,0 +1,39 @@
+{
+  "scriptId": "319",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/extractor.test.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 0, "endOffset": 4286, "count": 1 },
+        { "startOffset": 282, "endOffset": 309, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1493, "endOffset": 2219, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2308, "endOffset": 2559, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2630, "endOffset": 2804, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2933, "endOffset": 4046, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4117, "endOffset": 4283, "count": 1 }],
+      "isBlockCoverage": true
+    }
+  ]
+}

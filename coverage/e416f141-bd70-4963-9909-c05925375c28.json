@@ -1,0 +1,22 @@
+{
+  "scriptId": "322",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/downloader.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 1495, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "downloadFile",
+      "ranges": [
+        { "startOffset": 442, "endOffset": 1494, "count": 4 },
+        { "startOffset": 805, "endOffset": 828, "count": 3 },
+        { "startOffset": 828, "endOffset": 917, "count": 1 },
+        { "startOffset": 917, "endOffset": 1492, "count": 2 },
+        { "startOffset": 1272, "endOffset": 1287, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

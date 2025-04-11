@@ -1,0 +1,34 @@
+{
+  "scriptId": "322",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/resolver.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 3873, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "resolveDownloadTasks",
+      "ranges": [
+        { "startOffset": 628, "endOffset": 3872, "count": 4 },
+        { "startOffset": 1088, "endOffset": 1121, "count": 1 },
+        { "startOffset": 1122, "endOffset": 1140, "count": 3 },
+        { "startOffset": 1265, "endOffset": 1629, "count": 0 },
+        { "startOffset": 1937, "endOffset": 1948, "count": 3 },
+        { "startOffset": 1949, "endOffset": 1970, "count": 2 },
+        { "startOffset": 1972, "endOffset": 3637, "count": 1 },
+        { "startOffset": 2088, "endOffset": 3633, "count": 5 },
+        { "startOffset": 2118, "endOffset": 3627, "count": 4 },
+        { "startOffset": 2223, "endOffset": 2249, "count": 3 },
+        { "startOffset": 2250, "endOffset": 2275, "count": 3 },
+        { "startOffset": 2277, "endOffset": 3279, "count": 3 },
+        { "startOffset": 2455, "endOffset": 2679, "count": 2 },
+        { "startOffset": 2679, "endOffset": 3269, "count": 1 },
+        { "startOffset": 3279, "endOffset": 3619, "count": 1 },
+        { "startOffset": 3434, "endOffset": 3619, "count": 0 },
+        { "startOffset": 3637, "endOffset": 3771, "count": 3 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

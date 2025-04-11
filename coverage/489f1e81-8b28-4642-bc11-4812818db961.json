@@ -1,0 +1,29 @@
+{
+  "scriptId": "319",
+  "url": "file:///Users/bobby/dev/pushd-devtools/src/schemas/resolver.test.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 0, "endOffset": 4346, "count": 1 },
+        { "startOffset": 283, "endOffset": 310, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1849, "endOffset": 3559, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3624, "endOffset": 3728, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3827, "endOffset": 4343, "count": 1 }],
+      "isBlockCoverage": true
+    }
+  ]
+}

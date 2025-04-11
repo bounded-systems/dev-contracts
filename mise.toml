@@ -100,6 +100,12 @@ run = "deno test"
 depends = ["install"]
 description = "Run Deno tests"
 
+# New Task: Validate Test Coverage
+[tasks.validate-coverage]
+run = "deno run --allow-read src/contracts/quality/coverage/validate.ts"
+depends = ["install"]
+description = "Check that all .ts files have a corresponding .test.ts file"
+
 # Clone task (no dependencies as it's meant to be run before mise is even installed)
 [tasks.clone]
 run = "deno run -A scripts/clone.ts $MISE_ARGS"
