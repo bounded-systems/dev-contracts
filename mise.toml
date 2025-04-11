@@ -83,8 +83,8 @@ run = "mise install"
 
 # Deno test tasks
 [tasks.deno_test]
-run = "deno test --allow-run --allow-read --allow-env"
-depends = ["install"]
+run = "deno test --allow-run --allow-read --allow-env scripts/**/*.test.ts"
+# depends = ["install"] # Dependency seems redundant if tests are run via deno
 
 [tasks.deno_test_watch]
 run = "deno test --allow-run --allow-read --allow-env --watch"
@@ -96,52 +96,32 @@ run = "deno test --allow-run --allow-read --allow-env --coverage=coverage && den
 depends = ["install"]
 description = "Run tests and generate coverage report"
 
-[tasks.deno_test_schemas]
-run = "deno test --allow-read --allow-write --allow-net --allow-env --no-check scripts/generate_schema_types.test.ts"
-depends = ["install"]
-description = "Run tests for the schema validator"
-
 # Setup and configuration tasks
 [tasks.setup]
 run = "deno run -A scripts/setup.ts"
 depends = ["install"]
 description = "Run initial project setup"
 
-[tasks.config_link]
-run = "deno run -A scripts/link-configs.ts"
-depends = ["install"]
-description = "Link configuration files"
-
-[tasks.config_generate]
-run = "deno run -A scripts/generate_configs.ts"
-depends = ["install"]
-description = "Generate config files from mise.toml"
-
-[tasks.config_generate_env]
-run = "deno run -A scripts/generate_env.ts"
-depends = ["install"]
-description = "Generate environment file"
-
 # Schema and validation tasks
-[tasks.schema_validate]
-run = "deno run -A scripts/generate_schema_types.ts"
-depends = ["install"]
-description = "Validate schemas, generate TypeScript interfaces, and ensure consistency between mise.toml and trunk.yaml"
-
-[tasks.schema_transform]
-run = "deno run -A scripts/update_trunk.ts"
-depends = ["install"]
-description = "Update trunk.yaml to match mise.toml configuration"
-
-[tasks.schema_legacy_transform]
-run = "deno run -A scripts/generate_schema_types.ts --transform"
-depends = ["install"]
-description = "Legacy task to validate schemas and update trunk.yaml using the old script"
-
-[tasks.schema_sync_yaml]
-run = "deno run -A scripts/sync_yaml_schemas.ts"
-depends = ["install"]
-description = "Sync YAML schemas"
+# [tasks.schema_validate]
+# run = "deno run -A scripts/generate_schema_types.ts"
+# depends = ["install"]
+# description = "Validate schemas, generate TypeScript interfaces, and ensure consistency between mise.toml and trunk.yaml"
+#
+# [tasks.schema_transform]
+# run = "deno run -A scripts/update_trunk.ts"
+# depends = ["install"]
+# description = "Update trunk.yaml to match mise.toml configuration"
+#
+# [tasks.schema_legacy_transform]
+# run = "deno run -A scripts/generate_schema_types.ts --transform"
+# depends = ["install"]
+# description = "Legacy task to validate schemas and update trunk.yaml using the old script"
+#
+# [tasks.schema_sync_yaml]
+# run = "deno run -A scripts/sync_yaml_schemas.ts"
+# depends = ["install"]
+# description = "Sync YAML schemas"
 
 # Trunk tasks
 [tasks.trunk_check]
@@ -159,22 +139,6 @@ run = "trunk upgrade"
 depends = ["install"]
 description = "Upgrade Trunk plugins"
 
-[tasks.trunk_validate]
-run = "deno run -A scripts/validate_trunk.ts"
-depends = ["install"]
-description = "Validate Trunk configuration"
-
-# Project-wide validation and updates
-[tasks.sync_validate]
-run = "deno run -A scripts/sync_validate.ts"
-depends = ["install"]
-description = "Validate and sync configuration files"
-
-[tasks.update_all]
-depends = ["config_generate"]
-run = "deno run -A scripts/run_installs.ts"
-description = "Generate configs and install dependencies"
-
 # Type Generation Task
 [tasks.generate_types]
 run = "deno run -A scripts/generate_types.ts"
@@ -182,15 +146,15 @@ description = "Generate TypeScript types from mise.json and trunk-yaml-schema.js
 depends = ["install"] # Depends on deno being installed
 
 # Validation Task (using transformation engine)
-[tasks.validate]
-run = "deno run -A scripts/transformation/engine.ts $MISE_ARGS"
-depends = ["install"]
-description = "Run validation and transformation using the engine"
+# [tasks.validate] # REMOVED - Engine moved to src and not run directly
+# run = "deno run -A scripts/transformation/engine.ts $MISE_ARGS"
+# depends = ["install"]
+# description = "Run validation and transformation using the engine"
 
 # Apply Transformation Task
 [tasks.transform-apply]
 run = "deno run -A scripts/transformation/apply.ts $MISE_ARGS"
-depends = ["validate"]
+# depends = ["validate"] # REMOVED dependency
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
 # Enable lockfile for consistent versioning across environments

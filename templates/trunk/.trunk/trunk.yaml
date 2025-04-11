@@ -31,9 +31,7 @@ actions:
   disabled:
     - trunk-announce
 runtimes:
-  enabled:
-    - node@20.14.0
-    - ruby@3.3.3
+  enabled: []
   definitions:
     - type: ruby
       runtime_environment:
@@ -53,6 +51,8 @@ runtimes:
           value: development
         - name: PACKAGE_FILE
           value: $PUSHD_DEVTOOLS_DIR/runtimes/node/package.json
+    - type: yamllint
+      version: 1.26.3
 plugins:
   sources:
     - id: trunk

@@ -7,15 +7,15 @@ import { exists } from "jsr:@std/fs/exists";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 
 // Import the generated transformation function(s)
-import { applyMiseToTrunkRules } from "../transformers/generated_transformers.ts";
+import { applyMiseToTrunkRules } from "../src/transformation/generated/generated_transformers.ts";
 
 // Assuming types are defined, adjust path as needed
-import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
-import type { TransformContext } from "../types/transform_rules.ts";
+import type { MiseConfig, TrunkConfig } from "../src/types/mise.ts";
+import type { TransformContext } from "../src/types/transform_rules.ts";
 
 // --- Constants & Configuration ---
 const SCRIPT_DIR = path.dirname(path.fromFileUrl(import.meta.url));
-const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", ".."); // Adjust if script moves
+const REPO_ROOT = path.resolve(SCRIPT_DIR, ".."); // Adjusted path: apply.ts is now directly in scripts/
 const MISE_CONFIG_PATH = path.join(REPO_ROOT, "mise.toml");
 const TEMPLATE_TRUNK_YAML_PATH =
   Deno.env.get("TRUNK_YAML_PATH") ?? path.join(REPO_ROOT, "templates/trunk/.trunk/trunk.yaml");

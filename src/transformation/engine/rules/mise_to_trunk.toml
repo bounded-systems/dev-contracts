@@ -1,0 +1,47 @@
+# Rules to transform trunk.yaml based on mise.toml
+
+# Rule to synchronize enabled linters
+[[rule]]
+name = "SyncEnabledLinters"
+description = "Synchronizes lint.enabled in trunk.yaml based on parsed linter list from mise.toml env var"
+target_path = ["lint", "enabled"]
+# Source path points to the env var containing the JSON string
+source_path = ["env", "DEVTOOLS_TRUNK_ENABLED_LINTERS"]
+transformer_function = "syncLinters"
+priority = 10
+# [rule.context.linterFormatOverrides]
+# git-diff-check = "(name, _version) => name"
+[rule.context.linterFormatOptions.git-diff-check]
+noVersionSuffix = true
+
+# Rule to synchronize runtime definitions
+[[rule]]
+name = "SyncRuntimeDefinitions"
+description = "Synchronizes runtimes.definitions in trunk.yaml with tools in mise.toml"
+target_path = ["runtimes", "definitions"]
+source_path = ["tools"]
+transformer_function = "syncRuntimeDefinitions"
+priority = 20
+[rule.context.runtimeMapping]
+nodejs = "node"
+# Add other mappings if needed
+
+# Rule to generate the runtimes.enabled list from the definitions
+[[rule]]
+name = "GenerateEnabledRuntimes"
+description = "Generates runtimes.enabled list based on runtimes.definitions"
+target_path = ["runtimes", "enabled"]
+source_path = ["runtimes", "definitions"] # Source is the output of the previous rule
+transformer_function = "generateEnabledListFromDefinitions"
+priority = 25 # Must run AFTER SyncRuntimeDefinitions
+
+# Rule to update the trunk config version field (if applicable)
+[[rule]]
+name = "UpdateTrunkVersionField"
+description = "Updates the top-level 'version' field in trunk.yaml based on mise.toml tools.trunk"
+target_path = ["version"]
+source_path = ["tools", "trunk"]
+transformer_function = "updateTrunkVersion"
+priority = 30
+[rule.context]
+ignoreSchemaVersion = "0.1"

@@ -4,25 +4,22 @@ import * as path from "jsr:@std/path";
 import * as toml from "jsr:@std/toml";
 import { exists } from "jsr:@std/fs/exists";
 import { Eta } from "jsr:@eta-dev/eta"; // CORRECTED PACKAGE NAME
-import type { TransformRule, TransformContext } from "../types/transform_rules.ts"; // Assuming types are defined here
-import type { MiseConfig, TrunkConfig } from "../types/mise.ts"; // Import config types
+import type { TransformRule, TransformContext } from "../../types/transform_rules.ts"; // Adjusted path
+import type { MiseConfig, TrunkConfig } from "../../types/mise.ts"; // Adjusted path
 
 // --- Configuration ---
-const SCRIPT_DIR = path.dirname(path.fromFileUrl(import.meta.url));
-const TRANSFORMERS_DIR = path.join(SCRIPT_DIR, "..", "transformers");
-const TYPES_DIR = path.join(SCRIPT_DIR, "..", "types"); // Assuming types location
-const RULES_DIR = path.join(TRANSFORMERS_DIR, "rules");
-const TEMPLATES_DIR = path.join(SCRIPT_DIR, "templates"); // Templates location
-const COMMON_TRANSFORMERS_PATH = path.join(TRANSFORMERS_DIR, "common_transformers.ts");
-const OUTPUT_FILE = path.join(TRANSFORMERS_DIR, "generated_transformers.ts");
+const ENGINE_DIR = path.dirname(path.fromFileUrl(import.meta.url)); // Path to this engine file's directory
+const REPO_ROOT = path.resolve(ENGINE_DIR, "..", "..", "..");
+const SRC_DIR = path.join(REPO_ROOT, "src");
+
+const TYPES_DIR = path.join(SRC_DIR, "types"); // Adjusted path
+const RULES_DIR = path.join(ENGINE_DIR, "rules"); // Adjusted path (rules moved here)
+const TEMPLATES_DIR = path.join(ENGINE_DIR, "templates"); // Adjusted path (templates moved here)
+const COMMON_TRANSFORMERS_PATH = path.join(SRC_DIR, "transformation", "common", "common_transformers.ts");
+const OUTPUT_FILE = path.join(SRC_DIR, "transformation", "generated", "generated_transformers.ts");
 const TEMPLATE_FILE = path.join(TEMPLATES_DIR, "generated_transformers.eta");
 const MISE_TO_TRUNK_RULES_FILE = path.join(RULES_DIR, "mise_to_trunk.toml");
 const TRUNK_TO_MISE_RULES_FILE = path.join(RULES_DIR, "trunk_to_mise.toml");
-
-// Relative path from generated file to common transformers
-const COMMON_TRANSFORMERS_RELATIVE_PATH = path
-  .relative(path.dirname(OUTPUT_FILE), COMMON_TRANSFORMERS_PATH)
-  .replace(/\\/g, "/"); // Ensure forward slashes for imports
 
 // --- Helper Functions ---
 
@@ -93,6 +90,71 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
   }
 }
 
+// --- Path Navigation Helpers ---
+
+/**
+ * Safely gets a value from a nested object/array structure using a path array.
+ * Returns undefined if the path doesn't exist.
+ */
+function getValueByPath(obj: any, path: (string | number)[]): any {
+  let current = obj;
+  for (const key of path) {
+    if (current === null || typeof current !== 'object') {
+      return undefined;
+    }
+    if (Array.isArray(current) && typeof key === 'number') {
+        current = current[key];
+    } else if (typeof key === 'string') {
+        current = (current as Record<string, any>)[key];
+    } else {
+        return undefined; // Invalid key type for current structure
+    }
+  }
+  return current;
+}
+
+/**
+ * Safely sets a value in a nested object/array structure using a path array.
+ * Creates intermediate objects/arrays if they don't exist.
+ * Returns true if the value was set (even if it was the same), false on error.
+ */
+function setValueByPath(obj: any, path: (string | number)[], value: any): boolean {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    const nextKey = path[i + 1];
+    let currentKey: string | number;
+    let nextStructureHint: 'object' | 'array';
+
+    if (typeof key === 'string') {
+        currentKey = key;
+    } else if (typeof key === 'number' && Array.isArray(current)) {
+        currentKey = key;
+    } else {
+        console.error(`setValueByPath: Invalid key type '${typeof key}' for path segment.`);
+        return false;
+    }
+
+    nextStructureHint = typeof nextKey === 'number' ? 'array' : 'object';
+
+    if (current[currentKey] === null || typeof current[currentKey] !== 'object') {
+        // Create structure if it doesn't exist or is wrong type
+        console.log(`setValueByPath: Creating intermediate path segment '${String(key)}' as ${nextStructureHint}`);
+        current[currentKey] = nextStructureHint === 'array' ? [] : {};
+    }
+    current = current[currentKey];
+  }
+
+  const finalKey = path[path.length - 1];
+  if (typeof finalKey === 'string' || (typeof finalKey === 'number' && Array.isArray(current))){
+      current[finalKey] = value;
+      return true;
+  } else {
+       console.error(`setValueByPath: Invalid final key type '${typeof finalKey}'.`);
+       return false;
+  }
+}
+
 // --- Main Generation Logic ---
 
 async function generateTransformers() {
@@ -133,13 +195,13 @@ async function generateTransformers() {
     // Calculate relative paths from the OUTPUT file directory
     commonTransformersRelativePath: path
       .relative(path.dirname(OUTPUT_FILE), COMMON_TRANSFORMERS_PATH)
-      .replace(/\\/g, "/"),
+      .replace(/\\/g, "/"), // Should still be correct
     miseTrunkTypesRelativePath: path
       .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "mise.ts"))
-      .replace(/\\/g, "/"),
+      .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
     transformRulesTypesRelativePath: path
       .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "transform_rules.ts"))
-      .replace(/\\/g, "/"),
+      .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
   };
 
   // 4. Initialize Eta and Render Template

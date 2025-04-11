@@ -1,0 +1,153 @@
+// GENERATED FILE - DO NOT EDIT MANUALLY!
+// Timestamp: <%= it.timestamp %>
+
+import type { MiseConfig, TrunkConfig } from "<%= it.miseTrunkTypesRelativePath %>";
+import type { TransformContext, TransformRule } from "<%= it.transformRulesTypesRelativePath %>";
+
+// Import *all* transformer functions
+import * as transformers from "./<%= it.commonTransformersRelativePath %>";
+
+// --- Path Navigation Helpers (Copied from engine.ts for self-containment) ---
+
+function getValueByPath(obj: any, path: (string | number)[]): any {
+  let current = obj;
+  for (const key of path) {
+    if (current === null || typeof current !== 'object') return undefined;
+    current = Array.isArray(current) && typeof key === 'number' ? current[key] : (typeof key === 'string' ? (current as Record<string, any>)[key] : undefined);
+    if (current === undefined) return undefined;
+  }
+  return current;
+}
+
+function setValueByPath(obj: any, path: (string | number)[], value: any): boolean {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    const nextKey = path[i + 1];
+    let currentKey: string | number;
+
+    if (typeof key === 'string') currentKey = key;
+    else if (typeof key === 'number' && Array.isArray(current)) currentKey = key;
+    else { console.error(`setValueByPath: Invalid key ${String(key)}`); return false; }
+
+    if (current[currentKey] === null || typeof current[currentKey] !== 'object') {
+      current[currentKey] = typeof nextKey === 'number' ? [] : {};
+    }
+    current = current[currentKey];
+  }
+  const finalKey = path[path.length - 1];
+  if (typeof finalKey === 'string' || (typeof finalKey === 'number' && Array.isArray(current))){
+    if (value !== undefined) current[finalKey] = value;
+    return true;
+  } else { console.error(`setValueByPath: Invalid final key ${String(finalKey)}`); return false; }
+}
+
+// --- Transformation Functions ---
+
+async function applyRules(
+    direction: string,
+    targetConfig: any,
+    sourceConfig: any,
+    rules: TransformRule[],
+    ruleFileName: string,
+    initialContext?: TransformContext
+): Promise<{ config: any; changed: boolean }> {
+    console.log(`Applying ${direction} transformation rules from ${ruleFileName}...`);
+    const initialTargetString = JSON.stringify(targetConfig); // For final comparison
+    let transformedConfig = JSON.parse(JSON.stringify(targetConfig));
+    // let overallChanged = false; // We will determine this at the end
+
+    for (const rule of rules) {
+        console.log(`  [${direction}] Executing rule: ${rule.name} (${rule.transformer_function})`);
+        const transformerFn = (transformers as Record<string, Function>)[rule.transformer_function];
+        if (!transformerFn) {
+            console.warn(`  [${direction}] Unknown transformer function: ${rule.transformer_function}. Skipping.`);
+            continue;
+        }
+
+        const sourceValue = rule.source_path ? getValueByPath(sourceConfig, rule.source_path) : undefined;
+        const targetValue = rule.target_path ? getValueByPath(transformedConfig, rule.target_path) : undefined;
+        const ruleContext = { ...(initialContext ?? {}), ...(rule.context ?? {}) };
+
+        try {
+            const result = await transformerFn(sourceValue, targetValue, ruleContext);
+
+            // Always update the transformed config IF the rule has a target path and returned a value
+            if (result && typeof result === 'object' && result.newValue !== undefined && rule.target_path) {
+                const success = setValueByPath(transformedConfig, rule.target_path, result.newValue);
+                if (!success) {
+                    console.error(`  [${direction}] Failed to set value for rule '${rule.name}' at path ${JSON.stringify(rule.target_path)}.`);
+                }
+                // Log if transformer thought it changed something (for debugging)
+                if (result.changed) {
+                    console.log(`  [${direction}] Transformer for rule '${rule.name}' indicated changes.`);
+                }
+            }
+        } catch (error) {
+            console.error(`  [${direction}] Error executing rule '${rule.name}':`, error);
+        }
+    }
+
+    // Determine overall change by comparing initial and final states
+    const finalTargetString = JSON.stringify(transformedConfig);
+    const overallChanged = initialTargetString !== finalTargetString;
+
+    if (overallChanged) {
+        console.log(`${direction} transformations from ${ruleFileName} resulted in overall changes.`);
+    } else {
+        console.log(`${direction} transformations from ${ruleFileName} resulted in no changes.`);
+    }
+    return { config: transformedConfig, changed: overallChanged };
+}
+
+<% /* Function for Mise -> Trunk */ %>
+<% if (it.miseToTrunkRules && it.miseToTrunkRules.length > 0) { %>
+/**
+ * Applies transformation rules defined in <%= it.miseToTrunkRulesFileName %>
+ * Transforms a TrunkConfig based on a MiseConfig.
+ */
+export async function applyMiseToTrunkRules(
+  targetConfig: TrunkConfig,
+  sourceConfig: MiseConfig,
+  context?: TransformContext
+): Promise<{ config: TrunkConfig; changed: boolean }> {
+    const rules = <%~ JSON.stringify(it.miseToTrunkRules) %> as TransformRule[];
+    return applyRules("Mise->Trunk", targetConfig, sourceConfig, rules, "<%= it.miseToTrunkRulesFileName %>", context);
+}
+<% } else { %>
+// No rules defined for Mise -> Trunk.
+export async function applyMiseToTrunkRules(
+  targetConfig: TrunkConfig,
+  _sourceConfig: MiseConfig,
+  _context?: TransformContext
+): Promise<{ config: TrunkConfig; changed: boolean }> {
+  console.log("Skipping Mise -> Trunk transformations: No rules defined in <%= it.miseToTrunkRulesFileName %>.");
+  return { config: targetConfig, changed: false };
+}
+<% } %>
+
+<% /* Function for Trunk -> Mise */ %>
+<% if (it.trunkToMiseRules && it.trunkToMiseRules.length > 0) { %>
+/**
+ * Applies transformation rules defined in <%= it.trunkToMiseRulesFileName %>
+ * Transforms a MiseConfig based on a TrunkConfig.
+ */
+export async function applyTrunkToMiseRules(
+  targetConfig: MiseConfig,
+  sourceConfig: TrunkConfig,
+  context?: TransformContext
+): Promise<{ config: MiseConfig; changed: boolean }> {
+    const rules = <%~ JSON.stringify(it.trunkToMiseRules) %> as TransformRule[];
+    return applyRules("Trunk->Mise", targetConfig, sourceConfig, rules, "<%= it.trunkToMiseRulesFileName %>", context);
+}
+<% } else { %>
+// No rules defined for Trunk -> Mise.
+export async function applyTrunkToMiseRules(
+  targetConfig: MiseConfig,
+  _sourceConfig: TrunkConfig,
+  _context?: TransformContext
+): Promise<{ config: MiseConfig; changed: boolean }> {
+  console.log("Skipping Trunk -> Mise transformations: No rules defined in <%= it.trunkToMiseRulesFileName %>.");
+  return { config: targetConfig, changed: false };
+}
+<% } %> 
