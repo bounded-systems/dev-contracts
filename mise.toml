@@ -40,6 +40,12 @@ description = "Upgrade Trunk plugins"
 run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
+# Deno tasks
+[tasks.deno-test]
+run = "deno test"
+depends = ["install"]
+description = "Run Deno tests"
+
 # Enable lockfile for consistent versioning across environments
 [settings]
 lockfile = true
