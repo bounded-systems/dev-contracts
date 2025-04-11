@@ -53,4 +53,5 @@ enabled_linters = [
   { name = "standardrb", version = "1.0.0" },
   { name = "yamllint", version = "1.26.3" },
   { name = "git-diff-check" }, # No version needed, it's a system tool
+  { name = "deno", version = "2.2.4" },
 ]
