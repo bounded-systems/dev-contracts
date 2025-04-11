@@ -44,8 +44,11 @@ description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 [settings]
 lockfile = true
 
-# DevTools specific settings for integration (e.g., with Trunk)
-[settings.devtools.trunk]
+# DevTools specific settings for integration (e.g., with Trunk) - moved to [_] below
+
+# Custom data under the '_' table
+[_]
+[_.devtools.trunk]
 enabled_linters = [
   { name = "standardrb", version = "1.0.0" },
   { name = "yamllint", version = "1.26.3" },
