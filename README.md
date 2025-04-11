@@ -26,67 +26,17 @@ development tools and their necessary environments through:
 3. **Git Exclusion:** Target projects exclude these symlinked directories in
    their `.gitignore` files
 
-## Prerequisites
-
-**For `pushd-devtools` setup:**
-
-- Git for cloning this repository
-- mise version manager (formerly rtx)
-
-**For Target Projects:**
-
-- Git
-- Unix-like shell environment
-- Editor extensions for full functionality
-
 ## Setup & Usage
 
-### 1. Clone this Repository
-
-```bash
-git clone <repository-url> ~/dev/pushd-devtools
-```
-
-### 2. Install mise
-
-Install mise on your system (from https://mise.jdx.dev/)
-
-### 3. Install required tools
-
-```bash
-mise install
-```
-
-### 4. Set Environment Variable
-
-Add to your shell configuration file (e.g., `~/.zshrc`)
-
-```bash
-export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
-```
-
-### 5. Linking Configurations
-
-Create symlinks from the templates to your target project
-
-```bash
-# From your target project directory
-ln -s "$PUSHD_DEVTOOLS_DIR/templates/vscode" .vscode
-ln -s "$PUSHD_DEVTOOLS_DIR/templates/trunk" .trunk
-```
-
-Add to your project's `.gitignore`:
-
-```gitignore
-.vscode/
-.trunk/
-```
+Please refer to the tasks defined in `mise.toml` for setup and usage
+instructions. Common tasks include `mise run setup-all`, `mise run trunk-fmt`,
+etc.
 
 ## Tool Configuration
 
 ### mise_toml
 
-The project uses mise for managing tool versions and defining tasks. Key
+Core project configuration and task definitions managed by mise.toml. Key
 sections include:
 
 ```toml
@@ -101,13 +51,9 @@ PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.y
 # DevTools Environment (set by mise)
 PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
-[tools]
-# Core Runtime Tool versions
-ruby = "3.3.3"
-node = "20.14.0"
-
-[tasks]
-# Default install task (ensures tools are install
+# Reference to external configuration files
+CONTRACTS_FILE = "contracts.toml"
+# SETUP_FILE = "setup.toml" # Removed - Consolida
 # ... additional tasks
 ```
 
@@ -116,6 +62,12 @@ node = "20.14.0"
 The repository provides several predefined tasks that can be run using
 `mise run`:
 
+- `mise run setup-symlinks` - Create symlinks from pushd-devtools templates to
+  target project
+- `mise run setup-env` - Configure PUSHD_DEVTOOLS_DIR environment variable in
+  shell configuration
+- `mise run setup-all` - Run all setup steps (install tools, configure
+  environment, create symlinks)
 - `mise run trunk-check` - Run Trunk checks
 - `mise run trunk-fmt` - Format code using Trunk
 - `mise run trunk-upgrade` - Upgrade Trunk plugins
@@ -125,58 +77,62 @@ The repository provides several predefined tasks that can be run using
   back to mise.toml
 - `mise run transform-apply` - Apply generated transformations (e.g., mise.toml
   -> trunk.yaml)
-- `mise run generate-schema` - Generate readme-schema.yaml from mise.toml
-- `mise run generate-readme` - Generate README.md from readme-schema.yaml
-- `mise run check-contracts` - Check if all contract files exist in the project
-  root
+- `mise run generate-schema` - Generate readme.yml from mise.toml and format
+  using Trunk
+- `mise run validate-schema` - Validate readme.yml against the JSON schema
+- `mise run generate-readme` - Generate README.md from readme.yml and format
+  using Trunk
+- `mise run check-contracts` - Check if all required contract files (e.g.,
+  contracts.toml) exist in the project root, based on mise.toml config.
 - `mise run deno-test` - Run Deno tests
-
-## IDE Integration
-
-### VS Code
-
-For the best experience:
-
-- Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension
-- The extension will automatically configure other tools to use mise-managed
-  versions
-
-### JetBrains IDEs
-
-Options:
-
-- Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin
-- Add mise shims to your PATH
-
-### Vim/Neovim
-
-Add mise shims to your PATH in your initialization file:
-
-```vim
-" Vim
-let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
-```
-
-```lua
--- Neovim
-vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
-```
+- `mise run clone` - Clone the pushd-devtools repository (pass repo URL and
+  destination path as arguments)
+- `mise run generate-gitignore` - Generate .gitignore file from contracts.toml
+  structure
+- `mise run contracts-validate-structure` - Validate that the repository
+  structure matches contracts.toml (including schema check)
+- `mise run contracts-add-untracked` - Add untracked files/directories found on
+  the filesystem to contracts.toml [structure]
+- `mise run contracts-generate-structure` - Create missing files/directories
+  defined in contracts.toml [structure] (skips symlinks)
+- `mise run contracts-prune-structure` - Remove entries from contracts.toml
+  [structure] that do not exist on the filesystem
+- `mise run contracts-sort-structure` - Sort and deduplicate the [structure]
+  section in contracts.toml
+- `mise run contracts-clean` - Prune, generate, and sort the contracts.toml
+  [structure] section
+- `mise run contracts-delete-empty-dirs` - Delete empty directories defined in
+  contracts.toml [structure] if allow_empty_directory=false
 
 ## Project Structure
 
 ```
 pushd-devtools/
+├── .git            # Git version control data
+├── .github            # GitHub workflows and configuration
+├── .gitignore            # Defines files excluded from version control
+├── .ruby-lsp            # Ruby language server configuration
+├── .trunk            # Trunk configuration directory
+├── .vscode            # VSCode configuration directory
+├── deno.json            # Deno runtime configuration
+├── deno.lock            # Locked Deno dependencies
+├── global            # Global settings inherited by all subfolders
 ├── mise.toml            # Tool versions, environment variables, and tasks
+├── README.md            # Generated documentation
+├── readme.yml            # Schema for README generation
+├── runtimes            # Runtime environments
 ├── scripts            # Helper scripts for setup and configuration
-    ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
-    ├── transform-apply.ts            # Applies configuration transformations
-    ├── generate-readme.ts            # Generates README.md from schema
+│   ├── generate-readme.ts            # Generates README.md from schema
+│   ├── generate-schema-from-mise.ts            # Generates readme.yml from mise.toml
+│   ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
+│   └── transform-apply.ts            # Applies configuration transformations
 ├── src            # Source code for transformations and utilities
-    ├── transformation/            # Transformation engine
-        ├── engine/            # Core transformation logic
+│   └── transformation            # Transformation engine
+│   │   └── engine            # Core transformation logic
 ├── templates            # Configuration templates for symlinks
-    ├── trunk/            # Trunk.io configuration
-    ├── vscode/            # VS Code settings and extensions
+│   ├── trunk            # Trunk.io configuration
+│   └── vscode            # VS Code settings and extensions
+└── tests            # Test files
 ```
 
 **Note:** The `setup.ts` and `link-configs.ts` scripts mentioned in the
@@ -208,12 +164,13 @@ To update tools for all linked projects:
 
 The repository includes configuration for Trunk.io tooling:
 
-- Linters are defined in both `mise.toml` under `[_.devtools.trunk]` and in the
-  Trunk template
+- Linters enabled can be seen in the Trunk template
+  (`templates/trunk/.trunk/trunk.yaml`).
+- Tool _versions_ are managed via `mise.toml` and synchronized using tasks.
 - When updating linter versions, use `mise run sync-trunk-versions` to keep
-  configurations in sync
+  configurations in sync.
 - Custom transformations between mise.toml and trunk.yaml are handled by the
-  transform scripts
+  transform scripts.
 
 ## Design by Contract
 
@@ -302,35 +259,3 @@ The contracts defined above should be validated and enforced through:
   implemented
 - No formal validation of the contract requirements
 - Manual synchronization required between documentation and implementation
-
-## Roadmap
-
-### Immediate Priorities
-
-1. **Documentation-Code Consistency**
-   - Implement missing scripts referenced in documentation (`setup.ts`,
-     `link-configs.ts`)
-   - Create validation scripts to ensure README accuracy
-
-1. **Contract Enforcement**
-   - Add runtime validations to ensure contracts are followed
-   - Implement automated tests for each contract boundary
-
-1. **Documentation Generation**
-   - Add JSDoc/TSDoc comments to all script files
-   - Create a documentation generator that pulls from mise.toml, scripts, and
-     templates
-
-### Future Enhancements
-
-1. **Configuration Validation Schema**
-   - Formal schema definitions for all configuration files
-   - Runtime validation of configurations against schemas
-
-1. **Integration Testing**
-   - Automated tests that verify end-to-end functionality
-   - CI/CD pipeline to validate changes against contracts
-
-1. **Self-Healing Configuration**
-   - Automatic repair of broken symlinks
-   - Detection and resolution of configuration conflicts

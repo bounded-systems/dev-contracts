@@ -11,8 +11,82 @@ PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
 # Reference to external configuration files
 CONTRACTS_FILE = "contracts.toml"
-SETUP_FILE = "setup.toml"
-ROADMAP_FILE = "roadmap.toml"
+# SETUP_FILE = "setup.toml" # Removed - Consolidated into [_] section below
+# ROADMAP_FILE = "roadmap.toml" # Removed - Replaced by skipped Deno tests
+
+# Consolidated Setup/IDE Info (for schema generation)
+[_]
+  [_.setup]
+    [_.setup.prerequisites]
+    devtools = [
+      "Git for cloning this repository",
+      "mise version manager (formerly rtx)",
+      "Deno runtime for setup scripts"
+    ]
+    target_projects = [
+      "Git",
+      "Unix-like shell environment",
+      "Editor extensions for full functionality"
+    ]
+
+    [[_.setup.installation]]
+    step = "Clone this Repository"
+    code = "deno run -A https://raw.githubusercontent.com/yourusername/pushd-devtools/main/scripts/clone.ts"
+    detail = "Clone the pushd-devtools repository to your local machine (defaults to ~/dev/pushd-devtools)"
+
+    [[_.setup.installation]]
+    step = "Clone with Custom Options"
+    code = "deno run -A https://raw.githubusercontent.com/yourusername/pushd-devtools/main/scripts/clone.ts [repo-url] [destination-path]"
+    detail = "Clone with a custom repository URL and destination path"
+
+    [[_.setup.installation]]
+    step = "Install required tools"
+    code = "cd ~/dev/pushd-devtools && mise install"
+    detail = "Navigate to the repository and install required tools"
+
+    [[_.setup.installation]]
+    step = "Set Environment Variable and Create Symlinks"
+    code = "cd ~/dev/pushd-devtools && mise run setup-all"
+    detail = "Run the setup tasks that will configure your environment and create symlinks"
+
+    [[_.setup.installation]]
+    step = "Alternative: Manual Setup Steps"
+    detail = "If you prefer to run each step individually:"
+    code = """
+# Set environment variable
+cd ~/dev/pushd-devtools && mise run setup-env
+
+# Create symlinks (from target project directory)
+cd ~/your-project && mise -C ~/dev/pushd-devtools run setup-symlinks
+"""
+
+    [_.setup.gitignore]
+    content = """
+.vscode/
+.trunk/
+"""
+    detail = "Add these lines to your target project's .gitignore file to exclude symlinked directories"
+
+
+  [_.ide_integration]
+    vscode = [
+      "Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension",
+      "The extension will automatically configure other tools to use mise-managed versions"
+    ]
+    jetbrains = [
+      "Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin",
+      "Add mise shims to your PATH"
+    ]
+
+    [_.ide_integration.vim_neovim]
+    code = """
+" Vim
+let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
+"""
+    code_alt = """
+-- Neovim
+vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
+"""
 
 [tools]
 # Core Runtime Tool versions
@@ -74,9 +148,9 @@ description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
 # Generate README Schema Task
 [tasks.generate-schema]
-run = "deno run -A scripts/generate-schema-from-mise.ts"
+run = "deno run -A scripts/generate-schema-from-mise.ts && trunk fmt"
 depends = ["install"]
-description = "Generate readme.yml from mise.toml"
+description = "Generate readme.yml from mise.toml and format using Trunk"
 
 # Validate README Schema Task
 [tasks.validate-schema]
@@ -84,17 +158,17 @@ run = "deno run -A scripts/validate-readme-schema.ts"
 depends = ["generate-schema"]
 description = "Validate readme.yml against the JSON schema"
 
-# Update README Generation Task to depend on schema generation
+# Update README Generation Task to depend on schema generation and run formatter
 [tasks.generate-readme]
-run = "deno run -A scripts/generate-readme.ts"
+run = "deno run -A scripts/generate-readme.ts && trunk fmt"
 depends = ["install", "generate-schema", "validate-schema"]
-description = "Generate README.md from readme.yml"
+description = "Generate README.md from readme.yml and format using Trunk"
 
 # Check Contract Files Task
 [tasks.check-contracts]
 run = "deno run -A scripts/check-contracts.ts"
 depends = ["install"]
-description = "Check if all contract files exist in the project root, including contracts.toml, setup.toml, and roadmap.toml"
+description = "Check if all required contract files (e.g., contracts.toml) exist in the project root, based on mise.toml config."
 
 # Deno tasks
 [tasks.deno-test]
