@@ -1,0 +1,159 @@
+// GENERATED FILE - DO NOT EDIT MANUALLY!
+// Timestamp: <%= it.timestamp %>
+
+import type { MiseConfig, TrunkConfig } from "<%= it.miseTrunkTypesRelativePath %>";
+import type { TransformContext } from "<%= it.transformRulesTypesRelativePath %>";
+import {
+<% it.transformerFunctions.forEach(funcName => { %>
+  <%= funcName %>,
+<% }) %>
+  // Add other exports from common_transformers if needed
+} from "./<%= it.commonTransformersRelativePath %>";
+
+<% /* Function for Mise -> Trunk */ %>
+<% if (it.miseToTrunkRules && it.miseToTrunkRules.length > 0) { %>
+/**
+ * Applies transformation rules defined in <%= it.miseToTrunkRulesFileName %>
+ * Transforms a TrunkConfig based on a MiseConfig.
+ */
+export async function applyMiseToTrunkRules(
+  targetConfig: TrunkConfig, // trunk.yaml object
+  sourceConfig: MiseConfig, // mise.toml object
+  context?: TransformContext
+): Promise<{ config: TrunkConfig; changed: boolean }> {
+  console.log("Applying Mise -> Trunk transformation rules...");
+  // Use structuredClone for deep copy
+  let transformedConfig = structuredClone(targetConfig);
+  let overallChanged = false;
+
+  // Rules are embedded here for clarity, consider passing them if they get very large
+  const rules: any[] = <%= JSON.stringify(it.miseToTrunkRules, null, 2) %>;
+
+  for (const rule of rules) {
+    console.log(`  [Mise->Trunk] Executing rule: ${rule.name} (${rule.transformer_function})`);
+    let ruleResult: { config: any; changed: boolean } | undefined;
+    let changedByRule = false;
+    try {
+      switch (rule.transformer_function) {
+<%   // Get unique function names used *in this specific ruleset*
+     const miseFuncs = [...new Set(it.miseToTrunkRules.map(r => r.transformer_function))];
+     miseFuncs.forEach(funcName => { %>
+        case "<%= funcName %>":
+          // The first arg is the TARGET (TrunkConfig), second is SOURCE (MiseConfig)
+          ruleResult = await <%= funcName %>(transformedConfig, sourceConfig, context);
+          break;
+<%   }) %>
+        default:
+          console.warn(`  [Mise->Trunk] Unknown transformer function specified in rule '${rule.name}': ${rule.transformer_function}`);
+          break;
+      }
+
+      if (ruleResult) {
+        // Update the config for the next rule ONLY if the structure is valid
+        if (typeof ruleResult.config === 'object' && ruleResult.config !== null) {
+             transformedConfig = ruleResult.config;
+        } else {
+             console.warn(`  [Mise->Trunk] Rule '${rule.name}' transformer returned invalid config. Skipping update.`)
+        }
+        changedByRule = ruleResult.changed;
+        if (changedByRule) {
+          console.log(`  [Mise->Trunk] Rule '${rule.name}' resulted in changes.`);
+          overallChanged = true;
+        }
+      }
+    } catch (error) {
+      console.error(`  [Mise->Trunk] Error executing rule '${rule.name}' (${rule.transformer_function}):`, error);
+      // Decide if errors should halt execution or just be logged
+    }
+  }
+
+  if (overallChanged) {
+      console.log("Mise -> Trunk transformations resulted in overall changes.");
+  } else {
+      console.log("Mise -> Trunk transformations resulted in no changes.");
+  }
+  return { config: transformedConfig, changed: overallChanged };
+}
+<% } else { %>
+// No rules defined for Mise -> Trunk.
+export async function applyMiseToTrunkRules(
+  targetConfig: TrunkConfig,
+  _sourceConfig: MiseConfig,
+  _context?: TransformContext
+): Promise<{ config: TrunkConfig; changed: boolean }> {
+  console.log("Skipping Mise -> Trunk transformations: No rules defined.");
+  return { config: targetConfig, changed: false };
+}
+<% } %>
+
+<% /* Function for Trunk -> Mise */ %>
+<% if (it.trunkToMiseRules && it.trunkToMiseRules.length > 0) { %>
+/**
+ * Applies transformation rules defined in <%= it.trunkToMiseRulesFileName %>
+ * Transforms a MiseConfig based on a TrunkConfig.
+ */
+export async function applyTrunkToMiseRules(
+  targetConfig: MiseConfig, // mise.toml object
+  sourceConfig: TrunkConfig, // trunk.yaml object
+  context?: TransformContext
+): Promise<{ config: MiseConfig; changed: boolean }> {
+  console.log("Applying Trunk -> Mise transformation rules...");
+  let transformedConfig = structuredClone(targetConfig);
+  let overallChanged = false;
+
+  const rules: any[] = <%= JSON.stringify(it.trunkToMiseRules, null, 2) %>;
+
+  for (const rule of rules) {
+    console.log(`  [Trunk->Mise] Executing rule: ${rule.name} (${rule.transformer_function})`);
+    let ruleResult: { config: any; changed: boolean } | undefined;
+    let changedByRule = false;
+    try {
+      switch (rule.transformer_function) {
+<%   // Get unique function names used *in this specific ruleset*
+     const trunkFuncs = [...new Set(it.trunkToMiseRules.map(r => r.transformer_function))];
+     trunkFuncs.forEach(funcName => { %>
+        case "<%= funcName %>":
+           // The first arg is the TARGET (MiseConfig), second is SOURCE (TrunkConfig)
+          ruleResult = await <%= funcName %>(transformedConfig, sourceConfig, context);
+          break;
+<%   }) %>
+        default:
+          console.warn(`  [Trunk->Mise] Unknown transformer function specified in rule '${rule.name}': ${rule.transformer_function}`);
+          break;
+      }
+
+      if (ruleResult) {
+        if (typeof ruleResult.config === 'object' && ruleResult.config !== null) {
+             transformedConfig = ruleResult.config;
+        } else {
+             console.warn(`  [Trunk->Mise] Rule '${rule.name}' transformer returned invalid config. Skipping update.`)
+        }
+        changedByRule = ruleResult.changed;
+        if (changedByRule) {
+          console.log(`  [Trunk->Mise] Rule '${rule.name}' resulted in changes.`);
+          overallChanged = true;
+        }
+      }
+     } catch (error) {
+      console.error(`  [Trunk->Mise] Error executing rule '${rule.name}' (${rule.transformer_function}):`, error);
+    }
+  }
+
+  if (overallChanged) {
+      console.log("Trunk -> Mise transformations resulted in overall changes.");
+  } else {
+      console.log("Trunk -> Mise transformations resulted in no changes.");
+  }
+  return { config: transformedConfig, changed: overallChanged };
+}
+<% } else { %>
+// No rules defined for Trunk -> Mise.
+export async function applyTrunkToMiseRules(
+  targetConfig: MiseConfig,
+  _sourceConfig: TrunkConfig,
+  _context?: TransformContext
+): Promise<{ config: MiseConfig; changed: boolean }> {
+  console.log("Skipping Trunk -> Mise transformations: No rules defined.");
+  return { config: targetConfig, changed: false };
+}
+<% } %> 

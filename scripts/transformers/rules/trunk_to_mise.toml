@@ -1,11 +1,1 @@
-# Rules to transform mise.toml based on trunk.yaml
-# (Placeholder - Currently focusing on Mise -> Trunk synchronization)
-
-# Example structure if needed later:
-# [[rule]]
-# name = "ExampleTrunkToMiseRule"
-# description = "Example rule for the reverse direction"
-# target_path = ["settings", "devtools", "trunk", "enabled_linters"] # Path in mise.toml
-# source_path = ["lint", "enabled"] # Path in trunk.yaml
-# transformer_function = "someReverseSyncFunction" # Needs to be defined in common_transformers.ts
-# priority = 10 
+# This file intentionally left blank (or contains no rules) 

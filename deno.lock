@@ -3,6 +3,7 @@
   "specifiers": {
     "jsr:@david/dax@0.39.2": "0.39.2",
     "jsr:@david/which@0.3": "0.3.0",
+    "jsr:@eta-dev/eta@*": "3.5.0",
     "jsr:@std/assert@0.213": "0.213.1",
     "jsr:@std/bytes@0.213": "0.213.1",
     "jsr:@std/collections@0.224": "0.224.2",
@@ -35,6 +36,9 @@
     },
     "@david/which@0.3.0": {
       "integrity": "6bdb62c40ac90edcf328e854fa8103a8db21e7c326089cbe3c3a1cf7887d3204"
+    },
+    "@eta-dev/eta@3.5.0": {
+      "integrity": "6b70827efc14c7cbf08498ac7a922ecab003641caf3852a6cb5b1b12ee58fb37"
     },
     "@std/assert@0.213.1": {
       "integrity": "24c28178b30c8e0782c18e8e94ea72b16282207569cdd10ffb9d1d26f2edebfe"
