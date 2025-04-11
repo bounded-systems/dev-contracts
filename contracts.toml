@@ -51,169 +51,201 @@ expects = ["mise to be installed","Tool versions to be specified in mise.toml"]
 guarantees = ["Tools will be installed in isolated environments","Tasks will run with the correct tool versions","Environment variables will be consistent"]
 
 [structure.".git"]
-type = "artifact"
+type = "directory"
 purpose = "Git version control data"
 ignores = ["deno"]
 
 [structure.".github"]
-type = "contract"
+type = "directory"
 purpose = "GitHub workflows and configuration"
 
 [structure.".gitignore"]
-type = "contract"
+type = "file"
 purpose = "Defines files excluded from version control"
 
 [structure.".ruby-lsp"]
-type = "artifact"
+type = "directory"
 purpose = "Ruby language server configuration"
 
 [structure.".trunk"]
-type = "artifact"
+type = "symlink"
 depends_on = ["templates/trunk/","mise.toml"]
 affects = ["mise.toml"]
 purpose = "Generated/symlinked Trunk configuration"
+
+[structure.".trunk/actions/"]
+type = "symlink"
 ignores = ["git"]
 
-[structure.".trunk".files]
+[structure.".trunk/logs/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure.".trunk/notifications/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure.".trunk/out/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure.".trunk/plugins/"]
+type = "directory"
+ignores = ["git"]
+
+[structure.".trunk/tools/"]
+type = "symlink"
+ignores = ["git"]
 
 [structure.".vscode"]
-type = "artifact"
+type = "symlink"
 depends_on = ["templates/vscode/"]
 purpose = "Symlinked VSCode configuration"
-ignores = ["git"]
-
-[structure.".vscode".files]
 
 [structure.".idea"]
-type = "artifact"
+type = "directory"
 purpose = "IntelliJ IDEA configuration files"
-ignores = []
 
 [structure."README.md"]
-type = "artifact"
+type = "file"
 depends_on = ["readme.yml"]
 purpose = "Generated documentation"
 
 [structure."deno.json"]
-type = "contract"
+type = "file"
 purpose = "Deno runtime configuration"
 
 [structure."deno.lock"]
-type = "artifact"
+type = "file"
 depends_on = ["deno.json"]
 purpose = "Locked Deno dependencies"
 
 [structure."mise.toml"]
-type = "contract"
+type = "file"
 affects = [".trunk/trunk.yaml"]
 purpose = "Source of truth for tool versions and tasks"
 description = "Tool versions, environment variables, and tasks"
 
 [structure."readme.yml"]
-type = "contract"
+type = "file"
 affects = ["README.md"]
 purpose = "Schema for README generation"
 
 [structure.runtimes]
-type = "static"
+type = "directory"
 purpose = "Runtime environments"
 
 [structure.scripts]
-type = "static"
+type = "directory"
 purpose = "Container for transformation scripts"
 description = "Helper scripts for setup and configuration"
 
-[structure."scripts.sync-trunk-versions.ts"]
+[structure."scripts/sync-trunk-versions.ts"]
+type = "file"
 description = "Syncs versions from Trunk to mise"
 
-[structure."scripts.transform-apply.ts"]
+[structure."scripts/transform-apply.ts"]
+type = "file"
 description = "Applies configuration transformations"
 
-[structure."scripts.generate-readme.ts"]
+[structure."scripts/generate-readme.ts"]
+type = "file"
 description = "Generates README.md from schema"
 
-[structure."scripts.generate-schema-from-mise.ts"]
+[structure."scripts/generate-schema-from-mise.ts"]
+type = "file"
 description = "Generates readme.yml from mise.toml"
 
 [structure.src]
-type = "static"
+type = "directory"
 purpose = "Source code for transformation logic"
 description = "Source code for transformations and utilities"
 
-[structure."src.transformation"]
+[structure."src/transformation"]
+type = "directory"
 description = "Transformation engine"
 
-[structure."src.transformation.engine"]
+[structure."src/transformation/engine"]
+type = "directory"
 description = "Core transformation logic"
 
 [structure.templates]
-type = "contract"
+type = "directory"
 purpose = "Source templates for symlinked configurations"
 description = "Configuration templates for symlinks"
 
-[structure."templates.trunk"]
+[structure."templates/trunk"]
+type = "directory"
 description = "Trunk.io configuration"
 
-[structure."templates.vscode"]
+[structure."templates/trunk/.trunk/actions/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure."templates/trunk/.trunk/logs/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure."templates/trunk/.trunk/notifications/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure."templates/trunk/.trunk/out/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure."templates/trunk/.trunk/plugins/"]
+type = "directory"
+ignores = ["git"]
+
+[structure."templates/trunk/.trunk/tools/"]
+type = "symlink"
+ignores = ["git"]
+
+[structure."templates/vscode"]
+type = "directory"
 description = "VS Code settings and extensions"
 
 [structure.tests]
-type = "static"
+type = "directory"
 purpose = "Test files"
 
 [structure.types]
-type = "static"
+type = "directory"
 purpose = "TypeScript type definitions"
 ignores = ["deno","lint"]
-
-[structure.types.ignore_patterns]
-"*.d.ts.map" = ["git","deno"]
-"generated/" = ["git","lint"]
 
 [structure.global]
 description = "Global settings inherited by all subfolders"
 
 [structure.global.ignore_patterns]
-"*.sublime-*" = ["git","contracts"]
-"*.swp" = ["git"]
-"*.swo" = ["git"]
-".DS_Store" = ["git"]
-"*.tmp" = ["git"]
 "*.min.js" = ["eslint","prettier"]
 "*.min.css" = ["prettier"]
-".env" = ["git"]
-".env.local" = ["git"]
-"*.pem" = ["git"]
-"*.log" = ["git"]
 
-[structure.project.ignore_patterns]
+[structure.project]
 
 [structure.coverage]
-type = "artifact"
+type = "directory"
 purpose = "Test coverage reports"
 ignores = ["eslint","prettier"]
 
 [structure.vendor]
-type = "artifact"
+type = "directory"
 purpose = "Vendored dependencies"
 ignores = ["eslint"]
 
 [structure.".deno"]
-type = "artifact"
+type = "directory"
 purpose = "Deno cache directory"
-ignores = []
 
 [structure.logs]
-type = "artifact"
+type = "directory"
 purpose = "Log files directory"
-ignores = []
 
 [structure.tmp]
-type = "artifact"
+type = "directory"
 purpose = "Temporary files directory"
-ignores = []
 
 [structure.temp]
-type = "artifact"
+type = "directory"
 purpose = "Temporary files directory"
-ignores = []

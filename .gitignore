@@ -1,24 +1,21 @@
 # THIS FILE IS GENERATED FROM contracts.toml
 # DO NOT EDIT DIRECTLY - CHANGES WILL BE OVERWRITTEN
-# Last generated: 2025-04-11T17:17:55.118Z
+# Last generated: 2025-04-11T18:09:31.175Z
 
 # Generated from contracts.structure with 'ignores = ["git"]'
-.trunk
-.vscode
+.trunk/actions
+.trunk/logs
+.trunk/notifications
+.trunk/out
+.trunk/plugins/
+.trunk/tools
+templates/trunk/.trunk/actions
+templates/trunk/.trunk/logs
+templates/trunk/.trunk/notifications
+templates/trunk/.trunk/out
+templates/trunk/.trunk/plugins/
+templates/trunk/.trunk/tools
 
 # Global ignore patterns
-*.sublime-*
-*.swp
-*.swo
-.DS_Store
-*.tmp
-.env
-.env.local
-*.pem
-*.log
-
-# Project-specific ignore patterns
 
 # Type-specific ignore patterns
-types/*.d.ts.map
-types/generated/

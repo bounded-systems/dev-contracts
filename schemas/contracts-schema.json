@@ -4,72 +4,6 @@
   "description": "Schema for defining the contracts.toml file structure",
   "type": "object",
   "properties": {
-    "project": {
-      "type": "object",
-      "description": "Project information",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "problem_statement": { "type": "string" },
-        "solution": { "type": "string" }
-      }
-    },
-    "devtools": {
-      "type": "object",
-      "description": "DevTools specific settings",
-      "properties": {
-        "trunk": {
-          "type": "object",
-          "properties": {
-            "enabled_linters": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "version": { "type": "string" }
-                },
-                "required": ["name"]
-              }
-            }
-          }
-        }
-      }
-    },
-    "external_files": {
-      "type": "object",
-      "description": "External file references",
-      "additionalProperties": { "type": "string" }
-    },
-    "definitions": {
-      "type": "object",
-      "description": "Contract definitions",
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["id", "title", "provides", "expects", "guarantees"],
-            "properties": {
-              "id": { "type": "string" },
-              "title": { "type": "string" },
-              "provides": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "expects": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "guarantees": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            }
-          }
-        }
-      }
-    },
     "structure": {
       "type": "object",
       "description": "Repository structure contracts",
@@ -82,7 +16,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["artifact", "contract", "static"]
+                "enum": ["file", "directory", "symlink"]
               },
               "purpose": { "type": "string" },
               "description": { "type": "string" },
@@ -97,10 +31,6 @@
               "ignores": {
                 "type": "array",
                 "items": { "type": "string" }
-              },
-              "files": {
-                "type": "object",
-                "additionalProperties": { "type": "object" }
               },
               "ignore_patterns": {
                 "type": "object",
