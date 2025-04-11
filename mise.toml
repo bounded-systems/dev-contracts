@@ -120,6 +120,11 @@ description = "Generate .gitignore file from contracts.toml structure"
 run = "deno run -A --unstable-fs scripts/validate-contracts-structure.ts"
 description = "Validate that the repository structure matches contracts.toml (including schema check)"
 
+[tasks.contracts-add-untracked]
+run = "deno run -A --unstable-fs scripts/validate-contracts-structure.ts --add-untracked"
+description = "Add untracked files/directories found on the filesystem to contracts.toml [structure]"
+depends = ["install"]
+
 [tasks.contracts-generate-structure]
 run = "deno run -A --unstable-fs scripts/generate-contracts-structure.ts"
 description = "Create missing files/directories defined in contracts.toml [structure] (skips symlinks)"

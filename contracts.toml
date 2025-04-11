@@ -50,6 +50,9 @@ provides = ["Tool version management via mise.toml","Task definitions in mise.to
 expects = ["mise to be installed","Tool versions to be specified in mise.toml"]
 guarantees = ["Tools will be installed in isolated environments","Tasks will run with the correct tool versions","Environment variables will be consistent"]
 
+[rules.structure]
+allow_empty_directory = false
+
 [structure.".deno"]
 type = "directory"
 purpose = "Deno cache directory"
@@ -57,10 +60,17 @@ purpose = "Deno cache directory"
 [structure.".git"]
 type = "directory"
 purpose = "Git version control data"
+ignores = ["contract"]
 
 [structure.".github"]
 type = "directory"
 purpose = "GitHub workflows and configuration"
+
+[structure.".github/workflows"]
+type = "directory"
+
+[structure.".github/workflows/ci.yml"]
+type = "file"
 
 [structure.".gitignore"]
 type = "file"
@@ -74,40 +84,106 @@ purpose = "IntelliJ IDEA configuration files"
 type = "directory"
 purpose = "Ruby language server configuration"
 
+[structure.".ruby-lsp/.gitignore"]
+type = "file"
+
+[structure.".ruby-lsp/bundle_env"]
+type = "file"
+
+[structure.".ruby-lsp/bundle_is_composed"]
+type = "file"
+
+[structure.".ruby-lsp/Gemfile"]
+type = "file"
+
+[structure.".ruby-lsp/Gemfile.lock"]
+type = "file"
+
+[structure.".ruby-lsp/last_updated"]
+type = "file"
+
 [structure.".trunk"]
+type = "directory"
+purpose = "Trunk configuration directory"
+
+[structure.".trunk/actions"]
 type = "symlink"
-depends_on = ["templates/trunk/","mise.toml"]
-affects = ["mise.toml"]
-purpose = "Generated/symlinked Trunk configuration"
 
 [structure.".trunk/actions/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure.".trunk/configs"]
+type = "directory"
+
+[structure.".trunk/configs/.jsonlintrc"]
+type = "file"
+
+[structure.".trunk/configs/.prettierrc"]
+type = "file"
+
+[structure.".trunk/configs/.rubocop.yml"]
+type = "file"
+
+[structure.".trunk/configs/.standard.yml"]
+type = "file"
+
+[structure.".trunk/configs/.yamllint.yml"]
+type = "file"
+
+[structure.".trunk/configs/schema.json"]
+type = "file"
+
+[structure.".trunk/logs"]
+type = "symlink"
+
 [structure.".trunk/logs/"]
 type = "symlink"
 ignores = ["git","contract"]
+
+[structure.".trunk/notifications"]
+type = "symlink"
 
 [structure.".trunk/notifications/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure.".trunk/out"]
+type = "symlink"
+
 [structure.".trunk/out/"]
 type = "symlink"
 ignores = ["git","contract"]
+
+[structure.".trunk/plugins"]
+type = "directory"
 
 [structure.".trunk/plugins/"]
 type = "directory"
 ignores = ["git","contract"]
 
+[structure.".trunk/plugins/trunk"]
+type = "symlink"
+
+[structure.".trunk/tools"]
+type = "symlink"
+
 [structure.".trunk/tools/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure.".trunk/trunk.yaml"]
+type = "file"
+
 [structure.".vscode"]
-type = "symlink"
-depends_on = ["templates/vscode/"]
-purpose = "Symlinked VSCode configuration"
+type = "directory"
+purpose = "VSCode configuration directory"
+
+[structure.".vscode/settings.json"]
+type = "file"
+
+[structure."contracts.toml"]
+type = "file"
 
 [structure.coverage]
 type = "directory"
@@ -151,14 +227,62 @@ type = "file"
 affects = ["README.md"]
 purpose = "Schema for README generation"
 
+[structure."roadmap.toml"]
+type = "file"
+
 [structure.runtimes]
 type = "directory"
 purpose = "Runtime environments"
+
+[structure."runtimes/node"]
+type = "directory"
+
+[structure."runtimes/node/package-lock.json"]
+type = "file"
+
+[structure."runtimes/node/package.json"]
+type = "file"
+
+[structure."runtimes/ruby"]
+type = "directory"
+
+[structure."runtimes/ruby/.ruby-version"]
+type = "file"
+
+[structure."runtimes/ruby/Gemfile"]
+type = "file"
+
+[structure."runtimes/ruby/Gemfile.lock"]
+type = "file"
+
+[structure.schemas]
+type = "directory"
+
+[structure."schemas/contracts-schema.json"]
+type = "file"
+
+[structure."schemas/readme-schema.json"]
+type = "file"
+
+[structure."schemas/README.md"]
+type = "file"
 
 [structure.scripts]
 type = "directory"
 purpose = "Container for transformation scripts"
 description = "Helper scripts for setup and configuration"
+
+[structure."scripts/check-contracts.ts"]
+type = "file"
+
+[structure."scripts/clone.ts"]
+type = "file"
+
+[structure."scripts/generate-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/generate-gitignore.ts"]
+type = "file"
 
 [structure."scripts/generate-readme.ts"]
 type = "file"
@@ -168,6 +292,15 @@ description = "Generates README.md from schema"
 type = "file"
 description = "Generates readme.yml from mise.toml"
 
+[structure."scripts/prune-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/setup.ts"]
+type = "file"
+
+[structure."scripts/sort-contracts-structure.ts"]
+type = "file"
+
 [structure."scripts/sync-trunk-versions.ts"]
 type = "file"
 description = "Syncs versions from Trunk to mise"
@@ -176,18 +309,111 @@ description = "Syncs versions from Trunk to mise"
 type = "file"
 description = "Applies configuration transformations"
 
+[structure."scripts/validate-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/validate-readme-schema.ts"]
+type = "file"
+
+[structure."setup.toml"]
+type = "file"
+
 [structure.src]
 type = "directory"
 purpose = "Source code for transformation logic"
 description = "Source code for transformations and utilities"
 
+[structure."src/extractors"]
+type = "directory"
+
+[structure."src/extractors/trunk_extractors.ts"]
+type = "file"
+
+[structure."src/generated"]
+type = "directory"
+
+[structure."src/generated/trunk_enums.ts"]
+type = "file"
+
 [structure."src/transformation"]
 type = "directory"
 description = "Transformation engine"
 
+[structure."src/transformation/common"]
+type = "directory"
+
+[structure."src/transformation/common/common_transformers.ts"]
+type = "file"
+
 [structure."src/transformation/engine"]
 type = "directory"
 description = "Core transformation logic"
+
+[structure."src/transformation/engine/codegen"]
+type = "directory"
+
+[structure."src/transformation/engine/codegen/generate_transformer.ts"]
+type = "file"
+
+[structure."src/transformation/engine/engine.ts"]
+type = "file"
+
+[structure."src/transformation/engine/rules"]
+type = "directory"
+
+[structure."src/transformation/engine/rules/mise_to_trunk.toml"]
+type = "file"
+
+[structure."src/transformation/engine/rules/trunk_to_mise.toml"]
+type = "file"
+
+[structure."src/transformation/engine/templates"]
+type = "directory"
+
+[structure."src/transformation/engine/templates/generated_transformers.eta"]
+type = "file"
+
+[structure."src/transformation/generated"]
+type = "directory"
+
+[structure."src/transformation/generated/generated_transformers.ts"]
+type = "file"
+
+[structure."src/transformation/helpers"]
+type = "directory"
+
+[structure."src/transformation/helpers/builder_helpers.ts"]
+type = "file"
+
+[structure."src/types"]
+type = "directory"
+
+[structure."src/types/linter-types.ts"]
+type = "file"
+
+[structure."src/types/mise.ts"]
+type = "file"
+
+[structure."src/types/transform_rules.ts"]
+type = "file"
+
+[structure."src/types/trunk_runtime.ts"]
+type = "file"
+
+[structure."src/types/trunk.ts"]
+type = "file"
+
+[structure."src/utils"]
+type = "directory"
+
+[structure."src/utils/constants.ts"]
+type = "file"
+
+[structure."src/utils/object_utils.ts"]
+type = "file"
+
+[structure."src/utils/trunk_utils.ts"]
+type = "file"
 
 [structure.temp]
 type = "directory"
@@ -202,37 +428,103 @@ description = "Configuration templates for symlinks"
 type = "directory"
 description = "Trunk.io configuration"
 
+[structure."templates/trunk/.trunk"]
+type = "directory"
+
+[structure."templates/trunk/.trunk/actions"]
+type = "symlink"
+
 [structure."templates/trunk/.trunk/actions/"]
 type = "symlink"
 ignores = ["git","contract"]
+
+[structure."templates/trunk/.trunk/configs"]
+type = "directory"
+
+[structure."templates/trunk/.trunk/configs/.jsonlintrc"]
+type = "file"
+
+[structure."templates/trunk/.trunk/configs/.prettierrc"]
+type = "file"
+
+[structure."templates/trunk/.trunk/configs/.rubocop.yml"]
+type = "file"
+
+[structure."templates/trunk/.trunk/configs/.standard.yml"]
+type = "file"
+
+[structure."templates/trunk/.trunk/configs/.yamllint.yml"]
+type = "file"
+
+[structure."templates/trunk/.trunk/configs/schema.json"]
+type = "file"
+
+[structure."templates/trunk/.trunk/logs"]
+type = "symlink"
 
 [structure."templates/trunk/.trunk/logs/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure."templates/trunk/.trunk/notifications"]
+type = "symlink"
+
 [structure."templates/trunk/.trunk/notifications/"]
 type = "symlink"
 ignores = ["git","contract"]
+
+[structure."templates/trunk/.trunk/out"]
+type = "symlink"
 
 [structure."templates/trunk/.trunk/out/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure."templates/trunk/.trunk/plugins"]
+type = "directory"
+
 [structure."templates/trunk/.trunk/plugins/"]
 type = "directory"
 ignores = ["git","contract"]
+
+[structure."templates/trunk/.trunk/plugins/trunk"]
+type = "symlink"
+
+[structure."templates/trunk/.trunk/tools"]
+type = "symlink"
 
 [structure."templates/trunk/.trunk/tools/"]
 type = "symlink"
 ignores = ["git","contract"]
 
+[structure."templates/trunk/.trunk/trunk.yaml"]
+type = "file"
+
 [structure."templates/vscode"]
 type = "directory"
 description = "VS Code settings and extensions"
 
+[structure."templates/vscode/.vscode"]
+type = "directory"
+
+[structure."templates/vscode/.vscode/extensions.json"]
+type = "file"
+
+[structure."templates/vscode/.vscode/launch.json"]
+type = "file"
+
+[structure."templates/vscode/.vscode/settings.json"]
+type = "file"
+
+[structure."templates/vscode/.vscode/tasks.json"]
+type = "file"
+
 [structure.tests]
 type = "directory"
 purpose = "Test files"
+
+[structure."tests/example.test.ts"]
+type = "file"
 
 [structure.tmp]
 type = "directory"

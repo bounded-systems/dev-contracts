@@ -2,6 +2,7 @@
 import * as path from "jsr:@std/path@^0.225.0";
 import * as fs from "jsr:@std/fs@^0.229.0";
 import * as toml from "jsr:@std/toml@^0.224.0";
+import { parseArgs } from "jsr:@std/cli@^0.224.0/parse-args";
 import Ajv from "npm:ajv@^8.16.0";
 // TODO: Use Deno standard library spinner once available
 // import { Spinner, wait } from "jsr:@wait/wait@^0.1.19"; // Import wait for spinner
@@ -34,13 +35,34 @@ const CONTRACTS_FILE = path.join(ROOT_DIR, "contracts.toml");
 const SCHEMA_FILE = path.join(ROOT_DIR, "schemas", "contracts-schema.json");
 
 async function main() {
-  console.log("Validating repository structure against contracts.toml...");
+  const flags = parseArgs(Deno.args, {
+    boolean: ["add-untracked"],
+    alias: { a: "add-untracked" },
+    default: { "add-untracked": false },
+  });
+
+  const addUntracked = flags["add-untracked"];
+
+  if (addUntracked) {
+    console.log(
+      "Running in --add-untracked mode. Will add found paths to contracts.toml...",
+    );
+  } else {
+    console.log("Validating repository structure against contracts.toml...");
+  }
 
   // --- Add Schema Validation Step ---
-  console.log(`Validating ${path.basename(CONTRACTS_FILE)} against schema ${path.relative(ROOT_DIR, SCHEMA_FILE)}...`);
+  console.log(
+    `Validating ${path.basename(CONTRACTS_FILE)} against schema ${
+      path.relative(
+        ROOT_DIR,
+        SCHEMA_FILE,
+      )
+    }...`,
+  );
   let schemaContent: string;
-  let contractsTomlContent: string; // Moved declaration up
-  let contractsData: Contracts; // Moved declaration up
+  let contractsTomlContent: string;
+  let contractsData: Contracts;
 
   try {
     schemaContent = await Deno.readTextFile(SCHEMA_FILE);
@@ -64,8 +86,12 @@ async function main() {
   const valid = validate(contractsData);
 
   if (!valid) {
-    console.error(`Schema validation failed for ${path.basename(CONTRACTS_FILE)}:`);
+    console.error(
+      `Schema validation failed for ${path.basename(CONTRACTS_FILE)}:`,
+    );
     console.error(validate.errors);
+    // Don't proceed if schema is invalid, even in add-untracked mode
+    console.error("Aborting due to schema validation errors.");
     Deno.exit(1);
   } else {
     console.log("Schema validation successful.");
@@ -74,12 +100,14 @@ async function main() {
 
   let validationFailed = false;
   const errors: string[] = [];
+  const untrackedPaths: string[] = []; // Store untracked paths
+  const addedPaths: string[] = []; // Store paths added in --add-untracked mode
 
   // --- Read and Parse contracts.toml ---
   if (!contractsData.structure) {
-    // spinner.warn("No [structure] section found in contracts.toml.");
     console.warn("No [structure] section found in contracts.toml.");
-    return; // Nothing to validate
+    // Initialize structure if it doesn't exist, especially for add-untracked mode
+    contractsData.structure = {};
   }
 
   const definedStructures = new Map<string, StructureEntry>();
@@ -87,15 +115,12 @@ async function main() {
 
   for (const key in structureEntries) {
     const value = structureEntries[key];
-    // Skip special keys like 'global' or 'project' unless they define a type explicitly
     if (typeof value === "object" && value.type) {
-      // Handle quoted keys like "[structure.\"README.md\"]" -> "README.md"
       const normalizedKey = key.startsWith('"') && key.endsWith('"')
         ? key.slice(1, -1)
         : key;
       definedStructures.set(normalizedKey, value);
     } else if (key === "global" || key === "project") {
-      // Allow these specific keys without a type for now
       console.log(
         `INFO: Skipping structure validation for special key: ${key}`,
       );
@@ -104,7 +129,6 @@ async function main() {
         `INFO: Skipping structure validation for string entry: ${key}`,
       );
     } else {
-      // Potentially an object without a 'type', like 'global' or 'project' sub-configs
       console.log(
         `INFO: Skipping structure validation for typeless object: ${key}`,
       );
@@ -113,9 +137,8 @@ async function main() {
 
   // --- Walk the filesystem ---
   const foundPaths = new Set<string>();
-  const ignoreContractPaths = new Set<string>(); // Store paths where contract validation is ignored
+  const ignoreContractPaths = new Set<string>();
 
-  // Pre-populate ignoreContractPaths based on definitions
   for (const [relPath, entry] of definedStructures.entries()) {
     if (entry.ignores?.includes("contract")) {
       ignoreContractPaths.add(relPath);
@@ -123,27 +146,20 @@ async function main() {
   }
 
   const walkOptions: fs.WalkOptions = {
-    // Start from the root directory
-    // We'll add files directly in root later
-    // Skip .git by default for performance and relevance
-    skip: [/\.git$/, /\.DS_Store$/], // Add other common ignores if needed
-    followSymlinks: false, // Important: Don't follow symlinks listed in the contract
+    skip: [/\.git$/, /\.DS_Store$/],
+    followSymlinks: false,
   };
 
-  // Add root-level files/dirs manually first
   for await (const entry of Deno.readDir(ROOT_DIR)) {
     if (!walkOptions.skip?.some((pattern) => pattern.test(entry.name))) {
       foundPaths.add(entry.name);
     }
   }
 
-  // Now walk directories recursively
   for await (const entry of fs.walk(ROOT_DIR, walkOptions)) {
-    if (entry.path === ROOT_DIR) continue; // Already handled root entries
-
+    if (entry.path === ROOT_DIR) continue;
     const relativePath = path.relative(ROOT_DIR, entry.path);
 
-    // Check if the path or any of its parent directories are ignored for contracts
     let isIgnored = false;
     let currentPath = relativePath;
     while (currentPath && currentPath !== ".") {
@@ -152,27 +168,174 @@ async function main() {
         break;
       }
       const parent = path.dirname(currentPath);
-      currentPath = parent === "." ? "" : parent; // Avoid infinite loop at root
+      currentPath = parent === "." ? "" : parent;
     }
 
     if (isIgnored) {
-      // console.log(`DEBUG: Skipping validation within ignored path: ${relativePath}`);
-      continue; // Skip validation for this path and its children implicitly
+      continue;
     }
 
-    if (relativePath) { // Avoid adding empty string for root
+    if (relativePath) {
       foundPaths.add(relativePath);
     }
   }
 
-  // Add external files if they exist, they should be considered 'found'
   if (contractsData.external_files) {
     for (const key in contractsData.external_files) {
       const filePath = path.join(ROOT_DIR, contractsData.external_files[key]);
       try {
-        await Deno.stat(filePath); // Check if file exists
+        await Deno.stat(filePath);
         foundPaths.add(contractsData.external_files[key]);
       } catch (e) {
         if (!(e instanceof Deno.errors.NotFound)) {
           console.error(
-            `
+            `Error checking external file '${
+              contractsData.external_files[key]
+            }': ${e.message}`,
+          );
+        }
+      }
+    }
+  }
+
+  // --- Compare defined structures with found paths ---
+  // Check 1: Missing entries (only if not in add-untracked mode)
+  if (!addUntracked) {
+    for (const [definedPath, entry] of definedStructures.entries()) {
+      if (entry.ignores?.includes("contract")) {
+        continue;
+      }
+      if (!foundPaths.has(definedPath)) {
+        errors.push(
+          `Missing: Entry '${definedPath}' defined in contracts.toml [structure] but not found on filesystem.`,
+        );
+        validationFailed = true;
+      } else {
+        // Type check (run in both modes, but only error if not add-untracked)
+        try {
+          const lstatInfo = await Deno.lstat(path.join(ROOT_DIR, definedPath));
+          const actualType = lstatInfo.isFile
+            ? "file"
+            : lstatInfo.isDirectory
+            ? "directory"
+            : lstatInfo.isSymlink
+            ? "symlink"
+            : "unknown";
+          if (actualType !== "unknown" && entry.type !== actualType) {
+            errors.push(
+              `Type Mismatch: '${definedPath}' is type '${actualType}' but defined as '${entry.type}' in contracts.toml.`,
+            );
+            validationFailed = true;
+          }
+        } catch (e) {
+          if (!(e instanceof Deno.errors.NotFound)) {
+            errors.push(
+              `Error checking type for '${definedPath}': ${e.message}`,
+            );
+            validationFailed = true;
+          }
+        }
+      }
+    }
+  }
+
+  // Check 2: Untracked paths
+  for (const foundPath of foundPaths) {
+    if (!definedStructures.has(foundPath)) {
+      untrackedPaths.push(foundPath); // Collect untracked paths
+      if (!addUntracked) {
+        // Only report as error if not in add mode
+        errors.push(
+          `Untracked: Path '${foundPath}' found on filesystem but not defined in contracts.toml [structure].`,
+        );
+        validationFailed = true;
+      }
+    }
+  }
+
+  // --- Add untracked paths if flag is set ---
+  if (addUntracked && untrackedPaths.length > 0) {
+    console.log(
+      `\nFound ${untrackedPaths.length} untracked paths. Adding to ${
+        path.basename(CONTRACTS_FILE)
+      }...`,
+    );
+    let tomlToAdd = "\n# === Automatically added untracked entries ===\n";
+
+    for (const untrackedPath of untrackedPaths) {
+      try {
+        const fullPath = path.join(ROOT_DIR, untrackedPath);
+        const lstatInfo = await Deno.lstat(fullPath);
+        const type = lstatInfo.isFile
+          ? "file"
+          : lstatInfo.isDirectory
+          ? "directory"
+          : lstatInfo.isSymlink
+          ? "symlink"
+          : null;
+
+        if (type) {
+          // Always use quoted keys when adding untracked paths for safety/consistency
+          const key = `"${untrackedPath}"`;
+          const entryString = `\n[structure.${key}]\ntype = "${type}"\n`;
+          tomlToAdd += entryString;
+          console.log(`  + Adding entry for ${untrackedPath}`);
+          addedPaths.push(untrackedPath);
+        } else {
+          console.warn(
+            `  ! Skipping untracked path '${untrackedPath}' with unknown type.`,
+          );
+        }
+      } catch (e) {
+        console.error(
+          `  ! Error processing untracked path '${untrackedPath}': ${e.message}`,
+        );
+      }
+    }
+
+    // Append to the original file content
+    try {
+      // Read original content again to ensure freshness before appending
+      const originalContent = await Deno.readTextFile(CONTRACTS_FILE);
+      const updatedContent = originalContent + tomlToAdd;
+
+      await Deno.writeTextFile(CONTRACTS_FILE, updatedContent);
+      console.log(
+        `\nSuccessfully appended ${addedPaths.length} entries to ${
+          path.basename(CONTRACTS_FILE)
+        }.`,
+      );
+      console.log(
+        "Please run 'mise run contracts-clean' to sort the updated structure.",
+      );
+      Deno.exit(0); // Exit successfully after adding entries
+    } catch (e) {
+      console.error(
+        `\nFailed to write updated ${
+          path.basename(CONTRACTS_FILE)
+        }: ${e.message}`,
+      );
+      Deno.exit(1);
+    }
+  } else if (addUntracked && untrackedPaths.length === 0) {
+    console.log("\nNo untracked paths found to add.");
+    Deno.exit(0); // Exit successfully
+  }
+
+  // --- Report results (only if not in add-untracked mode or if add-untracked found nothing to add) ---
+  if (validationFailed) {
+    console.error("\nRepository structure validation failed.");
+    errors.forEach((error) => console.error(`- ${error}`));
+    Deno.exit(1);
+  } else if (!addUntracked) { // Only print success if not in add mode
+    console.log("\nRepository structure validation successful.");
+  }
+}
+
+if (import.meta.main) {
+  main().catch((e) => {
+    // spinner.fail("An unexpected error occurred during validation.");
+    console.error("An unexpected error occurred during validation:", e);
+    Deno.exit(1);
+  });
+}
