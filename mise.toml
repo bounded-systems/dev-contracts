@@ -47,6 +47,14 @@ node = "20.14.0"
 deno = "2.2.4"
 trunk = "1.22.12"
 
+# Linters (Add desired versions)
+prettier = "latest" # Example: Replace with specific version like "3.3.2"
+eslint = "latest"    # Example: Replace with specific version like "9.8.0"
+standardrb = "latest" # Example: Replace with specific version like "1.0.0"
+markdownlint = "latest" # Example: Replace with specific version like "0.41.0"
+oxipng = "latest"
+yamllint = "latest"
+
 # Configure Trunk actions via the custom plugin
 # trunk-actions = ["trunk-check-pre-commit"] # Removed - Replaced by trunk-actions-* entries below
 

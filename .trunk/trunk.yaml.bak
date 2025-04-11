@@ -35,7 +35,6 @@ lint:
     - markdownlint@latest
     - oxipng@latest
     - yamllint@latest
-    - git-diff-check
 actions:
   enabled:
     - trunk-check-pre-commit

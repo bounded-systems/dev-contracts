@@ -136,78 +136,35 @@ export async function updateTrunkConfig(
       console.warn(`Using tools.trunk version: \"${miseConfig.tools.trunk}\"`);
     }
 
-    // Setup Deno: Add to tools.definitions and downloads
-    if (miseConfig.tools?.deno) {
-      const denoVersion = miseConfig.tools.deno;
-      // Ensure denoVersion is a simple string (schema might allow object/array)
-      if (typeof denoVersion === "string") {
-        console.log(`Adding Deno ${denoVersion} to tools.definitions`);
-        // Ensure tools and definitions exist
-        trunkConfig.tools = trunkConfig.tools ?? { definitions: [] };
-        trunkConfig.tools.definitions = trunkConfig.tools.definitions ?? [];
-        trunkConfig.tools.definitions.push({
-          name: "deno",
-          download: "deno", // Assuming this maps correctly
-          known_good_version: denoVersion,
-          // shims might be optional or structured differently in TrunkConfig
-          // shims: ["deno"], // Add if defined and needed in TrunkConfig
-        });
-
-        console.log("Adding Deno downloads configuration");
-        // Ensure downloads array exists
-        trunkConfig.downloads = trunkConfig.downloads ?? [];
-        trunkConfig.downloads.push({
-          name: "deno",
-          downloads: [
-            {
-              os: {
-                linux: "linux",
-                macos: "darwin",
-                windows: "windows",
-              },
-              cpu: {
-                x86_64: "x86_64",
-                arm_64: "aarch64",
-              },
-              // url structure needs to match TrunkConfig definition
-              url: "https://github.com/denoland/deno/releases/download/v${version}/deno-${cpu}-${os}.zip",
-            },
-          ],
-        });
-      } else {
-        console.warn(
-          `Skipping Deno setup in trunk.yaml: Version in mise.toml is not a simple string ('${JSON.stringify(denoVersion)}')`
-        );
-      }
-    } else {
-      // If Deno is not in mise tools, ensure it's not in trunk tools/downloads
-      if (trunkConfig.tools?.definitions) {
-        trunkConfig.tools.definitions = trunkConfig.tools.definitions.filter(
-          (t: any) => t?.name !== "deno" // Use optional chaining for safety
-        );
-      }
-      if (trunkConfig.downloads) {
-        trunkConfig.downloads = trunkConfig.downloads.filter((d: any) => d?.name !== "deno");
-      }
-    }
-
-    // Populate runtimes
+    // Populate runtimes.enabled
     // Ensure tools exist and is an object
     if (miseConfig.tools && typeof miseConfig.tools === "object") {
-      console.log("Populating runtimes from mise.toml tools...");
+      console.log("Populating runtimes.enabled from mise.toml tools...");
       const toolMapping: Record<string, string> = {
-        // Adjust keys based on actual tool names used in mise.toml if needed
-        node: "node", // Or maybe nodejs?
+        node: "node",
         ruby: "ruby",
-        // Deno is handled separately in tools.definitions
+        deno: "deno", // Include deno here
       };
+
+      // Initialize runtimes section if it doesn't exist
+      trunkConfig.runtimes = trunkConfig.runtimes ?? { enabled: [] };
+      trunkConfig.runtimes.enabled = trunkConfig.runtimes.enabled ?? [];
 
       for (const [tool, versionObj] of Object.entries(miseConfig.tools)) {
         const runtimeName = toolMapping[tool];
         if (!runtimeName) {
+          // Only add linters/actions/other tools if they are explicitly configured elsewhere
           continue;
         }
-        // Extract the string version if versionObj is an object { version: "..." } or just a string
+
+        // --- Skip Deno --- 
+        // Trunk should pick up Deno from the PATH managed by mise, do not add it to runtimes.enabled
+        if (runtimeName === "deno") {
+          console.log("Skipping Deno for runtimes.enabled (should be used from PATH).");
+          continue;
+        }
+
+        // Extract version (handle string or { version: "..." } object)
         const version =
           typeof versionObj === "string"
             ? versionObj
@@ -219,16 +176,83 @@ export async function updateTrunkConfig(
               : null;
 
         if (version) {
-          const runtimeEntry = `${runtimeName}@${version}`;
-          console.log(`Adding runtime: ${runtimeEntry}`);
-          // Ensure runtimes and enabled exist
-          trunkConfig.runtimes = trunkConfig.runtimes ?? { enabled: [] };
-          trunkConfig.runtimes.enabled = trunkConfig.runtimes.enabled ?? [];
+          // Use "system" for Deno version in the enabled list for clarity,
+          // although the definition block is what truly controls it.
+          const runtimeEntry =
+            runtimeName === "deno" ? `${runtimeName}@system` : `${runtimeName}@${version}`;
+          console.log(`Adding to runtimes.enabled: ${runtimeEntry}`);
           trunkConfig.runtimes.enabled.push(runtimeEntry);
+        } else if (runtimeName === "deno" && typeof versionObj === "string") {
+          // Handle case where deno version is just a string (common)
+          // --- Removed this else-if block as Deno is now skipped above ---
+          /* 
+          const runtimeEntry = `${runtimeName}@system`;
+          console.log(`Adding to runtimes.enabled: ${runtimeEntry}`);
+          trunkConfig.runtimes.enabled.push(runtimeEntry);
+          */
         } else {
           console.log(
-            `Skipping runtime "${tool}" due to unsupported version format: ${JSON.stringify(versionObj)}`
+            `Skipping runtime "${tool}" for runtimes.enabled due to unsupported version format: ${JSON.stringify(versionObj)}`
           );
+        }
+      }
+    }
+
+    // Populate runtimes.definitions
+    if (miseConfig.tools && typeof miseConfig.tools === "object") {
+      console.log("Populating runtimes.definitions...");
+      trunkConfig.runtimes = trunkConfig.runtimes ?? { enabled: [], definitions: [] }; // Ensure definitions array exists
+      trunkConfig.runtimes.definitions = trunkConfig.runtimes.definitions ?? [];
+
+      const envConfig = Array.isArray(miseConfig.env)
+        ? miseConfig.env.find(e => typeof e === "object" && e !== null && !Array.isArray(e)) || {}
+        : miseConfig.env || {};
+
+      // --- Node Runtime Definition ---
+      if (miseConfig.tools.node) {
+        const nodeVersion =
+          typeof miseConfig.tools.node === "string"
+            ? miseConfig.tools.node
+            : (miseConfig.tools.node as any)?.version;
+        if (nodeVersion && typeof nodeVersion === "string") {
+          console.log(`Adding Node runtime definition (version: ${nodeVersion})`);
+          trunkConfig.runtimes.definitions.push({
+            type: "node",
+            version: nodeVersion,
+            // Add any Node-specific runtime_environment vars if needed from miseConfig.env
+            // runtime_environment: [ { name: "NODE_ENV", value: envConfig.NODE_ENV || "development" } ] // Example
+          });
+        } else {
+          console.warn("Could not determine Node version for runtime definition.");
+        }
+      }
+
+      // --- Ruby Runtime Definition ---
+      if (miseConfig.tools.ruby) {
+        const rubyVersion =
+          typeof miseConfig.tools.ruby === "string"
+            ? miseConfig.tools.ruby
+            : (miseConfig.tools.ruby as any)?.version;
+        if (rubyVersion && typeof rubyVersion === "string") {
+          console.log(`Adding Ruby runtime definition (version: ${rubyVersion})`);
+
+          // Construct paths relative to rootDir using miseConfig.env
+          const rubyRuntimeDir = path.join(rootDir, envConfig.RUNTIMES_DIR || "runtimes", "ruby"); // Default if not set
+          const gemfilePath = path.join(rubyRuntimeDir, envConfig.GEMFILE_NAME || "Gemfile");
+          const bundlePath = path.join(rubyRuntimeDir, "vendor", "bundle"); // Standard bundler path
+
+          trunkConfig.runtimes.definitions.push({
+            type: "ruby",
+            version: rubyVersion,
+            runtime_environment: [
+              { name: "BUNDLE_GEMFILE", value: gemfilePath },
+              { name: "BUNDLE_PATH", value: bundlePath },
+              { name: "BUNDLE_WITHOUT", value: "production:staging" }, // Assuming static value
+              { name: envConfig.RUBY_HOME_VAR || "GEM_HOME", value: bundlePath }, // Use var name from mise.toml
+            ],
+          });
+        } else {
+          console.warn("Could not determine Ruby version for runtime definition.");
         }
       }
     }
@@ -236,10 +260,74 @@ export async function updateTrunkConfig(
     // Populate linters and actions
     if (miseConfig.tools || miseConfig.settings?.trunk) {
       // Check settings.trunk
-      console.log("Populating linters and actions from mise.toml settings.trunk...");
+      console.log("Populating linters and actions from mise.toml...");
+
       // --- Linter and Action Population Logic ---
       // Remove linterPrefix definition
-      // const linterPrefix = "trunk-config-";
+
+      // --- Populate Linters from mise.tools ---
+      console.log("Populating linters from mise.toml tools...");
+      if (miseConfig.tools && typeof miseConfig.tools === "object") {
+        // Ensure lint section and enabled array exist
+        trunkConfig.lint = trunkConfig.lint ?? { enabled: [] };
+        trunkConfig.lint.enabled = trunkConfig.lint.enabled ?? [];
+
+        // Define tools that are NOT linters (runtimes, trunk itself)
+        const knownNonLinters = ["node", "ruby", "deno", "trunk"];
+        // Define linters that are built-in and don't take a version
+        const builtInLinters = ["git-diff-check"];
+
+        for (const [tool, versionObj] of Object.entries(miseConfig.tools)) {
+          if (knownNonLinters.includes(tool)) {
+            continue; // Skip runtimes/infra tools
+          }
+
+          // Handle built-in linters specially
+          if (builtInLinters.includes(tool)) {
+            const linterEntry = tool;
+            console.log(`Adding built-in linter: ${linterEntry}`);
+            if (!trunkConfig.lint.enabled.includes(linterEntry)) {
+              trunkConfig.lint.enabled.push(linterEntry);
+            }
+            continue; // Move to next tool
+          }
+
+          // Extract version (handle string or { version: "..." } object)
+          const version =
+            typeof versionObj === "string"
+              ? versionObj
+              : typeof versionObj === "object" &&
+                  versionObj !== null &&
+                  "version" in versionObj &&
+                  typeof versionObj.version === "string"
+                ? versionObj.version
+                : null;
+
+          if (version) {
+            const linterEntry = `${tool}@${version}`;
+            console.log(`Adding linter: ${linterEntry}`);
+            // Avoid duplicates
+            if (!trunkConfig.lint.enabled.includes(linterEntry)) {
+              trunkConfig.lint.enabled.push(linterEntry);
+            }
+          } else {
+            console.log(
+              `Skipping linter "${tool}" due to unsupported version format: ${JSON.stringify(versionObj)}`
+            );
+          }
+        }
+      } else {
+        console.log("No tools found in mise.toml to populate linters.");
+      }
+
+      // --- Explicitly add known built-in linters ---
+      const builtInLintersToAdd = ["git-diff-check"]; // List of built-ins we want enabled
+      for (const linterName of builtInLintersToAdd) {
+          if (!trunkConfig.lint.enabled.includes(linterName)) {
+              console.log(`Adding built-in linter: ${linterName}`);
+              trunkConfig.lint.enabled.push(linterName);
+          }
+      }
 
       // --- Populate Actions from settings.trunk.actions ---
       console.log("Populating actions from mise.toml settings.trunk.actions...");
@@ -264,14 +352,18 @@ export async function updateTrunkConfig(
       } else {
         console.log("No settings.trunk.actions found in mise.toml or it's not an object.");
       }
-      // --- End of Action Population Logic ---
+      // --- End of Linter and Action Population Logic ---
     }
 
     // Clean up empty sections before writing
     if (!trunkConfig.tools?.definitions?.length) delete trunkConfig.tools;
     if (!trunkConfig.downloads?.length) delete trunkConfig.downloads;
-    if (!trunkConfig.runtimes?.enabled?.length) delete trunkConfig.runtimes;
-    if (!trunkConfig.lint?.enabled?.length) delete trunkConfig.lint;
+    if (!trunkConfig.runtimes?.enabled?.length && !trunkConfig.runtimes?.definitions?.length) {
+      delete trunkConfig.runtimes;
+    }
+    if (!trunkConfig.lint?.enabled?.length) {
+      delete trunkConfig.lint;
+    }
     if (!trunkConfig.actions?.enabled?.length) delete trunkConfig.actions;
     if (Object.keys(trunkConfig.cli).length === 0) delete trunkConfig.cli;
 
@@ -283,6 +375,18 @@ export async function updateTrunkConfig(
 
     // Generate new trunk.yaml content
     const newTrunkContent = `# Generated by scripts/update_trunk.ts from ${miseConfigPath}\n# Do not edit this file directly.\n\n${yaml.stringify(finalTrunkConfig, yamlOptions)}`;
+
+    // --- Backup existing trunk.yaml before overwriting ---
+    const backupPath = `${fullTrunkPath}.bak`;
+    try {
+      if (await exists(fullTrunkPath)) {
+        await Deno.copyFile(fullTrunkPath, backupPath);
+        console.log(`Created backup of existing trunk.yaml at: ${backupPath}`);
+      }
+    } catch (backupError) {
+      console.warn(`Warning: Failed to create backup of trunk.yaml: ${backupError.message}`);
+      // Proceed without backup if copying failed
+    }
 
     // Write the generated configuration to trunk.yaml, overwriting existing content
     await Deno.writeTextFile(fullTrunkPath, newTrunkContent);
