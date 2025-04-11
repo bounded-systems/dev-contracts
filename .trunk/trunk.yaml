@@ -43,7 +43,6 @@ lint:
     - eslint@9.24.0
 actions:
   enabled:
-    - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
     - trunk-upgrade-available

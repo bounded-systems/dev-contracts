@@ -270,22 +270,81 @@ async function main() {
   }
 
   // Update actions
-  if (miseConfig.settings?.devtools?.trunk?.actions_enabled) {
-    console.log("Updating actions from mise.toml settings...");
+  console.log("Updating actions from mise.toml tools...");
 
-    if (!trunkConfig.actions) {
-      trunkConfig.actions = { enabled: [] };
-      changed = true;
-    } else if (!trunkConfig.actions.enabled) {
-      trunkConfig.actions.enabled = [];
-      changed = true;
+  if (!trunkConfig.actions) {
+    trunkConfig.actions = { enabled: [] };
+    changed = true;
+  } else if (!trunkConfig.actions.enabled) {
+    trunkConfig.actions.enabled = [];
+    changed = true;
+  }
+
+  // Known Trunk actions from "trunk actions list"
+  const validTrunkActions = [
+    "trunk-announce",
+    "trunk-cache-prune",
+    "trunk-check-pre-push",
+    "trunk-fmt-pre-commit",
+    "trunk-share-with-everyone",
+    "trunk-single-player-auto-on-upgrade",
+    "trunk-single-player-auto-upgrade",
+    "trunk-upgrade-available",
+    "trunk-whoami",
+    "buf-gen",
+    "commitizen",
+    "commitlint",
+    "git-blame-ignore-revs",
+    "git-lfs",
+    "go-mod-tidy",
+    "go-mod-tidy-vendor",
+    "hello-world-python",
+    "npm-check",
+    "npm-check-pre-push",
+    "poetry-check",
+    "poetry-export",
+    "poetry-install",
+    "poetry-lock",
+    "submodule-init-update",
+    "terraform-docs",
+    "trufflehog-pre-commit",
+    "trunk-check-pre-commit",
+    "trunk-check-pre-push-always",
+    "yarn-check",
+  ];
+
+  // Check tools for actions
+  if (miseConfig.tools) {
+    // First, find all enabled actions in tools
+    const enabledActions = [];
+
+    for (const [toolName, toolValue] of Object.entries(miseConfig.tools)) {
+      // Skip non-action tools (only process tools that look like actions)
+      if (validTrunkActions.includes(toolName)) {
+        if (toolValue === "enabled" || toolValue === true) {
+          enabledActions.push(toolName);
+          console.log(`Found enabled action in tools: ${toolName}`);
+        }
+      }
     }
 
-    // Process actions_enabled
-    for (const action of miseConfig.settings.devtools.trunk.actions_enabled) {
+    // Update the enabled actions in trunkConfig
+    for (const action of enabledActions) {
       if (!trunkConfig.actions.enabled.includes(action)) {
         trunkConfig.actions.enabled.push(action);
         console.log(`Added action: ${action}`);
+        changed = true;
+      } else {
+        console.log(`Action ${action} already exists.`);
+      }
+    }
+
+    // Remove actions that are not enabled in mise.toml
+    for (let i = trunkConfig.actions.enabled.length - 1; i >= 0; i--) {
+      const action = trunkConfig.actions.enabled[i];
+      if (!enabledActions.includes(action)) {
+        console.log(`Removing action: ${action} as it's not enabled in mise.toml`);
+        trunkConfig.actions.enabled.splice(i, 1);
         changed = true;
       }
     }
