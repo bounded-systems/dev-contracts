@@ -78,3 +78,78 @@ enabled_linters = [
   { name = "git-diff-check" }, # No version needed, it's a system tool
   { name = "deno", version = "2.2.8" },
 ]
+
+[_.contracts.project_root.files.".git"]
+type = "artifact"
+purpose = "Git version control data"
+
+[_.contracts.project_root.files.".github"]
+type = "contract"
+purpose = "GitHub workflows and configuration"
+
+[_.contracts.project_root.files.".gitignore"]
+type = "contract"
+purpose = "Defines files excluded from version control"
+
+[_.contracts.project_root.files.".ruby-lsp"]
+type = "artifact"
+purpose = "Ruby language server configuration"
+
+[_.contracts.project_root.files.".trunk"]
+type = "artifact"
+depends_on = ["templates/trunk/", "mise.toml"]
+affects = ["mise.toml"]
+purpose = "Generated/symlinked Trunk configuration"
+
+[_.contracts.project_root.files.".vscode"]
+type = "artifact"
+depends_on = ["templates/vscode/"]
+purpose = "Symlinked VSCode configuration"
+
+[_.contracts.project_root.files."README.md"]
+type = "artifact"
+depends_on = ["readme-schema.yaml"]
+purpose = "Generated documentation"
+
+[_.contracts.project_root.files."deno.json"]
+type = "contract"
+purpose = "Deno runtime configuration"
+
+[_.contracts.project_root.files."deno.lock"]
+type = "artifact"
+depends_on = ["deno.json"]
+purpose = "Locked Deno dependencies"
+
+[_.contracts.project_root.files."mise.toml"]
+type = "contract"
+affects = [".trunk/trunk.yaml"]
+purpose = "Source of truth for tool versions and tasks"
+
+[_.contracts.project_root.files."readme-schema.yaml"]
+type = "contract"
+affects = ["README.md"]
+purpose = "Schema for README generation"
+
+[_.contracts.project_root.files."runtimes"]
+type = "static"
+purpose = "Runtime environments"
+
+[_.contracts.project_root.files."scripts"]
+type = "static"
+purpose = "Container for transformation scripts"
+
+[_.contracts.project_root.files."src"]
+type = "static"
+purpose = "Source code for transformation logic"
+
+[_.contracts.project_root.files."templates"]
+type = "contract"
+purpose = "Source templates for symlinked configurations"
+
+[_.contracts.project_root.files."tests"]
+type = "static"
+purpose = "Test files"
+
+[_.contracts.project_root.files."types"]
+type = "static"
+purpose = "TypeScript type definitions"
