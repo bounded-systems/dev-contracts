@@ -1,5 +1,5 @@
 // GENERATED FILE - DO NOT EDIT MANUALLY!
-// Timestamp: 2025-04-11T04:52:09.432Z
+// Timestamp: 2025-04-11T04:55:33.369Z
 
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
 import type { TransformContext } from "../types/transform_rules.ts";
@@ -33,46 +33,46 @@ export async function applyMiseToTrunkRules(
   // Rules are embedded here for clarity, consider passing them if they get very large
   const rules: any[] = [
   {
-    &quot;name&quot;: &quot;SyncEnabledLinters&quot;,
-    &quot;description&quot;: &quot;Synchronizes lint.enabled in trunk.yaml with settings.devtools.trunk.enabled_linters in mise.toml&quot;,
-    &quot;target_path&quot;: [
-      &quot;lint&quot;,
-      &quot;enabled&quot;
+    "name": "SyncEnabledLinters",
+    "description": "Synchronizes lint.enabled in trunk.yaml with settings.devtools.trunk.enabled_linters in mise.toml",
+    "target_path": [
+      "lint",
+      "enabled"
     ],
-    &quot;source_path&quot;: [
-      &quot;settings&quot;,
-      &quot;devtools&quot;,
-      &quot;trunk&quot;,
-      &quot;enabled_linters&quot;
+    "source_path": [
+      "settings",
+      "devtools",
+      "trunk",
+      "enabled_linters"
     ],
-    &quot;transformer_function&quot;: &quot;syncLinters&quot;,
-    &quot;priority&quot;: 10
+    "transformer_function": "syncLinters",
+    "priority": 10
   },
   {
-    &quot;name&quot;: &quot;SyncRuntimeDefinitions&quot;,
-    &quot;description&quot;: &quot;Synchronizes runtimes.definitions in trunk.yaml with tools in mise.toml&quot;,
-    &quot;target_path&quot;: [
-      &quot;runtimes&quot;,
-      &quot;definitions&quot;
+    "name": "SyncRuntimeDefinitions",
+    "description": "Synchronizes runtimes.definitions in trunk.yaml with tools in mise.toml",
+    "target_path": [
+      "runtimes",
+      "definitions"
     ],
-    &quot;source_path&quot;: [
-      &quot;tools&quot;
+    "source_path": [
+      "tools"
     ],
-    &quot;transformer_function&quot;: &quot;syncRuntimes&quot;,
-    &quot;priority&quot;: 20
+    "transformer_function": "syncRuntimes",
+    "priority": 20
   },
   {
-    &quot;name&quot;: &quot;UpdateTrunkVersionField&quot;,
-    &quot;description&quot;: &quot;Updates the top-level &#39;version&#39; field in trunk.yaml based on mise.toml tools.trunk&quot;,
-    &quot;target_path&quot;: [
-      &quot;version&quot;
+    "name": "UpdateTrunkVersionField",
+    "description": "Updates the top-level 'version' field in trunk.yaml based on mise.toml tools.trunk",
+    "target_path": [
+      "version"
     ],
-    &quot;source_path&quot;: [
-      &quot;tools&quot;,
-      &quot;trunk&quot;
+    "source_path": [
+      "tools",
+      "trunk"
     ],
-    &quot;transformer_function&quot;: &quot;updateTrunkVersion&quot;,
-    &quot;priority&quot;: 30
+    "transformer_function": "updateTrunkVersion",
+    "priority": 30
   }
 ];
 

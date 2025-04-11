@@ -27,7 +27,7 @@ export async function applyMiseToTrunkRules(
   let overallChanged = false;
 
   // Rules are embedded here for clarity, consider passing them if they get very large
-  const rules: any[] = <%= JSON.stringify(it.miseToTrunkRules, null, 2) %>;
+  const rules: any[] = <%~ JSON.stringify(it.miseToTrunkRules, null, 2) %>;
 
   for (const rule of rules) {
     console.log(`  [Mise->Trunk] Executing rule: ${rule.name} (${rule.transformer_function})`);
@@ -101,7 +101,7 @@ export async function applyTrunkToMiseRules(
   let transformedConfig = structuredClone(targetConfig);
   let overallChanged = false;
 
-  const rules: any[] = <%= JSON.stringify(it.trunkToMiseRules, null, 2) %>;
+  const rules: any[] = <%~ JSON.stringify(it.trunkToMiseRules, null, 2) %>;
 
   for (const rule of rules) {
     console.log(`  [Trunk->Mise] Executing rule: ${rule.name} (${rule.transformer_function})`);
