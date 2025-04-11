@@ -19,13 +19,11 @@ PACKAGE_DESCRIPTION = "Pushd Development Tools"
 
 # Ruby configuration
 RUBY_GEMS_SOURCE = "https://rubygems.org"
-
-# Environment variable prefixes
-RUBY_ENV_PREFIX = "BUNDLE_"
-NODE_ENV_PREFIX = "NODE_"
-
-# Special environment variables
 RUBY_HOME_VAR = "GEM_HOME"
+RUBY_ENV_PREFIX = "BUNDLE_"
+
+# Node configuration
+NODE_ENV_PREFIX = "NODE_"
 NODE_PACKAGE_VAR = "PACKAGE_FILE"
 
 # Trunk configuration
@@ -38,10 +36,12 @@ YAMLLINT_CONFIG_PATH = ".yamllint"
 VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 
 [tools]
-deno = "2.2.4"
-nodejs = "20.14.0"
+# Tool versions
 ruby = "3.3.3"
+node = "20.14.0"
+deno = "2.2.4"
 trunk = "1.22.12"
+
 # Add linters as tools
 prettier = "3.5.3"
 eslint = "9.24.0"
@@ -161,15 +161,10 @@ run = "deno run -A scripts/generate_schema_types.ts --transform"
 depends = ["install"]
 description = "Legacy task to validate schemas and update trunk.yaml using the old script"
 
-# --- End of Tasks ---
-
 [settings]
 # Add any mise specific settings here, like experimental = true
 # ... keep existing settings if any ...
 
-# --- Central Devtools Configuration (Custom) ---
-# This section defines the dependencies and settings used to generate
-# various configuration files (Gemfile, package.json, deno.json, trunk.yaml, .ruby-version)
 [settings.devtools]
 description = "Central configuration for generating project files."
 
