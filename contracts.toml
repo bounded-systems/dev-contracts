@@ -53,7 +53,6 @@ guarantees = ["Tools will be installed in isolated environments","Tasks will run
 [structure.".git"]
 type = "directory"
 purpose = "Git version control data"
-ignores = ["deno"]
 
 [structure.".github"]
 type = "directory"
@@ -75,27 +74,27 @@ purpose = "Generated/symlinked Trunk configuration"
 
 [structure.".trunk/actions/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".trunk/logs/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".trunk/notifications/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".trunk/out/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".trunk/plugins/"]
 type = "directory"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".trunk/tools/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure.".vscode"]
 type = "symlink"
@@ -180,27 +179,27 @@ description = "Trunk.io configuration"
 
 [structure."templates/trunk/.trunk/actions/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/trunk/.trunk/logs/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/trunk/.trunk/notifications/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/trunk/.trunk/out/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/trunk/.trunk/plugins/"]
 type = "directory"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/trunk/.trunk/tools/"]
 type = "symlink"
-ignores = ["git"]
+ignores = ["git", "contract"]
 
 [structure."templates/vscode"]
 type = "directory"
@@ -213,7 +212,6 @@ purpose = "Test files"
 [structure.types]
 type = "directory"
 purpose = "TypeScript type definitions"
-ignores = ["deno","lint"]
 
 [structure.global]
 description = "Global settings inherited by all subfolders"
@@ -227,12 +225,10 @@ description = "Global settings inherited by all subfolders"
 [structure.coverage]
 type = "directory"
 purpose = "Test coverage reports"
-ignores = ["eslint","prettier"]
 
 [structure.vendor]
 type = "directory"
 purpose = "Vendored dependencies"
-ignores = ["eslint"]
 
 [structure.".deno"]
 type = "directory"

@@ -30,7 +30,10 @@
               },
               "ignores": {
                 "type": "array",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string",
+                  "enum": ["git", "contract"]
+                }
               },
               "ignore_patterns": {
                 "type": "object",
