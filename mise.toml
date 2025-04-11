@@ -109,3 +109,8 @@ description = "Clone the pushd-devtools repository (pass repo URL and destinatio
 # Enable lockfile for consistent versioning across environments
 [settings]
 lockfile = true
+
+[tasks.generate-gitignore]
+run = "deno run -A scripts/generate-gitignore.ts"
+depends = ["install"]
+description = "Generate .gitignore file from contracts.toml structure"

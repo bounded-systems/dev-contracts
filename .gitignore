@@ -1,32 +1,32 @@
-# Local mise configuration - not to be committed
-mise.local.toml
+# THIS FILE IS GENERATED FROM contracts.toml
+# DO NOT EDIT DIRECTLY - CHANGES WILL BE OVERWRITTEN
+# Last generated: 2025-04-11T17:01:34.749Z
 
-# Node.js
+# Generated from contracts.structure with 'ignores = ["git"]'
+.deno
+.idea
+.trunk
+.vscode
+build/
+dist/
+logs/
 node_modules/
-npm-debug.log
+temp/
+tmp/
 
-# Ruby
-.bundle/
-vendor/
-
-# Deno
-.deno/
-
-# Editor
-.vscode/
-.idea/
+# Global ignore patterns
+*.sublime-*
 *.swp
 *.swo
-
-# OS
 .DS_Store
-Thumbs.db
+*.tmp
+.env
+.env.local
+*.pem
+*.log
 
-# Build artifacts
-dist/
-build/
-coverage/
+# Project-specific ignore patterns
 
-# mise cache directory but NOT the bootstrap script
-.mise/
-!bin/mise 
+# Type-specific ignore patterns
+types/*.d.ts.map
+types/generated/
