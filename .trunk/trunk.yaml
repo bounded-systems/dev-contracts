@@ -3,10 +3,10 @@ cli:
   version: 1.22.12
 lint:
   enabled:
-    - standardrb@1.0.0
-    - yamllint@1.26.3
+    - standardrb@1.3.0
+    - yamllint@1.37.0
     - git-diff-check
-    - deno@2.2.4
+    - deno@2.2.8
   disabled:
     - rufo
     - brakeman
@@ -23,7 +23,9 @@ actions:
   disabled:
     - trunk-announce
 runtimes:
-  enabled: []
+  enabled:
+    - python@3.10.8
+    - ruby@3.3.3
   definitions:
     - type: ruby
       runtime_environment:

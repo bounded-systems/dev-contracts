@@ -22,18 +22,29 @@ run = "mise install"
 # Trunk tasks
 [tasks.trunk-check]
 run = "trunk check --ci"
-depends = ["install"]
+depends = ["trunk-fmt"]
 description = "Run Trunk checks"
 
 [tasks.trunk-fmt]
 run = "trunk fmt"
-depends = ["install"]
+depends = ["trunk-upgrade-and-sync"]
 description = "Format code using Trunk"
 
 [tasks.trunk-upgrade]
 run = "trunk upgrade"
 depends = ["install"]
 description = "Upgrade Trunk plugins"
+
+# Sync trunk.yaml versions back to mise.toml
+[tasks.sync-trunk-versions]
+run = "deno run -A scripts/sync-trunk-versions.ts"
+depends = ["install"] # Depends on deno being installed
+description = "Sync linter versions from .trunk/trunk.yaml to mise.toml"
+
+# Combined upgrade and sync task
+[tasks.trunk-upgrade-and-sync]
+depends = ["trunk-upgrade", "sync-trunk-versions"]
+description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 
 # Apply Transformation Task
 [tasks.transform-apply]
@@ -56,8 +67,8 @@ lockfile = true
 [_]
 [_.devtools.trunk]
 enabled_linters = [
-  { name = "standardrb", version = "1.0.0" },
-  { name = "yamllint", version = "1.26.3" },
+  { name = "standardrb", version = "1.3.0" },
+  { name = "yamllint", version = "1.37.0" },
   { name = "git-diff-check" }, # No version needed, it's a system tool
-  { name = "deno", version = "2.2.4" },
+  { name = "deno", version = "2.2.8" },
 ]
