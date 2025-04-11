@@ -10,6 +10,7 @@ import {
   extractToolVersion,
   buildRuntimeMapping
 } from "./trunk_utils.ts";
+import type { ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo as PrintedTrunkConfig } from "../types/trunk.ts";
 
 // Modified version of loadProjectEnv that doesn't exit on errors
 export async function loadEnv(rootDir?: string): Promise<Record<string, string>> {
@@ -39,12 +40,14 @@ export class SchemaValidator {
   private readonly miseConfigPath: string;
   private readonly trunkConfigPath: string;
   private readonly typesDir: string;
+  private readonly printedConfigPath: string;
 
   constructor(rootDir: string, miseConfigPath: string, trunkConfigPath: string) {
     this.rootDir = rootDir;
     this.miseConfigPath = path.join(rootDir, miseConfigPath);
     this.trunkConfigPath = path.join(rootDir, trunkConfigPath);
     this.typesDir = path.join(rootDir, "scripts/types");
+    this.printedConfigPath = path.join(rootDir, "trunk_full_config.yaml");
   }
 
   /**
@@ -342,39 +345,34 @@ async validateMiseConfig(): Promise<{ valid: boolean; issues: string[] }> {
 }
 
 /**
- * Validate configurations and generate types
+ * Load and parse the fully resolved trunk config from 'trunk config print' output.
  */
-async validateAndGenerate(): Promise<boolean> {
+async loadPrintedTrunkConfig(): Promise<PrintedTrunkConfig | null> {
+  if (!(await exists(this.printedConfigPath))) {
+    console.warn(
+      `Printed trunk config file not found: ${this.printedConfigPath}`
+    );
+    console.warn(
+      "Run 'trunk config print > trunk_full_config.yaml' in the project root."
+    );
+    return null;
+  }
+
   try {
-    // Generate TypeScript types
-    await this.generateLinterTypes();
-
-    // Validate mise.toml
-    console.log("Validating mise.toml...");
-    const miseValidation = await this.validateMiseConfig();
-
-    // Validate trunk.yaml
-    console.log(`Validating trunk.yaml at: ${this.trunkConfigPath}...`);
-    const trunkValidation = await this.validateTrunkConfig();
-
-    // Report validation results
-    console.log("\n===== Validation Results =====");
-    console.log(`mise.toml: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-    if (miseValidation.issues.length > 0) {
-      console.log("  Issues:");
-      miseValidation.issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-
-    console.log(`trunk.yaml: ${trunkValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-    if (trunkValidation.issues.length > 0) {
-      console.log("  Issues:");
-      trunkValidation.issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-
-    return miseValidation.valid && trunkValidation.valid;
+    const yamlContent = await Deno.readTextFile(this.printedConfigPath);
+    const parsedConfig = yaml.parse(yamlContent);
+    // Assert the type - TypeScript trusts us here!
+    const typedConfig = parsedConfig as PrintedTrunkConfig;
+    console.log(
+      `Successfully loaded and parsed ${this.printedConfigPath}`
+    );
+    return typedConfig;
   } catch (error) {
-    console.error("Validation failed:", error instanceof Error ? error.message : String(error));
-    return false;
+    console.error(
+      `Error loading or parsing ${this.printedConfigPath}:`,
+      error
+    );
+    return null;
   }
 }
 
@@ -596,32 +594,145 @@ async transformTrunkConfig(): Promise<boolean> {
 }
 
 /**
- * Validate configurations and transform if needed
+ * Validate configurations, generate types, and analyze printed config
  */
-async validateAndTransform(autoFix = false): Promise<boolean> {
-  // First validate both configurations
-  const isValid = await this.validateAndGenerate();
+async validateAndGenerate(): Promise<boolean> {
+  let overallValid = true;
+  try {
+    // Generate TypeScript types
+    await this.generateLinterTypes();
 
-  // If not valid and autoFix is enabled, transform trunk.yaml
-  if (!isValid && autoFix) {
-    console.log("\nAttempting to fix issues by transforming trunk.yaml...");
-    await this.transformTrunkConfig();
-
-    // Validate again after transformation
-    console.log("\nRe-validating after transformation...");
-    const isValidAfterFix = await this.validateAndGenerate();
-
-    if (isValidAfterFix) {
-      console.log("\n✅ All issues fixed successfully!");
-    } else {
-      console.log("\n⚠️ Some issues could not be fixed automatically.");
+    // Validate mise.toml
+    console.log("Validating mise.toml...");
+    const miseValidation = await this.validateMiseConfig();
+    console.log(
+      `mise.toml: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`
+    );
+    if (miseValidation.issues.length > 0) {
+      console.log("  Issues:");
+      miseValidation.issues.forEach((issue) => console.log(`  - ${issue}`));
+      overallValid = false;
     }
 
-    return isValidAfterFix;
-  }
+    // Validate trunk.yaml (input file)
+    console.log(`Validating trunk.yaml input at: ${this.trunkConfigPath}...`);
+    const trunkValidation = await this.validateTrunkConfig();
+    console.log(
+      `trunk.yaml input: ${
+        trunkValidation.valid ? "✅ VALID" : "❌ INVALID"
+      }`
+    );
+    if (trunkValidation.issues.length > 0) {
+      console.log("  Issues:");
+      trunkValidation.issues.forEach((issue) => console.log(`  - ${issue}`));
+      overallValid = false;
+    }
 
-  return isValid;
-}
+    // --- Analyze Printed Trunk Config ---
+    console.log(`\nAnalyzing printed trunk config from: ${this.printedConfigPath}...`);
+    const printedConfig = await this.loadPrintedTrunkConfig();
+
+    if (printedConfig) {
+      // --- Placeholder for Analysis ---
+      // Now you have 'printedConfig' typed (loosely) according to types/trunk.ts.
+      // Add your specific analysis logic here.
+      // For example, compare resolved linters/runtimes with mise.toml,
+      // check for specific properties, etc.
+      console.log(
+        `  -> Found CLI version: ${printedConfig.cli?.version}`
+      );
+      const numLinterDefs = printedConfig.lint?.definitions?.length ?? 0;
+      console.log(`  -> Found ${numLinterDefs} resolved linter definitions.`);
+      // Add more analysis...
+      // Example: Check if a specific linter is resolved
+      const resolvedEslint = printedConfig.lint?.definitions?.find(d => d.name === 'eslint');
+      if (resolvedEslint) {
+         console.log(`  -> ESLint resolved with runtime: ${(resolvedEslint as any).runtime}, version: ${(resolvedEslint as any).version}`);
+      } else {
+         console.log(`  -> ESLint not found in resolved definitions.`);
+      }
+
+      // Example: Compare resolved runtimes with mise tools
+       const miseConfig = await this.loadConfigFile(this.miseConfigPath) as MiseConfig;
+       const resolvedRuntimes = printedConfig.runtimes?.definitions ?? [];
+       console.log("\nComparing resolved runtimes with mise tools:");
+       for (const [tool, versionSpec] of Object.entries(miseConfig.tools ?? {})) {
+           if (["node", "ruby", "deno"].includes(tool)) { // Focus on runtimes
+              const miseVersion = extractToolVersion(versionSpec); // Need extractToolVersion helper
+              const resolvedRuntime = resolvedRuntimes.find(r => r.type === tool);
+              if (resolvedRuntime) {
+                  console.log(`  - ${tool}: mise='${miseVersion}', resolved='${resolvedRuntime.version}' ${miseVersion === resolvedRuntime.version ? '(Match)' : '(MISMATCH!)'}`);
+                   if(miseVersion && miseVersion !== resolvedRuntime.version) overallValid = false;
+              } else {
+                  console.log(`  - ${tool}: defined in mise, but not found in resolved runtimes!`);
+                   overallValid = false; // Mark as invalid
+              }
+           }
+       }
+
+       // --- Find Resolved Versions for 'latest' Linters ---
+      const lintersSetToLatest: string[] = [];
+      const tools = miseConfig.tools ?? {};
+
+      // Define non-linters locally for this check
+      const knownNonLinters = ["node", "ruby", "deno", "trunk"];
+      const builtInLinters = ["git-diff-check"];
+
+      // Identify linters set to 'latest' in mise.toml
+      for (const [tool, versionSpec] of Object.entries(tools)) {
+          const version = extractToolVersion(versionSpec);
+          if (!knownNonLinters.includes(tool) && !builtInLinters.includes(tool)) {
+               if (version?.toLowerCase() === 'latest') {
+                   lintersSetToLatest.push(tool);
+               }
+          }
+      }
+
+      if (lintersSetToLatest.length > 0) {
+          console.log("\n--------------------------------------------------");
+          console.warn("ACTION REQUIRED: Linters set to 'latest' in mise.toml");
+          console.log("--------------------------------------------------");
+          console.log("Resolved versions from 'trunk config print':");
+          const resolvedLinterDefs = printedConfig.lint?.definitions ?? [];
+          let allFound = true;
+
+          for (const linterName of lintersSetToLatest) {
+              const resolvedDef = resolvedLinterDefs.find(def => def.name === linterName);
+              // Accessing 'version' which might not be strictly in the base type
+              const resolvedVersion = (resolvedDef as any)?.version;
+              if (resolvedVersion) {
+                  console.log(`  - ${linterName} = "${resolvedVersion}"`);
+              } else {
+                  console.log(`  - ${linterName}: Could not find resolved version in printed config.`);
+                  allFound = false;
+              }
+          }
+          if (allFound) {
+               console.log("\n=> Please update mise.toml with these pinned versions.");
+          } else {
+               console.warn("\nWARNING: Could not determine all resolved versions. 'trunk_full_config.yaml' might be outdated or incomplete.");
+          }
+          // Mark validation as failed if 'latest' is still present
+          console.error("\nValidation FAILED because 'latest' is used for linters in mise.toml.");
+          overallValid = false; // Ensure validation fails
+          console.log("--------------------------------------------------");
+      }
+
+      // --- End Placeholder ---
+    } else {
+      console.log("  -> Skipping analysis as printed config could not be loaded.");
+      // Decide if inability to load printed config makes overall validation fail
+      overallValid = false; // Fail if printed config is missing/unreadable
+    }
+
+    return overallValid;
+  } catch (error) {
+    console.error(
+      "Validation/Analysis failed:",
+      error instanceof Error ? error.message : String(error)
+    );
+    return false;
+  }
 }
 
 // Main function to run everything
@@ -651,27 +762,39 @@ async function main() {
     console.log(\`mise.toml path: \${miseConfigPath}\`);
     console.log(\`trunk.yaml path: \${trunkConfigPath}\`);
 
-    // Create validator and run validation
+    // Create validator
     const validator = new SchemaValidator(rootDir, miseConfigPath, trunkConfigPath);
 
     // Check for --transform flag
     const autoFix = Deno.args.includes("--transform") || Deno.args.includes("-t");
 
-    // Run validation and transformation if needed
-    const isValid = await validator.validateAndTransform(autoFix);
+    // Run validation and analysis
+    let isValid = await validator.validateAndGenerate();
+
+    // --- Optional: Run transform if validation failed and autoFix is enabled ---
+    if (!isValid && autoFix) {
+      console.log("Attempting to fix trunk.yaml input based on mise.toml...");
+      await validator.transformTrunkConfig();
+
+      // Re-validate after transformation
+      console.log("Re-validating after transformation...");
+      isValid = await validator.validateAndGenerate();
+
+      if (isValid) {
+        console.log("✅ Validation passed after transformation!");
+      } else {
+        console.log("⚠️ Validation still failed after attempting transformation.");
+      }
+    } else if (!isValid) {
+         console.error("Validation found issues!");
+    } else {
+         console.log("✅ All checks passed!");
+    }
 
     // Exit with appropriate code
     if (!isValid) {
-      console.error("\nValidation found issues that need to be fixed!");
-      if (!autoFix) {
-        console.log(
-          "Run with --transform flag to automatically fix issues: deno run -A scripts/generate_schema_types.ts --transform"
-        );
-      }
       Deno.exit(1);
     }
-
-    console.log("\nAll configurations are valid!");
   } catch (error) {
     console.error("Error:", error instanceof Error ? error.message : String(error));
     Deno.exit(1);

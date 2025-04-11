@@ -28,6 +28,7 @@ import { type MiseConfig } from "../types/mise.ts";
 // TrunkConfig type might be large/complex; adjust import if needed
 // For now, let's assume a top-level TrunkConfig type was generated.
 import { type TrunkConfig } from "../types/trunk.ts";
+import { KNOWN_NON_LINTERS, BUILT_IN_LINTERS } from "./constants.ts";
 
 // YAML stringify options to preserve formatting
 const yamlOptions = {
@@ -157,7 +158,7 @@ export async function updateTrunkConfig(
           continue;
         }
 
-        // --- Skip Deno --- 
+        // --- Skip Deno ---
         // Trunk should pick up Deno from the PATH managed by mise, do not add it to runtimes.enabled
         if (runtimeName === "deno") {
           console.log("Skipping Deno for runtimes.enabled (should be used from PATH).");
@@ -323,10 +324,10 @@ export async function updateTrunkConfig(
       // --- Explicitly add known built-in linters ---
       const builtInLintersToAdd = ["git-diff-check"]; // List of built-ins we want enabled
       for (const linterName of builtInLintersToAdd) {
-          if (!trunkConfig.lint.enabled.includes(linterName)) {
-              console.log(`Adding built-in linter: ${linterName}`);
-              trunkConfig.lint.enabled.push(linterName);
-          }
+        if (!trunkConfig.lint.enabled.includes(linterName)) {
+          console.log(`Adding built-in linter: ${linterName}`);
+          trunkConfig.lint.enabled.push(linterName);
+        }
       }
 
       // --- Populate Actions from settings.trunk.actions ---
@@ -391,6 +392,29 @@ export async function updateTrunkConfig(
     // Write the generated configuration to trunk.yaml, overwriting existing content
     await Deno.writeTextFile(fullTrunkPath, newTrunkContent);
     console.log("trunk.yaml has been overwritten successfully.");
+
+    // --- Check for 'latest' in linter versions ---
+    const latestLintersFound: string[] = [];
+    for (const [tool, versionSpec] of Object.entries(miseConfig.tools ?? {})) {
+      // Use constants to identify linters
+      if (!KNOWN_NON_LINTERS.includes(tool) && !BUILT_IN_LINTERS.includes(tool)) {
+        const version =
+          typeof versionSpec === "string"
+            ? versionSpec
+            : (versionSpec as { version: string })?.version; // Basic extraction
+
+        if (version?.toLowerCase() === "latest") {
+          latestLintersFound.push(tool);
+        }
+      }
+    }
+
+    if (latestLintersFound.length > 0) {
+      throw new Error(
+        `Found 'latest' used for linters in ${miseConfigPath}: [${latestLintersFound.join(", ")}]. All linter versions must be pinned. Please update mise.toml.`
+      );
+    }
+    // --- End check ---
 
     return true; // Indicate that the file was written
   } catch (error) {
