@@ -119,6 +119,7 @@ description = "Generate .gitignore file from contracts.toml structure"
 [tasks.contracts-validate-structure]
 run = "deno run -A --unstable-fs scripts/validate-contracts-structure.ts"
 description = "Validate that the repository structure matches contracts.toml (including schema check)"
+depends = ["contracts-sort-structure"]
 
 [tasks.contracts-add-untracked]
 run = "deno run -A --unstable-fs scripts/validate-contracts-structure.ts --add-untracked"
@@ -133,7 +134,7 @@ depends = ["install"]
 [tasks.contracts-prune-structure]
 run = "deno run -A --unstable-fs scripts/prune-contracts-structure.ts"
 description = "Remove entries from contracts.toml [structure] that do not exist on the filesystem"
-depends = ["install"]
+depends = ["install", "contracts-sort-structure"]
 
 [tasks.contracts-sort-structure]
 run = "deno run -A scripts/sort-contracts-structure.ts"
@@ -143,3 +144,8 @@ depends = ["install"]
 [tasks.contracts-clean]
 description = "Prune, generate, and sort the contracts.toml [structure] section"
 depends = ["contracts-prune-structure", "contracts-generate-structure", "contracts-sort-structure"]
+
+[tasks.contracts-delete-empty-dirs]
+run = "deno run -A --unstable-fs scripts/delete-empty-dirs.ts"
+description = "Delete empty directories defined in contracts.toml [structure] if allow_empty_directory=false"
+depends = ["install"] # Depends on deno

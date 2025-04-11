@@ -53,10 +53,6 @@ guarantees = ["Tools will be installed in isolated environments","Tasks will run
 [rules.structure]
 allow_empty_directory = false
 
-[structure.".deno"]
-type = "directory"
-purpose = "Deno cache directory"
-
 [structure.".git"]
 type = "directory"
 purpose = "Git version control data"
@@ -75,10 +71,6 @@ type = "file"
 [structure.".gitignore"]
 type = "file"
 purpose = "Defines files excluded from version control"
-
-[structure.".idea"]
-type = "directory"
-purpose = "IntelliJ IDEA configuration files"
 
 [structure.".ruby-lsp"]
 type = "directory"
@@ -185,10 +177,6 @@ type = "file"
 [structure."contracts.toml"]
 type = "file"
 
-[structure.coverage]
-type = "directory"
-purpose = "Test coverage reports"
-
 [structure."deno.json"]
 type = "file"
 purpose = "Deno runtime configuration"
@@ -204,10 +192,6 @@ description = "Global settings inherited by all subfolders"
 [structure.global.ignore_patterns]
 "*.min.js" = ["eslint","prettier"]
 "*.min.css" = ["prettier"]
-
-[structure.logs]
-type = "directory"
-purpose = "Log files directory"
 
 [structure."mise.toml"]
 type = "file"
@@ -276,6 +260,9 @@ description = "Helper scripts for setup and configuration"
 type = "file"
 
 [structure."scripts/clone.ts"]
+type = "file"
+
+[structure."scripts/delete-empty-dirs.ts"]
 type = "file"
 
 [structure."scripts/generate-contracts-structure.ts"]
@@ -415,10 +402,6 @@ type = "file"
 [structure."src/utils/trunk_utils.ts"]
 type = "file"
 
-[structure.temp]
-type = "directory"
-purpose = "Temporary files directory"
-
 [structure.templates]
 type = "directory"
 purpose = "Source templates for symlinked configurations"
@@ -525,15 +508,3 @@ purpose = "Test files"
 
 [structure."tests/example.test.ts"]
 type = "file"
-
-[structure.tmp]
-type = "directory"
-purpose = "Temporary files directory"
-
-[structure.types]
-type = "directory"
-purpose = "TypeScript type definitions"
-
-[structure.vendor]
-type = "directory"
-purpose = "Vendored dependencies"

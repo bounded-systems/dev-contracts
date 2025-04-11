@@ -14,9 +14,16 @@ interface StructureEntry {
   ignore_patterns?: Record<string, string[]>;
 }
 
+interface StructureRules {
+  allow_empty_directory?: boolean;
+}
+
 interface Contracts {
   structure?: Record<string, StructureEntry | string>;
   external_files?: Record<string, string>;
+  rules?: {
+    structure?: StructureRules;
+  };
   // Keep other top-level keys
   [key: string]: any;
 }
@@ -120,7 +127,7 @@ async function main() {
       if (e instanceof Deno.errors.NotFound) {
         // Entry does not exist, mark for pruning (i.e., don't add to prunedStructure)
         console.log(`Pruning non-existent entry: ${normalizedKey}`);
-        prunedKeys.push(normalizedKey);
+        prunedKeys.push(normalizedKey); // Reverted from adding '(non-existent)'
       } else {
         // Other error accessing the path, keep the entry to be safe
         console.error(
