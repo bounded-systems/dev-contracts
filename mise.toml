@@ -1,38 +1,9 @@
 [env]
 # Project configuration
-PROJECT_NAME = "pushd-devtools"
 NODE_ENV = "development"
-
-# Directory structure
-RUNTIMES_DIR = "runtimes"
-RUBY_RUNTIME_DIR = "runtimes/ruby"
-NODE_RUNTIME_DIR = "runtimes/node"
-
-# File names
-GEMFILE_NAME = "Gemfile"
-PACKAGE_JSON_NAME = "package.json"
-TOOL_VERSIONS_NAME = "mise.toml"
-
-# Package information
-PACKAGE_VERSION = "1.0.0"
-PACKAGE_DESCRIPTION = "Pushd Development Tools"
-
-# Ruby configuration
-RUBY_GEMS_SOURCE = "https://rubygems.org"
-RUBY_HOME_VAR = "GEM_HOME"
-RUBY_ENV_PREFIX = "BUNDLE_"
-
-# Node configuration
-NODE_ENV_PREFIX = "NODE_"
-NODE_PACKAGE_VAR = "PACKAGE_FILE"
 
 # Trunk configuration
 TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml"
-TRUNK_TEMPLATE_DIR = "templates/trunk"
-
-# YAML schema configuration
-YAMLLINT_CONFIG_PATH = ".yamllint"
-VSCODE_SETTINGS_PATH = ".vscode/settings.json"
 
 # DevTools Environment (set by mise)
 PUSHD_DEVTOOLS_DIR = "{{mise.dir}}"
@@ -43,11 +14,6 @@ DEVTOOLS_TRUNK_ENABLED_LINTERS = """[
     "yamllint@1.26.3",
     "git-diff-check@system"
 ]"""
-DEVTOOLS_SCHEMA_MISE = "https://mise.jdx.dev/schema/mise.json"
-DEVTOOLS_SCHEMA_TRUNK = "https://static.trunk.io/pub/trunk-yaml-schema.json"
-
-# Path enhancement for node binaries
-_.path = "./node_modules/.bin"
 
 [tools]
 # Core Runtime Tool versions
