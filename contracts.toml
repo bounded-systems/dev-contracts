@@ -1,5 +1,17 @@
 schema = "./schemas/contracts-schema.json"
 
+[schemas]
+github-workflow = "https://json.schemastore.org/github-workflow.json"
+vscode-settings = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/settings/workspace.json"
+deno-config = "https://deno.land/x/deno/cli/schemas/config-file.v1.json"
+package-json = "https://json.schemastore.org/package.json"
+trunk-yaml = "https://static.trunk.io/pub/trunk-yaml-schema.json"
+vscode-extensions = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/vscode-extensions.json"
+vscode-launch = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/launch.json"
+vscode-tasks = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/tasks.json"
+eslintrc = "https://json.schemastore.org/eslintrc.json"
+partial-eslint-plugins = "https://json.schemastore.org/partial-eslint-plugins.json"
+
 [quality.lint.standardrb]
 depends = ["trunk"]
 version = "1.3.0"
@@ -35,7 +47,7 @@ purpose = "Directory containing GitHub Actions workflow files"
 [structure.".github/workflows/ci.yml"]
 type = "file"
 purpose = "Defines the Continuous Integration workflow for GitHub Actions"
-schema = "https://json.schemastore.org/github-workflow.json"
+schema_ref = "github-workflow"
 
 [structure.".gitignore"]
 type = "file"
@@ -136,7 +148,7 @@ ignores = ["git","contract"]
 
 [structure.".trunk/trunk.yaml"]
 type = "file"
-schema = "https://static.trunk.io/pub/trunk-yaml-schema.json"
+schema_ref = "trunk-yaml"
 
 [structure.".vscode"]
 type = "directory"
@@ -144,7 +156,7 @@ purpose = "VSCode configuration directory"
 
 [structure.".vscode/settings.json"]
 type = "file"
-# schema = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/settings/workspace.json" # Temporarily disabled due to schema validity/resolution issues
+# schema_ref = "vscode-settings" # Temporarily disabled due to schema validity/resolution issues
 
 [structure."contracts.toml"]
 type = "file"
@@ -154,7 +166,7 @@ types = "./src/types/contracts.d.ts"
 [structure."deno.json"]
 type = "file"
 purpose = "Deno runtime configuration"
-schema = "https://deno.land/x/deno/cli/schemas/config-file.v1.json"
+schema_ref = "deno-config"
 
 [structure."deno.lock"]
 type = "file"
@@ -199,7 +211,7 @@ type = "file"
 
 [structure."runtimes/node/package.json"]
 type = "file"
-schema = "https://json.schemastore.org/package.json"
+schema_ref = "package-json"
 
 [structure."runtimes/ruby"]
 type = "directory"
@@ -265,6 +277,10 @@ type = "file"
 [structure."scripts/sync-trunk-versions.ts"]
 type = "file"
 description = "Syncs versions from Trunk to mise"
+
+[structure."scripts/sync-schemas.ts"]
+type = "file"
+description = "Downloads external schemas referenced in contracts.toml to schemas/external/"
 
 [structure."scripts/tests"]
 type = "directory"
@@ -468,7 +484,7 @@ ignores = ["git","contract"]
 
 [structure."templates/trunk/.trunk/trunk.yaml"]
 type = "file"
-schema = "https://static.trunk.io/pub/trunk-yaml-schema.json"
+schema_ref = "trunk-yaml"
 
 [structure."templates/vscode"]
 type = "directory"
@@ -479,19 +495,19 @@ type = "directory"
 
 [structure."templates/vscode/.vscode/extensions.json"]
 type = "file"
-schema = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/vscode-extensions.json"
+schema_ref = "vscode-extensions"
 
 [structure."templates/vscode/.vscode/launch.json"]
 type = "file"
-schema = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/launch.json"
+schema_ref = "vscode-launch"
 
 [structure."templates/vscode/.vscode/settings.json"]
 type = "file"
-# schema = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/settings/workspace.json" # Temporarily disabled
+# schema_ref = "vscode-settings" # Temporarily disabled
 
 [structure."templates/vscode/.vscode/tasks.json"]
 type = "file"
-schema = "https://raw.githubusercontent.com/ota-meshi/extract-vscode-schemas/main/resources/vscode/schemas/tasks.json"
+schema_ref = "vscode-tasks"
 
 [structure.tests]
 type = "directory"
