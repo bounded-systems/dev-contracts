@@ -13,13 +13,15 @@ type AnyObject = Record<string | number | symbol, any>;
 export function getProperty<T = unknown>(
   obj: AnyObject | null | undefined,
   path: string | (string | number)[],
-  defaultValue?: T
+  defaultValue?: T,
 ): T | undefined {
   if (!obj) {
     return defaultValue;
   }
 
-  const pathSegments = Array.isArray(path) ? path : path.replace(/\\[(\\d+)\\]/g, ".$1").split("."); // Handle array notation like a[0]
+  const pathSegments = Array.isArray(path)
+    ? path
+    : path.replace(/\\[(\\d+)\\]/g, ".$1").split("."); // Handle array notation like a[0]
 
   let current: any = obj;
   for (const segment of pathSegments) {
@@ -49,14 +51,16 @@ export function getProperty<T = unknown>(
 export function setProperty(
   obj: AnyObject,
   path: string | (string | number)[],
-  value: unknown
+  value: unknown,
 ): boolean {
   if (typeof obj !== "object" || obj === null) {
     console.error("setProperty: Provided obj must be a non-null object.");
     return false;
   }
 
-  const pathSegments = Array.isArray(path) ? path : path.replace(/\\[(\\d+)\\]/g, ".$1").split(".");
+  const pathSegments = Array.isArray(path)
+    ? path
+    : path.replace(/\\[(\\d+)\\]/g, ".$1").split(".");
 
   let current: any = obj;
   for (let i = 0; i < pathSegments.length - 1; i++) {
@@ -70,12 +74,16 @@ export function setProperty(
       // Create object or array if it doesn't exist
       current[segment] = nextIsArrayIndex ? [] : {};
       if (typeof current !== "object") {
-        console.error(`setProperty: Cannot create path on non-object at segment '${segment}'`);
+        console.error(
+          `setProperty: Cannot create path on non-object at segment '${segment}'`,
+        );
         return false;
       } // Safety check
     } else if (typeof current[segment] !== "object") {
       // Path segment exists but is not an object/array - cannot continue
-      console.error(`setProperty: Path segment '${segment}' exists but is not an object/array.`);
+      console.error(
+        `setProperty: Path segment '${segment}' exists but is not an object/array.`,
+      );
       return false;
     }
 
@@ -85,14 +93,14 @@ export function setProperty(
       // console.warn(`Overwriting non-array at segment '${segment}' with array.`);
       // current[segment] = [];
       console.error(
-        `setProperty: Path segment '${segment}' is not an array, but next segment '${nextSegment}' is an index.`
+        `setProperty: Path segment '${segment}' is not an array, but next segment '${nextSegment}' is an index.`,
       );
       return false;
     }
     // If next segment is not an index but current is an array, handle error?
     if (!nextIsArrayIndex && Array.isArray(current[segment])) {
       console.error(
-        `setProperty: Path segment '${segment}' is an array, but next segment '${nextSegment}' is not an index.`
+        `setProperty: Path segment '${segment}' is an array, but next segment '${nextSegment}' is not an index.`,
       );
       return false;
     }
@@ -109,7 +117,9 @@ export function setProperty(
     current[finalSegment] = value;
     return true;
   } catch (e) {
-    console.error(`setProperty: Failed to set final segment '${finalSegment}': ${e}`);
+    console.error(
+      `setProperty: Failed to set final segment '${finalSegment}': ${e}`,
+    );
     return false;
   }
 }
@@ -126,14 +136,16 @@ export function setProperty(
 export function ensurePathExists<T = AnyObject | unknown[]>(
   obj: AnyObject,
   path: string | (string | number)[],
-  finalType: "object" | "array" = "object"
+  finalType: "object" | "array" = "object",
 ): T | undefined {
   if (typeof obj !== "object" || obj === null) {
     console.error("ensurePathExists: Provided obj must be a non-null object.");
     return undefined;
   }
 
-  const pathSegments = Array.isArray(path) ? path : path.replace(/\\[(\\d+)\\]/g, ".$1").split(".");
+  const pathSegments = Array.isArray(path)
+    ? path
+    : path.replace(/\\[(\\d+)\\]/g, ".$1").split(".");
 
   if (pathSegments.length === 0) {
     return obj as T; // Path is empty, return original object
@@ -154,13 +166,13 @@ export function ensurePathExists<T = AnyObject | unknown[]>(
       }
       if (typeof current !== "object") {
         console.error(
-          `ensurePathExists: Cannot create path on non-object at segment before '${segment}'`
+          `ensurePathExists: Cannot create path on non-object at segment before '${segment}'`,
         );
         return undefined;
       } // Safety check
     } else if (typeof current[segment] !== "object") {
       console.error(
-        `ensurePathExists: Path segment '${segment}' exists but is not an object/array.`
+        `ensurePathExists: Path segment '${segment}' exists but is not an object/array.`,
       );
       return undefined; // Cannot continue if a primitive blocks the path
     }
@@ -171,13 +183,13 @@ export function ensurePathExists<T = AnyObject | unknown[]>(
       const nextIsArrayIndex = !isNaN(parseInt(String(nextSegment), 10));
       if (nextIsArrayIndex && !Array.isArray(current[segment])) {
         console.error(
-          `ensurePathExists: Path segment '${segment}' is not an array, but next segment '${nextSegment}' is an index.`
+          `ensurePathExists: Path segment '${segment}' is not an array, but next segment '${nextSegment}' is an index.`,
         );
         return undefined;
       }
       if (!nextIsArrayIndex && Array.isArray(current[segment])) {
         console.error(
-          `ensurePathExists: Path segment '${segment}' is an array, but next segment '${nextSegment}' is not an index.`
+          `ensurePathExists: Path segment '${segment}' is an array, but next segment '${nextSegment}' is not an index.`,
         );
         return undefined;
       }

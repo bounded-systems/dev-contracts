@@ -9,26 +9,32 @@ export type TransformContext = Record<string, any>;
 /** Accessor function to get data from a config object */
 type ConfigAccessor<TInput extends ConfigObject, TValue> = (
   config: TInput,
-  context?: TransformContext
+  context?: TransformContext,
 ) => TValue | undefined;
 
 /** Function to format the final output value */
 type OutputFormatter<TName, TVersion, TOutput> = (
   name: TName,
   version: TVersion,
-  context?: TransformContext
+  context?: TransformContext,
 ) => TOutput;
 
 /** Function to map a source name/key to a target name/key */
-type NameMapper = (sourceName: string, context?: TransformContext) => string | null; // Return null to skip
+type NameMapper = (
+  sourceName: string,
+  context?: TransformContext,
+) => string | null; // Return null to skip
 
 /** Function to extract version info */
-type VersionExtractor = (versionInfo: unknown, context?: TransformContext) => string | null;
+type VersionExtractor = (
+  versionInfo: unknown,
+  context?: TransformContext,
+) => string | null;
 
 /** Function to ensure a target path exists */
 type PathEnsurer<TConfig extends ConfigObject, TValue> = (
   config: TConfig,
-  context?: TransformContext
+  context?: TransformContext,
 ) => TValue;
 
 /** Represents a rule for transforming a collection (like tools or linters) */
@@ -79,12 +85,18 @@ export interface ValueTransformRule<
   /** Function to set the value at the target path (mutates target config) */
   // setValueAtPath: (config: TOutputConfig, value: TValue, context?: TransformContext) => void;
   // Removing setValueAtPath as the engine can now use setProperty with targetPath
-  valueMapper?: (sourceValue: unknown, context?: TransformContext) => TValue | null;
+  valueMapper?: (
+    sourceValue: unknown,
+    context?: TransformContext,
+  ) => TValue | null;
   skipIf?: (sourceValue: unknown, context?: TransformContext) => boolean;
 }
 
 // Union type for any transformation rule
-export type TransformRule<TInputConfig extends ConfigObject, TOutputConfig extends ConfigObject> =
+export type TransformRule<
+  TInputConfig extends ConfigObject,
+  TOutputConfig extends ConfigObject,
+> =
   | CollectionTransformRule<TInputConfig, TOutputConfig, unknown>
   | ValueTransformRule<TInputConfig, TOutputConfig, unknown>; // Add other rule types later if needed
 

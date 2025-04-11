@@ -12,7 +12,7 @@ export function buildRenameKey(
   value: any,
   target: any,
   targetPath: string, // The NEW key path
-  context: TransformationContext & { sourcePath?: string } // Optional: pass original source path via context if deletion is needed
+  context: TransformationContext & { sourcePath?: string }, // Optional: pass original source path via context if deletion is needed
 ): boolean {
   if (value === undefined) return false; // Nothing to rename
 
@@ -36,17 +36,19 @@ export function buildMapArrayItems(
   sourceArray: any[],
   target: any,
   targetPath: string,
-  context: TransformationContext & { itemMapper: (item: any, index: number) => any }
+  context: TransformationContext & {
+    itemMapper: (item: any, index: number) => any;
+  },
 ): boolean {
   if (!Array.isArray(sourceArray)) {
     console.warn(
-      `buildMapArrayItems: Expected an array for path ${targetPath}, got ${typeof sourceArray}`
+      `buildMapArrayItems: Expected an array for path ${targetPath}, got ${typeof sourceArray}`,
     );
     return false;
   }
   if (!context.itemMapper || typeof context.itemMapper !== "function") {
     console.error(
-      `buildMapArrayItems: Missing or invalid 'itemMapper' function in context for path ${targetPath}`
+      `buildMapArrayItems: Missing or invalid 'itemMapper' function in context for path ${targetPath}`,
     );
     return false;
   }
@@ -69,13 +71,15 @@ export function buildMapArrayItems(
 export function extractFlattenObjectArray(
   sourceArray: any[],
   _sourcePath: string,
-  context: TransformationContext & { keyProp: string; valueProp: string }
+  context: TransformationContext & { keyProp: string; valueProp: string },
 ): any {
   if (!Array.isArray(sourceArray)) return undefined;
   if (!context.keyProp || !context.valueProp) return undefined;
 
   return sourceArray.reduce((acc, item) => {
-    if (item && typeof item === "object" && item[context.keyProp] !== undefined) {
+    if (
+      item && typeof item === "object" && item[context.keyProp] !== undefined
+    ) {
       acc[item[context.keyProp]] = item[context.valueProp];
     }
     return acc;

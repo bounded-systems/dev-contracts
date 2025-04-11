@@ -12,7 +12,9 @@ async function fetchSchema(url: string): Promise<any> {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch schema from ${url}: ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch schema from ${url}: ${response.statusText}`,
+    );
   }
 
   return await response.json();
@@ -29,16 +31,31 @@ export async function fetchSupportedRuntimes(): Promise<string[]> {
     // Extract runtime types from the schema
     const runtimeTypes: string[] = [];
     if (
-      trunkSchema?.definitions?.runtimes?.properties?.definitions?.items?.properties?.type?.examples
+      trunkSchema?.definitions?.runtimes?.properties?.definitions?.items
+        ?.properties?.type?.examples
     ) {
       const examples =
-        trunkSchema.definitions.runtimes.properties.definitions.items.properties.type.examples;
+        trunkSchema.definitions.runtimes.properties.definitions.items.properties
+          .type.examples;
       runtimeTypes.push(...examples);
-      console.log(`Found ${runtimeTypes.length} supported runtime types in schema`);
+      console.log(
+        `Found ${runtimeTypes.length} supported runtime types in schema`,
+      );
     } else {
       // Fallback to a default list of known runtime types
-      const defaultRuntimes = ["go", "java", "node", "python", "ruby", "rust", "deno"];
-      console.warn("Could not find runtime types in schema, using default list:", defaultRuntimes);
+      const defaultRuntimes = [
+        "go",
+        "java",
+        "node",
+        "python",
+        "ruby",
+        "rust",
+        "deno",
+      ];
+      console.warn(
+        "Could not find runtime types in schema, using default list:",
+        defaultRuntimes,
+      );
       runtimeTypes.push(...defaultRuntimes);
     }
 
@@ -46,7 +63,7 @@ export async function fetchSupportedRuntimes(): Promise<string[]> {
   } catch (error) {
     console.error(
       "Error fetching runtime types:",
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
     // Return a default list of common runtimes as fallback
     return ["go", "java", "node", "python", "ruby", "rust", "deno"];
@@ -74,7 +91,9 @@ export function extractToolVersion(versionInfo: unknown): string | null {
 /**
  * Build a mapping of mise tool names to trunk runtime names
  */
-export function buildRuntimeMapping(supportedRuntimes: string[]): Record<string, string> {
+export function buildRuntimeMapping(
+  supportedRuntimes: string[],
+): Record<string, string> {
   const mapping: Record<string, string> = {};
 
   // Map each runtime to itself
@@ -99,7 +118,10 @@ if (import.meta.main) {
   // Test tool version extraction
   console.log("\nTesting extractToolVersion function...");
   console.log('From string "1.2.3":', extractToolVersion("1.2.3"));
-  console.log('From object { version: "2.3.4" }:', extractToolVersion({ version: "2.3.4" }));
+  console.log(
+    'From object { version: "2.3.4" }:',
+    extractToolVersion({ version: "2.3.4" }),
+  );
   console.log("From invalid object {}:", extractToolVersion({}));
 
   // Test runtime mapping

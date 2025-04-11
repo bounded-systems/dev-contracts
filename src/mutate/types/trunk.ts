@@ -223,7 +223,6 @@ export interface ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkI
          *   * directory - the linter target itself, with the condition that the linter target is a directory itself
          *   * root_file - the nearest directory containing 'run_from_root_target', e.g. the nearest directory containing a go.mod file
          *   * root_directory - the nearest directory matching 'run_from_root_target', e.g. the nearest src/ directory
-         *
          */
         run_linter_from?: string;
         run_when?: string[];
@@ -320,7 +319,6 @@ export interface ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkI
        *   * directory - the linter target itself, with the condition that the linter target is a directory itself
        *   * root_file - the nearest directory containing 'run_from_root_target', e.g. the nearest directory containing a go.mod file
        *   * root_directory - the nearest directory matching 'run_from_root_target', e.g. the nearest src/ directory
-       *
        */
       run_linter_from?: string;
       run_timeout?: string | number | boolean;
@@ -381,13 +379,13 @@ export interface ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkI
     enabled?: (
       | string
       | {
-          [k: string]: {
-            commands?: (string | number | boolean)[];
-            name?: string | number | boolean;
-            packages?: (string | number | boolean)[];
-            [k: string]: unknown;
-          };
-        }
+        [k: string]: {
+          commands?: (string | number | boolean)[];
+          name?: string | number | boolean;
+          packages?: (string | number | boolean)[];
+          [k: string]: unknown;
+        };
+      }
     )[];
     environments?: {
       environment?: {

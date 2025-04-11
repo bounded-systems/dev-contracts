@@ -8,94 +8,94 @@ export type Task =
   | string
   | string[]
   | {
-      alias?: string | string[];
-      /**
-       * confirmation message before running this task
-       */
-      confirm?: string;
-      depends?: string | string[];
-      depends_post?: string | string[];
-      wait_for?: string | string[];
-      /**
-       * description of task
-       */
-      description?: string;
-      /**
-       * directory to run script in, default is the project's base directory
-       */
-      dir?: string;
-      /**
-       * environment variables
-       */
-      env?: {
-        [k: string]: string | number | false;
-      };
-      /**
-       * tools to install/activate before running this task
-       */
-      tools?: {
-        [k: string]:
-          | string
-          | {
-              /**
-               * version of the tool to install
-               */
-              version: string;
-              os?: unknown[] | string | boolean;
-              [k: string]: string;
-            };
-      };
-      /**
-       * do not display this task
-       */
-      hide?: boolean;
-      outputs?:
-        | string[]
+    alias?: string | string[];
+    /**
+     * confirmation message before running this task
+     */
+    confirm?: string;
+    depends?: string | string[];
+    depends_post?: string | string[];
+    wait_for?: string | string[];
+    /**
+     * description of task
+     */
+    description?: string;
+    /**
+     * directory to run script in, default is the project's base directory
+     */
+    dir?: string;
+    /**
+     * environment variables
+     */
+    env?: {
+      [k: string]: string | number | false;
+    };
+    /**
+     * tools to install/activate before running this task
+     */
+    tools?: {
+      [k: string]:
         | string
         | {
-            /**
-             * automatically touch an internal tracked file instead of specifying outputs
-             */
-            auto: true;
-          };
-      /**
-       * do not display mise information for this task
-       */
-      quiet?: boolean;
-      /**
-       * suppress all output for this task
-       */
-      silent?: boolean | ("stdout" | "stderr");
-      /**
-       * directly connect task to stdin/stdout/stderr
-       */
-      raw?: boolean;
-      run?: string | string[];
-      run_windows?: string | string[];
-      /**
-       * Execute an external script
-       */
-      file?: string;
-      sources?: string[] | string;
-      /**
-       * specify a shell command to run the script with
-       */
-      shell?: string;
-      /**
-       * Specify usage (https://usage.jdx.dev/) specs for the task
-       */
-      usage?: string;
+          /**
+           * version of the tool to install
+           */
+          version: string;
+          os?: unknown[] | string | boolean;
+          [k: string]: string;
+        };
     };
+    /**
+     * do not display this task
+     */
+    hide?: boolean;
+    outputs?:
+      | string[]
+      | string
+      | {
+        /**
+         * automatically touch an internal tracked file instead of specifying outputs
+         */
+        auto: true;
+      };
+    /**
+     * do not display mise information for this task
+     */
+    quiet?: boolean;
+    /**
+     * suppress all output for this task
+     */
+    silent?: boolean | ("stdout" | "stderr");
+    /**
+     * directly connect task to stdin/stdout/stderr
+     */
+    raw?: boolean;
+    run?: string | string[];
+    run_windows?: string | string[];
+    /**
+     * Execute an external script
+     */
+    file?: string;
+    sources?: string[] | string;
+    /**
+     * specify a shell command to run the script with
+     */
+    shell?: string;
+    /**
+     * Specify usage (https://usage.jdx.dev/) specs for the task
+     */
+    usage?: string;
+  };
 export type Tool =
   | string
   | {
-      /**
-       * version of the tool to install
-       */
-      version: string;
-      os?: unknown[] | string | boolean;
-      [k: string]: string;
-    };
+    /**
+     * version of the tool to install
+     */
+    version: string;
+    os?: unknown[] | string | boolean;
+    [k: string]: string;
+  };
 /**
  * files to watch for changes
  */
@@ -121,11 +121,11 @@ export interface Mise {
     [k: string]:
       | string
       | {
-          /**
-           * version alias points to
-           */
-          [k: string]: string;
-        };
+        /**
+         * version alias points to
+         */
+        [k: string]: string;
+      };
   };
   env?: Env | Env[];
   /**
@@ -176,77 +176,7 @@ export interface Env {
   _?: {
     file?:
       | {
-          path?: string | string[];
-          /**
-           * load tools before resolving
-           */
-          tools?: boolean;
-          /**
-           * redact the value from logs
-           */
-          redact?: boolean;
-          [k: string]: unknown;
-        }
-      | string
-      | string[];
-    path?:
-      | {
-          path?: string | string[];
-          [k: string]: unknown;
-        }
-      | string
-      | string[];
-    /**
-     * python environment
-     */
-    python?: {
-      venv?:
-        | string
-        | {
-            /**
-             * create a new virtual environment if one does not exist
-             */
-            create?: boolean;
-            /**
-             * path to python virtual environment to use
-             */
-            path: string;
-            /**
-             * python version to use
-             */
-            python?: string;
-            /**
-             * additional arguments to pass to python when creating a virtual environment
-             */
-            python_create_args?: string[];
-            /**
-             * additional arguments to pass to uv when creating a virtual environment
-             */
-            uv_create_args?: string[];
-            [k: string]: unknown;
-          };
-      [k: string]: unknown;
-    };
-    source?:
-      | {
-          path?: string | string[];
-          /**
-           * load tools before resolving
-           */
-          tools?: boolean;
-          /**
-           * redact the value from logs
-           */
-          redact?: boolean;
-          [k: string]: unknown;
-        }
-      | string
-      | string[];
-    [k: string]: unknown;
-  };
-  [k: string]:
-    | {
-        value?: string | number | boolean;
+        path?: string | string[];
         /**
          * load tools before resolving
          */
@@ -257,6 +187,76 @@ export interface Env {
         redact?: boolean;
         [k: string]: unknown;
       }
+      | string
+      | string[];
+    path?:
+      | {
+        path?: string | string[];
+        [k: string]: unknown;
+      }
+      | string
+      | string[];
+    /**
+     * python environment
+     */
+    python?: {
+      venv?:
+        | string
+        | {
+          /**
+           * create a new virtual environment if one does not exist
+           */
+          create?: boolean;
+          /**
+           * path to python virtual environment to use
+           */
+          path: string;
+          /**
+           * python version to use
+           */
+          python?: string;
+          /**
+           * additional arguments to pass to python when creating a virtual environment
+           */
+          python_create_args?: string[];
+          /**
+           * additional arguments to pass to uv when creating a virtual environment
+           */
+          uv_create_args?: string[];
+          [k: string]: unknown;
+        };
+      [k: string]: unknown;
+    };
+    source?:
+      | {
+        path?: string | string[];
+        /**
+         * load tools before resolving
+         */
+        tools?: boolean;
+        /**
+         * redact the value from logs
+         */
+        redact?: boolean;
+        [k: string]: unknown;
+      }
+      | string
+      | string[];
+    [k: string]: unknown;
+  };
+  [k: string]:
+    | {
+      value?: string | number | boolean;
+      /**
+       * load tools before resolving
+       */
+      tools?: boolean;
+      /**
+       * redact the value from logs
+       */
+      redact?: boolean;
+      [k: string]: unknown;
+    }
     | string
     | number
     | boolean;
@@ -788,7 +788,14 @@ export interface Settings {
   /**
    * Change output style when executing tasks.
    */
-  task_output?: "prefix" | "interleave" | "keep-order" | "replacing" | "timed" | "quiet" | "silent";
+  task_output?:
+    | "prefix"
+    | "interleave"
+    | "keep-order"
+    | "replacing"
+    | "timed"
+    | "quiet"
+    | "silent";
   /**
    * Mise will always fetch the latest tasks from the remote, by default the cache is used.
    */
@@ -880,15 +887,15 @@ export interface Hooks {
     | string
     | string[]
     | {
-        /**
-         * script to run
-         */
-        script?: string;
-        /**
-         * specify the shell to run the script inside of
-         */
-        shell?: string;
-      };
+      /**
+       * script to run
+       */
+      script?: string;
+      /**
+       * specify the shell to run the script inside of
+       */
+      shell?: string;
+    };
 }
 /**
  * variables to set

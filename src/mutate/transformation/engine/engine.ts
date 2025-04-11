@@ -4,7 +4,10 @@ import * as path from "jsr:@std/path";
 import * as toml from "jsr:@std/toml";
 import { exists } from "jsr:@std/fs/exists";
 import { Eta } from "jsr:@eta-dev/eta"; // CORRECTED PACKAGE NAME
-import type { TransformRule, TransformContext } from "../../types/transform_rules.ts"; // Adjusted path
+import type {
+  TransformContext,
+  TransformRule,
+} from "../../types/transform_rules.ts"; // Adjusted path
 import type { MiseConfig, TrunkConfig } from "../../types/mise.ts"; // Adjusted path
 
 // --- Configuration ---
@@ -15,8 +18,18 @@ const SRC_DIR = path.join(REPO_ROOT, "src");
 const TYPES_DIR = path.join(SRC_DIR, "types"); // Adjusted path
 const RULES_DIR = path.join(ENGINE_DIR, "rules"); // Adjusted path (rules moved here)
 const TEMPLATES_DIR = path.join(ENGINE_DIR, "templates"); // Adjusted path (templates moved here)
-const COMMON_TRANSFORMERS_PATH = path.join(SRC_DIR, "transformation", "common", "common_transformers.ts");
-const OUTPUT_FILE = path.join(SRC_DIR, "transformation", "generated", "generated_transformers.ts");
+const COMMON_TRANSFORMERS_PATH = path.join(
+  SRC_DIR,
+  "transformation",
+  "common",
+  "common_transformers.ts",
+);
+const OUTPUT_FILE = path.join(
+  SRC_DIR,
+  "transformation",
+  "generated",
+  "generated_transformers.ts",
+);
 const TEMPLATE_FILE = path.join(TEMPLATES_DIR, "generated_transformers.eta");
 const MISE_TO_TRUNK_RULES_FILE = path.join(RULES_DIR, "mise_to_trunk.toml");
 const TRUNK_TO_MISE_RULES_FILE = path.join(RULES_DIR, "trunk_to_mise.toml");
@@ -57,7 +70,9 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
       return [];
     }
     if (!Array.isArray(parsed.rule)) {
-      throw new Error("Invalid TOML structure: Expected 'rule' key to be an array.");
+      throw new Error(
+        "Invalid TOML structure: Expected 'rule' key to be an array.",
+      );
     }
 
     // Validate individual rules (can add more checks)
@@ -71,7 +86,7 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
       ) {
         // Throw here because if the rule array exists, its elements should be valid
         throw new Error(
-          `Invalid rule definition at index ${index}. Missing required fields (name, transformer_function).`
+          `Invalid rule definition at index ${index}. Missing required fields (name, transformer_function).`,
         );
       }
     });
@@ -99,15 +114,15 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
 function getValueByPath(obj: any, path: (string | number)[]): any {
   let current = obj;
   for (const key of path) {
-    if (current === null || typeof current !== 'object') {
+    if (current === null || typeof current !== "object") {
       return undefined;
     }
-    if (Array.isArray(current) && typeof key === 'number') {
-        current = current[key];
-    } else if (typeof key === 'string') {
-        current = (current as Record<string, any>)[key];
+    if (Array.isArray(current) && typeof key === "number") {
+      current = current[key];
+    } else if (typeof key === "string") {
+      current = (current as Record<string, any>)[key];
     } else {
-        return undefined; // Invalid key type for current structure
+      return undefined; // Invalid key type for current structure
     }
   }
   return current;
@@ -118,40 +133,57 @@ function getValueByPath(obj: any, path: (string | number)[]): any {
  * Creates intermediate objects/arrays if they don't exist.
  * Returns true if the value was set (even if it was the same), false on error.
  */
-function setValueByPath(obj: any, path: (string | number)[], value: any): boolean {
+function setValueByPath(
+  obj: any,
+  path: (string | number)[],
+  value: any,
+): boolean {
   let current = obj;
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i];
     const nextKey = path[i + 1];
     let currentKey: string | number;
-    let nextStructureHint: 'object' | 'array';
+    let nextStructureHint: "object" | "array";
 
-    if (typeof key === 'string') {
-        currentKey = key;
-    } else if (typeof key === 'number' && Array.isArray(current)) {
-        currentKey = key;
+    if (typeof key === "string") {
+      currentKey = key;
+    } else if (typeof key === "number" && Array.isArray(current)) {
+      currentKey = key;
     } else {
-        console.error(`setValueByPath: Invalid key type '${typeof key}' for path segment.`);
-        return false;
+      console.error(
+        `setValueByPath: Invalid key type '${typeof key}' for path segment.`,
+      );
+      return false;
     }
 
-    nextStructureHint = typeof nextKey === 'number' ? 'array' : 'object';
+    nextStructureHint = typeof nextKey === "number" ? "array" : "object";
 
-    if (current[currentKey] === null || typeof current[currentKey] !== 'object') {
-        // Create structure if it doesn't exist or is wrong type
-        console.log(`setValueByPath: Creating intermediate path segment '${String(key)}' as ${nextStructureHint}`);
-        current[currentKey] = nextStructureHint === 'array' ? [] : {};
+    if (
+      current[currentKey] === null || typeof current[currentKey] !== "object"
+    ) {
+      // Create structure if it doesn't exist or is wrong type
+      console.log(
+        `setValueByPath: Creating intermediate path segment '${
+          String(key)
+        }' as ${nextStructureHint}`,
+      );
+      current[currentKey] = nextStructureHint === "array" ? [] : {};
     }
     current = current[currentKey];
   }
 
   const finalKey = path[path.length - 1];
-  if (typeof finalKey === 'string' || (typeof finalKey === 'number' && Array.isArray(current))){
-      current[finalKey] = value;
-      return true;
+  if (
+    typeof finalKey === "string" ||
+    (typeof finalKey === "number" && Array.isArray(current))
+  ) {
+    current[finalKey] = value;
+    return true;
   } else {
-       console.error(`setValueByPath: Invalid final key type '${typeof finalKey}'.`);
-       return false;
+    console.error(
+      `setValueByPath: Invalid final key type '${typeof finalKey}'.`,
+    );
+    return false;
   }
 }
 
@@ -167,19 +199,24 @@ async function generateTransformers() {
   // 2. Collect unique transformer function names from *all* parsed rules
   const allParsedRules = [...miseToTrunkRules, ...trunkToMiseRules];
   const transformerFunctions = [
-    ...new Set(allParsedRules.map(rule => rule.transformer_function)),
+    ...new Set(allParsedRules.map((rule) => rule.transformer_function)),
   ].sort();
 
   if (allParsedRules.length === 0) {
-    console.log("No valid rule files found or rules defined. Nothing to generate.");
+    console.log(
+      "No valid rule files found or rules defined. Nothing to generate.",
+    );
     // Optionally write an empty/commented file
-    await Deno.writeTextFile(OUTPUT_FILE, "// No valid rules found to generate transformers.\n");
+    await Deno.writeTextFile(
+      OUTPUT_FILE,
+      "// No valid rules found to generate transformers.\n",
+    );
     console.log(`Wrote empty file to ${OUTPUT_FILE}`);
     return;
   }
   if (transformerFunctions.length === 0) {
     console.warn(
-      "Valid rules found, but no transformer functions are defined within them. Generated file might be incomplete."
+      "Valid rules found, but no transformer functions are defined within them. Generated file might be incomplete.",
     );
     // Proceed, but the generated file might not import anything if no functions are listed
   }
@@ -200,7 +237,10 @@ async function generateTransformers() {
       .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "mise.ts"))
       .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
     transformRulesTypesRelativePath: path
-      .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "transform_rules.ts"))
+      .relative(
+        path.dirname(OUTPUT_FILE),
+        path.join(TYPES_DIR, "transform_rules.ts"),
+      )
       .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
   };
 
@@ -235,7 +275,7 @@ async function generateTransformers() {
 // --- Run ---
 // RESTORED main execution block
 if (import.meta.main) {
-  generateTransformers().catch(err => {
+  generateTransformers().catch((err) => {
     console.error("Transformer generation failed:", err);
     Deno.exit(1);
   });

@@ -33,7 +33,7 @@ export async function getTrunkTools(): Promise<string[]> {
     const lines = output.split("\n");
     const tools: string[] = [];
 
-    lines.forEach(line => {
+    lines.forEach((line) => {
       // Remove ANSI codes and trim whitespace
       let processedLine = line.replace(ansiRegex, "").trim();
 
@@ -90,7 +90,7 @@ export async function getTrunkActions(): Promise<string[]> {
     const lines = output.split("\n");
     const actions: string[] = [];
 
-    lines.forEach(line => {
+    lines.forEach((line) => {
       // Clean the line
       let cleanedLine = line.replace(ansiRegex, "").trim();
 
@@ -98,7 +98,9 @@ export async function getTrunkActions(): Promise<string[]> {
       if (
         cleanedLine.toLowerCase().startsWith("enabled actions:") ||
         cleanedLine.toLowerCase().startsWith("disabled actions:") ||
-        cleanedLine.toLowerCase().startsWith("you can run trunk actions enable") ||
+        cleanedLine.toLowerCase().startsWith(
+          "you can run trunk actions enable",
+        ) ||
         cleanedLine.length === 0
       ) {
         return; // Skip this line
@@ -166,13 +168,16 @@ export async function getMiseActionAliases(): Promise<string[]> {
     } else if (Object.keys(miseConfig).length > 0) {
       // Only warn if the file existed but lacked [tools]
       console.warn(
-        `Warning: Could not find [tools] section in ${MISE_TOML_PATH} or it's not an object.`
+        `Warning: Could not find [tools] section in ${MISE_TOML_PATH} or it's not an object.`,
       );
     }
 
     return aliases;
   } catch (error) {
-    console.error(`Error processing ${MISE_TOML_PATH} for trunk-actions aliases:`, error);
+    console.error(
+      `Error processing ${MISE_TOML_PATH} for trunk-actions aliases:`,
+      error,
+    );
     throw error; // Re-throw the error
   }
 }

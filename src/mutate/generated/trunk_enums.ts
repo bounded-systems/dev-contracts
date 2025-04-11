@@ -193,5 +193,4 @@ export enum TrunkAction {
 }
 
 export enum MiseActionAlias {
-
 }
