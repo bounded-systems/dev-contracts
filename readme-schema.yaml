@@ -1,93 +1,95 @@
 # README schema for pushd-devtools
-$schema: "pushd:readme/v1"
-
-# Contract-based sections (required)
+$schema: 'pushd:readme/v1'
 contracts:
-  - id: "repo-contract"
-    title: "pushd-devtools Repository Contract"
+  - id: repo-contract
+    title: pushd-devtools Repository Contract
     provides:
-      - "Managed tool versions via mise.toml"
-      - "Configuration templates in the templates/ directory"
-      - "Transformation logic between configuration formats"
-      - "Scripts for synchronizing configurations"
+      - Managed tool versions via mise.toml
+      - Configuration templates in the templates/ directory
+      - Transformation logic between configuration formats
+      - Scripts for synchronizing configurations
     expects:
-      - "mise to be installed on the developer's machine"
-      - "PUSHD_DEVTOOLS_DIR environment variable to be set"
-      - "Target projects to implement the Target Project Contract"
+      - mise to be installed on the developer's machine
+      - PUSHD_DEVTOOLS_DIR environment variable to be set
+      - Target projects to implement the Target Project Contract
     guarantees:
-      - "Tool versions will be compatible with templates"
-      - "Templates will be kept in sync with tool versions"
-      - "Configuration transformations will be bidirectional and consistent"
-  
-  - id: "target-project-contract"
-    title: "Target Project Contract"
+      - Tool versions will be compatible with templates
+      - Templates will be kept in sync with tool versions
+      - Configuration transformations will be bidirectional and consistent
+  - id: target-project-contract
+    title: Target Project Contract
     provides:
-      - "A workspace to place symlinked configurations"
-      - "A .gitignore file that excludes the symlinked directories"
+      - A workspace to place symlinked configurations
+      - A .gitignore file that excludes the symlinked directories
     expects:
-      - "Access to the pushd-devtools repository via PUSHD_DEVTOOLS_DIR"
-      - "Scripts to set up appropriate symlinks"
+      - Access to the pushd-devtools repository via PUSHD_DEVTOOLS_DIR
+      - Scripts to set up appropriate symlinks
     guarantees:
-      - "Will not modify the symlinked configurations directly"
-      - "Will not commit the symlinked configurations to version control"
-  
-  - id: "mise-contract"
-    title: "mise Tool Manager Contract"
+      - Will not modify the symlinked configurations directly
+      - Will not commit the symlinked configurations to version control
+  - id: mise-contract
+    title: mise Tool Manager Contract
     provides:
-      - "Tool version management via mise.toml"
-      - "Task definitions in mise.toml"
-      - "Consistent environment variables"
+      - Tool version management via mise.toml
+      - Task definitions in mise.toml
+      - Consistent environment variables
     expects:
-      - "mise to be installed"
-      - "Tool versions to be specified in mise.toml"
+      - mise to be installed
+      - Tool versions to be specified in mise.toml
     guarantees:
-      - "Tools will be installed in isolated environments"
-      - "Tasks will run with the correct tool versions"
-      - "Environment variables will be consistent"
-
-# Project basics (required)
+      - Tools will be installed in isolated environments
+      - Tasks will run with the correct tool versions
+      - Environment variables will be consistent
 project:
-  name: "Pushd DevTools"
-  description: "A centralized and sandboxed environment for development tools, configurations, and their associated runtimes"
-  problem_statement: |
-    Core projects often rely on specific, sometimes outdated, runtime versions. This
+  name: Pushd DevTools
+  description: >-
+    A centralized and sandboxed environment for development tools,
+    configurations, and their associated runtimes
+  problem_statement: >
+    Core projects often rely on specific, sometimes outdated, runtime versions.
+    This
+
     dependency can prevent the adoption of newer development tools which require
-    more recent runtimes. Upgrading core project runtimes directly can be complex,
+
+    more recent runtimes. Upgrading core project runtimes directly can be
+    complex,
+
     risky, and time-consuming.
-  solution: |
-    Sandboxed & Linked Tooling that acts as a central, up-to-date source for development tools and
+  solution: >
+    Sandboxed & Linked Tooling that acts as a central, up-to-date source for
+    development tools and
+
     their necessary environments through:
-    
+
+
     1. **Sandboxing:** Tools and runtimes are managed within this repository,
        separate from target projects
     2. **Symlinking:** Configuration directories (`.vscode` and `.trunk`) are
        maintained as templates and symlinked into target projects
     3. **Git Exclusion:** Target projects exclude these symlinked directories in
        their `.gitignore` files
-
-# Setup & Usage (required)
 setup:
   prerequisites:
     devtools:
-      - "Git for cloning this repository"
-      - "mise version manager (formerly rtx)"
+      - Git for cloning this repository
+      - mise version manager (formerly rtx)
     target_projects:
-      - "Git"
-      - "Unix-like shell environment"
-      - "Editor extensions for full functionality"
+      - Git
+      - Unix-like shell environment
+      - Editor extensions for full functionality
   installation:
-    - step: "Clone this Repository"
-      code: "git clone <repository-url> ~/dev/pushd-devtools"
-    - step: "Install mise"
-      detail: "Install mise on your system (from https://mise.jdx.dev/)"
-    - step: "Install required tools"
-      code: "mise install"
-    - step: "Set Environment Variable"
+    - step: Clone this Repository
+      code: git clone <repository-url> ~/dev/pushd-devtools
+    - step: Install mise
+      detail: 'Install mise on your system (from https://mise.jdx.dev/)'
+    - step: Install required tools
+      code: mise install
+    - step: Set Environment Variable
       code: |
         export PUSHD_DEVTOOLS_DIR="$HOME/dev/pushd-devtools"
-      detail: "Add to your shell configuration file (e.g., `~/.zshrc`)"
-    - step: "Linking Configurations"
-      detail: "Create symlinks from the templates to your target project"
+      detail: 'Add to your shell configuration file (e.g., `~/.zshrc`)'
+    - step: Linking Configurations
+      detail: Create symlinks from the templates to your target project
       code: |
         # From your target project directory
         ln -s "$PUSHD_DEVTOOLS_DIR/templates/vscode" .vscode
@@ -95,45 +97,54 @@ setup:
       gitignore: |
         .vscode/
         .trunk/
-
-# Configuration (optional but recommended)
 configuration:
   mise_toml:
-    code_from_file: "mise.toml"
-    description: "The project uses mise for managing tool versions and defining tasks."
-
-# Tasks (optional but recommended)
+    code_from_file: mise.toml
+    description: The project uses mise for managing tool versions and defining tasks.
 tasks:
-  - id: "install"
-    command: "mise run install"
-    description: "Install all required tools" 
-  - id: "trunk-check"
-    command: "mise run trunk-check"
-    description: "Run Trunk checks"
-  - id: "trunk-fmt"
-    command: "mise run trunk-fmt"
-    description: "Format code using Trunk"
-  - id: "trunk-upgrade"
-    command: "mise run trunk-upgrade"
-    description: "Upgrade Trunk plugins"
-  - id: "sync-trunk-versions"
-    command: "mise run sync-trunk-versions"
-    description: "Sync linter versions from Trunk to mise.toml"
-  - id: "transform-apply"
-    command: "mise run transform-apply"
-    description: "Apply generated transformations"
-  - id: "generate-readme"
-    command: "mise run generate-readme"
-    description: "Generate README.md from readme-schema.yaml"
-
-# IDE Integration (optional)
+  - id: trunk-check
+    command: mise run trunk-check
+    description: Run Trunk checks
+  - id: trunk-fmt
+    command: mise run trunk-fmt
+    description: Format code using Trunk
+  - id: trunk-upgrade
+    command: mise run trunk-upgrade
+    description: Upgrade Trunk plugins
+  - id: sync-trunk-versions
+    command: mise run sync-trunk-versions
+    description: Sync linter versions from .trunk/trunk.yaml to mise.toml
+  - id: trunk-upgrade-and-sync
+    command: mise run trunk-upgrade-and-sync
+    description: Upgrade Trunk plugins and sync versions back to mise.toml
+  - id: transform-apply
+    command: mise run transform-apply
+    description: 'Apply generated transformations (e.g., mise.toml -> trunk.yaml)'
+  - id: generate-schema
+    command: mise run generate-schema
+    description: Generate readme-schema.yaml from mise.toml
+  - id: generate-readme
+    command: mise run generate-readme
+    description: Generate README.md from readme-schema.yaml
+  - id: check-contracts
+    command: mise run check-contracts
+    description: Check if all contract files exist in the project root
+  - id: deno-test
+    command: mise run deno-test
+    description: Run Deno tests
 ide_integration:
   vscode:
-    - "Install the [mise-vscode](https://github.com/hverlin/mise-vscode/) extension"
-    - "The extension will automatically configure other tools to use mise-managed versions"
+    - >-
+      Install the [mise-vscode](https://github.com/hverlin/mise-vscode/)
+      extension
+    - >-
+      The extension will automatically configure other tools to use mise-managed
+      versions
   jetbrains:
-    - "Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin"
-    - "Add mise shims to your PATH"
+    - >-
+      Install the [intellij-mise](https://github.com/134130/intellij-mise)
+      plugin
+    - Add mise shims to your PATH
   vim_neovim:
     code: |
       " Vim
@@ -141,62 +152,61 @@ ide_integration:
     code_alt: |
       -- Neovim
       vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
-
-# Project Structure (optional but recommended)
 structure:
-  - path: "mise.toml"
-    description: "Tool versions, environment variables, and tasks"
-  - path: "scripts/"
-    description: "Helper scripts for setup and configuration"
+  - path: mise.toml
+    description: 'Tool versions, environment variables, and tasks'
+  - path: scripts
+    description: Helper scripts for setup and configuration
     children:
-      - path: "sync-trunk-versions.ts"
-        description: "Syncs versions from Trunk to mise"
-      - path: "transform-apply.ts"
-        description: "Applies configuration transformations"
-      - path: "generate-readme.ts"
-        description: "Generates README.md from schema"
-  - path: "templates/"
-    description: "Configuration templates for symlinks"
+      - path: sync-trunk-versions.ts
+        description: Syncs versions from Trunk to mise
+      - path: transform-apply.ts
+        description: Applies configuration transformations
+      - path: generate-readme.ts
+        description: Generates README.md from schema
+  - path: src
+    description: Source code for transformations and utilities
     children:
-      - path: "trunk/"
-        description: "Trunk.io configuration"
-      - path: "vscode/"
-        description: "VS Code settings and extensions"
-  - path: "src/"
-    description: "Source code for transformations and utilities"
-    children:
-      - path: "transformation/"
-        description: "Transformation engine"
+      - path: transformation/
+        description: Transformation engine
         children:
-          - path: "engine/"
-            description: "Core transformation logic"
-
-# Roadmap (optional)
+          - path: engine/
+            description: Core transformation logic
+  - path: templates
+    description: Configuration templates for symlinks
+    children:
+      - path: trunk/
+        description: Trunk.io configuration
+      - path: vscode/
+        description: VS Code settings and extensions
 roadmap:
   immediate_priorities:
-    - title: "Documentation-Code Consistency"
+    - title: Documentation-Code Consistency
       items:
-        - "Implement missing scripts referenced in documentation (`setup.ts`, `link-configs.ts`)"
-        - "Create validation scripts to ensure README accuracy"
-    - title: "Contract Enforcement"
+        - >-
+          Implement missing scripts referenced in documentation (`setup.ts`,
+          `link-configs.ts`)
+        - Create validation scripts to ensure README accuracy
+    - title: Contract Enforcement
       items:
-        - "Add runtime validations to ensure contracts are followed"
-        - "Implement automated tests for each contract boundary"
-    - title: "Documentation Generation"
+        - Add runtime validations to ensure contracts are followed
+        - Implement automated tests for each contract boundary
+    - title: Documentation Generation
       items:
-        - "Add JSDoc/TSDoc comments to all script files"
-        - "Create a documentation generator that pulls from mise.toml, scripts, and templates"
-
+        - Add JSDoc/TSDoc comments to all script files
+        - >-
+          Create a documentation generator that pulls from mise.toml, scripts,
+          and templates
   future_enhancements:
-    - title: "Configuration Validation Schema"
+    - title: Configuration Validation Schema
       items:
-        - "Formal schema definitions for all configuration files"
-        - "Runtime validation of configurations against schemas"
-    - title: "Integration Testing"
+        - Formal schema definitions for all configuration files
+        - Runtime validation of configurations against schemas
+    - title: Integration Testing
       items:
-        - "Automated tests that verify end-to-end functionality"
-        - "CI/CD pipeline to validate changes against contracts"
-    - title: "Self-Healing Configuration"
+        - Automated tests that verify end-to-end functionality
+        - CI/CD pipeline to validate changes against contracts
+    - title: Self-Healing Configuration
       items:
-        - "Automatic repair of broken symlinks"
-        - "Detection and resolution of configuration conflicts" 
+        - Automatic repair of broken symlinks
+        - Detection and resolution of configuration conflicts

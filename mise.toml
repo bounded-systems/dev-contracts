@@ -51,10 +51,16 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
-# README Generation Task
+# Generate README Schema Task
+[tasks.generate-schema]
+run = "deno run -A scripts/generate-schema-from-mise.ts"
+depends = ["install"]
+description = "Generate readme-schema.yaml from mise.toml"
+
+# Update README Generation Task to depend on schema generation
 [tasks.generate-readme]
 run = "deno run -A scripts/generate-readme.ts"
-depends = ["install"]
+depends = ["install", "generate-schema"]
 description = "Generate README.md from readme-schema.yaml"
 
 # Check Contract Files Task
@@ -210,16 +216,16 @@ jetbrains = [
   "Install the [intellij-mise](https://github.com/134130/intellij-mise) plugin",
   "Add mise shims to your PATH"
 ]
-vim_neovim = { 
-  code = """
+
+[_.ide_integration.vim_neovim]
+code = """
 " Vim
 let $PATH = $HOME . '/.local/share/mise/shims:' . $PATH
-""", 
-  code_alt = """
+"""
+code_alt = """
 -- Neovim
 vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
 """
-}
 
 # Roadmap information
 [_.roadmap]

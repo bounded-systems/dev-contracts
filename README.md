@@ -116,13 +116,20 @@ node = "20.14.0"
 The repository provides several predefined tasks that can be run using
 `mise run`:
 
-- `mise run install` - Install all required tools
 - `mise run trunk-check` - Run Trunk checks
 - `mise run trunk-fmt` - Format code using Trunk
 - `mise run trunk-upgrade` - Upgrade Trunk plugins
-- `mise run sync-trunk-versions` - Sync linter versions from Trunk to mise.toml
-- `mise run transform-apply` - Apply generated transformations
+- `mise run sync-trunk-versions` - Sync linter versions from .trunk/trunk.yaml
+  to mise.toml
+- `mise run trunk-upgrade-and-sync` - Upgrade Trunk plugins and sync versions
+  back to mise.toml
+- `mise run transform-apply` - Apply generated transformations (e.g., mise.toml
+  -> trunk.yaml)
+- `mise run generate-schema` - Generate readme-schema.yaml from mise.toml
 - `mise run generate-readme` - Generate README.md from readme-schema.yaml
+- `mise run check-contracts` - Check if all contract files exist in the project
+  root
+- `mise run deno-test` - Run Deno tests
 
 ## IDE Integration
 
@@ -160,16 +167,16 @@ vim.env.PATH = vim.env.HOME .. "/.local/share/mise/shims:" .. vim.env.PATH
 ```
 pushd-devtools/
 ├── mise.toml            # Tool versions, environment variables, and tasks
-├── scripts/            # Helper scripts for setup and configuration
+├── scripts            # Helper scripts for setup and configuration
     ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
     ├── transform-apply.ts            # Applies configuration transformations
     ├── generate-readme.ts            # Generates README.md from schema
-├── templates/            # Configuration templates for symlinks
-    ├── trunk/            # Trunk.io configuration
-    ├── vscode/            # VS Code settings and extensions
-├── src/            # Source code for transformations and utilities
+├── src            # Source code for transformations and utilities
     ├── transformation/            # Transformation engine
         ├── engine/            # Core transformation logic
+├── templates            # Configuration templates for symlinks
+    ├── trunk/            # Trunk.io configuration
+    ├── vscode/            # VS Code settings and extensions
 ```
 
 **Note:** The `setup.ts` and `link-configs.ts` scripts mentioned in the
