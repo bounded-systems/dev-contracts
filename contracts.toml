@@ -99,6 +99,7 @@ guarantees = [
 [contracts.structure.".git"]
 type = "artifact"
 purpose = "Git version control data"
+ignores = ["deno"]
 
 [contracts.structure.".github"]
 type = "contract"
@@ -118,12 +119,19 @@ depends_on = ["templates/trunk/", "mise.toml"]
 affects = ["mise.toml"]
 purpose = "Generated/symlinked Trunk configuration"
 files = {}
+ignores = ["git"]
 
 [contracts.structure.".vscode"]
 type = "artifact"
 depends_on = ["templates/vscode/"]
 purpose = "Symlinked VSCode configuration"
 files = {}
+ignores = ["git"]
+
+[contracts.structure.".idea"]
+type = "artifact"
+purpose = "IntelliJ IDEA configuration files"
+ignores = ["git"]
 
 [contracts.structure."README.md"]
 type = "artifact"
@@ -199,4 +207,83 @@ purpose = "Test files"
 
 [contracts.structure."types"]
 type = "static"
-purpose = "TypeScript type definitions" 
+purpose = "TypeScript type definitions"
+ignores = ["deno", "lint"]
+
+# TypeScript-specific ignore patterns
+[contracts.structure."types".ignore_patterns]
+"*.d.ts.map" = ["git", "deno"]
+"generated/" = ["git", "lint"]
+
+# Add a new global section for common ignore patterns
+[contracts.structure.global]
+description = "Global settings inherited by all subfolders"
+
+[contracts.structure.global.ignore_patterns]
+# IDE and editor files
+"*.sublime-*" = ["git", "contracts"]
+"*.swp" = ["git"]
+"*.swo" = ["git"]
+".DS_Store" = ["git"]
+
+# Temporary files
+"*.tmp" = ["git"]
+
+# Other tool-specific ignores
+"*.min.js" = ["eslint", "prettier"]
+"*.min.css" = ["prettier"]
+
+# Environment and secrets - file patterns that could exist anywhere
+".env" = ["git"]
+".env.local" = ["git"]
+"*.pem" = ["git"]
+"*.log" = ["git"]
+
+# New section for project root-specific ignore patterns - keeping any patterns that don't have clear structure entries
+[contracts.structure.project.ignore_patterns]
+# Empty now that we've moved patterns to their respective structure entries
+
+[contracts.structure."node_modules"]
+type = "artifact"
+purpose = "Node.js dependencies"
+ignores = ["git", "eslint", "prettier", "deno"]
+
+[contracts.structure."dist"]
+type = "artifact"
+purpose = "Build distribution files"
+ignores = ["git", "eslint", "prettier", "deno"]
+
+[contracts.structure."build"]
+type = "artifact"
+purpose = "Build output directory"
+ignores = ["git", "eslint", "prettier", "deno"]
+
+[contracts.structure."coverage"]
+type = "artifact"
+purpose = "Test coverage reports"
+ignores = ["eslint", "prettier"]
+
+[contracts.structure."vendor"]
+type = "artifact"
+purpose = "Vendored dependencies"
+ignores = ["eslint"]
+
+[contracts.structure.".deno"]
+type = "artifact"
+purpose = "Deno cache directory"
+ignores = ["git"]
+
+[contracts.structure."logs"]
+type = "artifact"
+purpose = "Log files directory"
+ignores = ["git"]
+
+[contracts.structure."tmp"]
+type = "artifact"
+purpose = "Temporary files directory"
+ignores = ["git"]
+
+[contracts.structure."temp"]
+type = "artifact"
+purpose = "Temporary files directory"
+ignores = ["git"]
