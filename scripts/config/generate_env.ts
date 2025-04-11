@@ -1,6 +1,7 @@
 import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
-import { join } from "https://deno.land/std/path/mod.ts";
-import { loadProjectEnv } from "./setup.ts"; // Import the shared function
+import * as path from "jsr:@std/path";
+import { loadProjectEnv } from "../setup/setup.ts"; // Import the shared function
+import * as fs from "jsr:@std/fs";
 
 interface RuntimeEnvironment {
   name: string;
@@ -20,9 +21,7 @@ interface TrunkConfig {
   };
 }
 
-export async function syncTrunkEnvironment(
-  trunkYamlPath: string,
-): Promise<Record<string, string>> {
+export async function syncTrunkEnvironment(trunkYamlPath: string): Promise<Record<string, string>> {
   const trunkYamlContent = await Deno.readTextFile(trunkYamlPath);
   const config = parseYaml(trunkYamlContent) as TrunkConfig;
 
@@ -39,7 +38,7 @@ export async function syncTrunkEnvironment(
       // Replace $PUSHD_DEVTOOLS_DIR with actual path if needed
       const value = env.value.replace(
         "$PUSHD_DEVTOOLS_DIR",
-        Deno.env.get("PUSHD_DEVTOOLS_DIR") || "",
+        Deno.env.get("PUSHD_DEVTOOLS_DIR") || ""
       );
       envVars[env.name] = value;
     }
@@ -52,28 +51,24 @@ export async function generateEnvFiles(baseDir: string): Promise<void> {
   // Load project environment variables relative to baseDir
   const projectEnv = await loadProjectEnv(baseDir);
 
-  const trunkYamlPath = join(baseDir, projectEnv.TRUNK_YAML_PATH);
+  const trunkYamlPath = path.join(baseDir, projectEnv.TRUNK_YAML_PATH);
   const envVars = await syncTrunkEnvironment(trunkYamlPath);
 
   // Generate Ruby environment file
-  const rubyEnvPath = join(baseDir, projectEnv.RUBY_RUNTIME_DIR, ".env");
+  const rubyEnvPath = path.join(baseDir, projectEnv.RUBY_RUNTIME_DIR, ".env");
   const rubyEnvContent = Object.entries(envVars)
     .filter(
-      ([key]) =>
-        key.startsWith(projectEnv.RUBY_ENV_PREFIX) ||
-        key === projectEnv.RUBY_HOME_VAR,
+      ([key]) => key.startsWith(projectEnv.RUBY_ENV_PREFIX) || key === projectEnv.RUBY_HOME_VAR
     )
     .map(([key, value]) => `${key}=${value}`)
     .join("\n");
   await Deno.writeTextFile(rubyEnvPath, rubyEnvContent);
 
   // Generate Node environment file
-  const nodeEnvPath = join(baseDir, projectEnv.NODE_RUNTIME_DIR, ".env");
+  const nodeEnvPath = path.join(baseDir, projectEnv.NODE_RUNTIME_DIR, ".env");
   const nodeEnvContent = Object.entries(envVars)
     .filter(
-      ([key]) =>
-        key.startsWith(projectEnv.NODE_ENV_PREFIX) ||
-        key === projectEnv.NODE_PACKAGE_VAR,
+      ([key]) => key.startsWith(projectEnv.NODE_ENV_PREFIX) || key === projectEnv.NODE_PACKAGE_VAR
     )
     .map(([key, value]) => `${key}=${value}`)
     .join("\n");

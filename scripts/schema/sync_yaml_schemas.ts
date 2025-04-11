@@ -1,12 +1,12 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
 import { join } from "https://deno.land/std/path/mod.ts";
-import { parse as parseYaml } from "https://deno.land/std/yaml/mod.ts";
+import * as yaml from "jsr:@std/yaml";
 import { parse as parseJson } from "https://deno.land/std@0.224.0/jsonc/mod.ts";
 
 // Re-use loadProjectEnv from setup.ts (assuming it's accessible/correctly located)
 // If not, keep the function definition here.
-import { loadProjectEnv } from "./setup.ts";
+import { loadProjectEnv } from "../setup/setup.ts";
 
 interface YamlLintSchema {
   pattern: string;
@@ -42,7 +42,7 @@ export class SchemaSyncer {
       this.rootDir = devtoolsDir;
     } else {
       console.warn(
-        "PUSHD_DEVTOOLS_DIR not set, deriving rootDir from script location. This might be inaccurate.",
+        "PUSHD_DEVTOOLS_DIR not set, deriving rootDir from script location. This might be inaccurate."
       );
       // Fallback using import.meta.url (less reliable for testing)
       this.rootDir = join(new URL(".", import.meta.url).pathname, "..");
@@ -50,32 +50,23 @@ export class SchemaSyncer {
     console.log(`SchemaSyncer using rootDir: ${this.rootDir}`); // Debugging log
 
     // Ensure required env vars are present in the passed projectEnv
-    if (
-      !this.projectEnv.YAMLLINT_CONFIG_PATH ||
-      !this.projectEnv.VSCODE_SETTINGS_PATH
-    ) {
+    if (!this.projectEnv.YAMLLINT_CONFIG_PATH || !this.projectEnv.VSCODE_SETTINGS_PATH) {
       console.error(
-        "Error: Missing YAMLLINT_CONFIG_PATH or VSCODE_SETTINGS_PATH in project environment.",
+        "Error: Missing YAMLLINT_CONFIG_PATH or VSCODE_SETTINGS_PATH in project environment."
       );
       // Avoid Deno.exit here, let the caller handle missing config paths if needed
       // Deno.exit(1);
       throw new Error("Missing required config paths in environment");
     }
 
-    this.yamllintPath = join(
-      this.rootDir,
-      this.projectEnv.YAMLLINT_CONFIG_PATH,
-    );
-    this.vscodeSettingsPath = join(
-      this.rootDir,
-      this.projectEnv.VSCODE_SETTINGS_PATH,
-    );
+    this.yamllintPath = join(this.rootDir, this.projectEnv.YAMLLINT_CONFIG_PATH);
+    this.vscodeSettingsPath = join(this.rootDir, this.projectEnv.VSCODE_SETTINGS_PATH);
   }
 
   private async readYamlLintConfig(): Promise<YamlLintConfig> {
     try {
       const content = await Deno.readTextFile(this.yamllintPath);
-      return parseYaml(content) as YamlLintConfig;
+      return yaml.parse(content) as YamlLintConfig;
     } catch (error) {
       // Handle unknown error type
       if (error instanceof Error) {
@@ -113,12 +104,8 @@ export class SchemaSyncer {
     const vscodeSchemas: { [key: string]: string[] } = {};
     // Ensure yamllintConfig.schemas exists and is an array
     if (Array.isArray(yamllintConfig?.schemas)) {
-      yamllintConfig.schemas.forEach((schema) => {
-        if (
-          schema &&
-          typeof schema.schema === "string" &&
-          typeof schema.pattern === "string"
-        ) {
+      yamllintConfig.schemas.forEach(schema => {
+        if (schema && typeof schema.schema === "string" && typeof schema.pattern === "string") {
           vscodeSchemas[schema.schema] = [schema.pattern];
         }
       });
@@ -169,7 +156,7 @@ export class SchemaSyncer {
     await this.writeVSCodeSettings(vscodeSettings);
 
     console.log(
-      `Successfully synced YAML schemas from ${this.yamllintPath} to ${this.vscodeSettingsPath}`,
+      `Successfully synced YAML schemas from ${this.yamllintPath} to ${this.vscodeSettingsPath}`
     );
   }
 }
@@ -186,7 +173,7 @@ export class SchemaSyncer {
       for (const envVar of requiredEnvVars) {
         if (!projectEnv[envVar]) {
           console.error(
-            `Error: Required environment variable ${envVar} is missing from .env.project`,
+            `Error: Required environment variable ${envVar} is missing from .env.project`
           );
           Deno.exit(1);
         }
@@ -196,10 +183,7 @@ export class SchemaSyncer {
       const syncer = new SchemaSyncer(projectEnv);
       await syncer.sync();
     } catch (error) {
-      console.error(
-        "Schema sync failed:",
-        error instanceof Error ? error.message : error,
-      );
+      console.error("Schema sync failed:", error instanceof Error ? error.message : error);
       Deno.exit(1);
     }
   }
