@@ -257,6 +257,12 @@ type = "file"
 type = "file"
 description = "Syncs versions from Trunk to mise"
 
+[structure."scripts/tests"]
+type = "directory"
+
+[structure."scripts/tests/roadmap_validators.test.ts"]
+type = "file"
+
 [structure."scripts/transform-apply.ts"]
 type = "file"
 description = "Applies configuration transformations"
@@ -265,9 +271,6 @@ description = "Applies configuration transformations"
 type = "file"
 
 [structure."scripts/validate-readme-schema.ts"]
-type = "file"
-
-[structure."setup.toml"]
 type = "file"
 
 [structure.src]
@@ -472,12 +475,4 @@ type = "directory"
 purpose = "Test files"
 
 [structure."tests/example.test.ts"]
-type = "file"
-
-# === Automatically added untracked entries ===
-
-[structure."scripts/tests"]
-type = "directory"
-
-[structure."scripts/tests/roadmap_validators.test.ts"]
 type = "file"
