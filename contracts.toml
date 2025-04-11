@@ -1,4 +1,4 @@
-schema = "./schemas/contracts-schema.json"
+schema = "./src/contracts/schemas/contracts-schema.json"
 
 [schemas]
 github-workflow = "https://json.schemastore.org/github-workflow.json"
@@ -160,7 +160,7 @@ type = "file"
 
 [structure."contracts.toml"]
 type = "file"
-schema = "./schemas/contracts-schema.json"
+schema = "./src/contracts/schemas/contracts-schema.json"
 types = "./src/types/contracts.d.ts"
 
 [structure."deno.json"]
@@ -197,7 +197,7 @@ purpose = "Generated documentation"
 type = "file"
 affects = ["README.md"]
 purpose = "Schema for README generation"
-schema = "./schemas/readme-schema.json"
+schema = "./src/contracts/schemas/readme-schema.json"
 
 [structure.runtimes]
 type = "directory"
@@ -228,13 +228,16 @@ type = "file"
 [structure.schemas]
 type = "directory"
 
-[structure."schemas/contracts-schema.json"]
+[structure."src/contracts/schemas"]
+type = "directory"
+
+[structure."src/contracts/schemas/contracts-schema.json"]
 type = "file"
 
-[structure."schemas/readme-schema.json"]
+[structure."src/contracts/schemas/readme-schema.json"]
 type = "file"
 
-[structure."schemas/README.md"]
+[structure."src/contracts/schemas/README.md"]
 type = "file"
 
 [structure.scripts]
@@ -242,70 +245,61 @@ type = "directory"
 purpose = "Container for transformation scripts"
 description = "Helper scripts for setup and configuration"
 
-[structure."scripts/check-contracts.ts"]
-type = "file"
-
 [structure."scripts/clone.ts"]
 type = "file"
 
-[structure."scripts/delete-empty-dirs.ts"]
-type = "file"
-
-[structure."scripts/generate-contracts-structure.ts"]
-type = "file"
-
-[structure."scripts/generate-gitignore.ts"]
-type = "file"
-
 [structure."scripts/generate-readme.ts"]
-type = "file"
-description = "Generates README.md from schema"
-
-[structure."scripts/generate-types-from-schema.ts"]
-type = "file"
-description = "Generates TypeScript types from contracts-schema.json"
-
-[structure."scripts/prune-contracts-structure.ts"]
 type = "file"
 
 [structure."scripts/setup.ts"]
 type = "file"
 
-[structure."scripts/sort-contracts-structure.ts"]
-type = "file"
-
 [structure."scripts/sync-trunk-versions.ts"]
-type = "file"
-description = "Syncs versions from Trunk to mise"
-
-[structure."scripts/sync-schemas.ts"]
-type = "file"
-description = "Downloads external schemas referenced in contracts.toml to schemas/external/"
-
-[structure."scripts/tests"]
-type = "directory"
-
-[structure."scripts/tests/roadmap_validators.test.ts"]
 type = "file"
 
 [structure."scripts/transform-apply.ts"]
 type = "file"
 description = "Applies configuration transformations"
 
-[structure."scripts/validate-contracts-structure.ts"]
-type = "file"
-
 [structure."scripts/validate-readme-schema.ts"]
 type = "file"
 
-[structure."scripts/validate-schemas.ts"]
+[structure."scripts/contracts"]
+type = "directory"
+purpose = "Container for contract-related scripts"
+
+[structure."scripts/contracts/check-contracts.ts"]
 type = "file"
-description = "Validates files against schemas defined in contracts.toml"
+
+[structure."scripts/contracts/delete-empty-dirs.ts"]
+type = "file"
+
+[structure."scripts/contracts/generate-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/contracts/generate-gitignore.ts"]
+type = "file"
+
+[structure."scripts/contracts/prune-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/contracts/sort-contracts-structure.ts"]
+type = "file"
+
+[structure."scripts/contracts/validate-contracts-structure.ts"]
+type = "file"
 
 [structure.src]
 type = "directory"
 purpose = "Source code for transformation logic"
 description = "Source code for transformations and utilities"
+
+[structure."src/contracts"]
+type = "directory"
+
+[structure."src/contracts/generate-types-from-schema.ts"]
+type = "file"
+description = "Generates TypeScript types from contracts-schema.json"
 
 [structure."src/extractors"]
 type = "directory"
@@ -375,7 +369,7 @@ type = "directory"
 [structure."src/types/contracts.d.ts"]
 type = "file"
 purpose = "Generated TypeScript types for contracts.toml"
-depends_on = ["schemas/contracts-schema.json"]
+depends_on = ["src/contracts/schemas/contracts-schema.json"]
 
 [structure."src/types/linter-types.ts"]
 type = "file"
@@ -515,3 +509,9 @@ purpose = "Test files"
 
 [structure."tests/example.test.ts"]
 type = "file"
+
+[structure."tests/contracts"]
+type = "directory"
+
+[structure."tests/contracts/structure"]
+type = "directory"
