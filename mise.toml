@@ -221,11 +221,3 @@ imports = [
   { name = "jsr:@std/yaml", url = "jsr:@std/yaml@^0.224.0" },
   { name = "jsr:@std/toml", url = "jsr:@std/toml@^0.224.0" },
 ]
-
-[settings.devtools.trunk]
-# The Trunk CLI version is taken from the main [tools] section (e.g., tools.trunk)
-# The Ruby and Node runtime versions for Trunk are also taken from the main [tools] section.
-# Linters are now defined in the tools section above and will be enabled
-# if they are in the approved linter list
-# Actions are now defined in the tools section above and will be enabled
-# if they are valid Trunk actions
