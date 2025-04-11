@@ -70,22 +70,22 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
-# Generate README Schema Task
-[tasks.generate-schema]
-run = "deno run -A scripts/generate-schema-from-mise.ts && trunk fmt"
+# Generate Contract Types from Schema Task (Temporary/Failed attempt)
+[tasks.generate-contract-types]
+run = "deno run -A scripts/generate-types-from-schema.ts && trunk fmt"
 depends = ["install"]
-description = "Generate readme.yml from mise.toml and format using Trunk"
+description = "Generate TypeScript types from schemas/contracts-schema.json and format using Trunk"
 
 # Validate README Schema Task
 [tasks.validate-schema]
 run = "deno run -A scripts/validate-readme-schema.ts"
-depends = ["generate-schema"]
+depends = ["generate-contract-types"]
 description = "Validate readme.yml against the JSON schema"
 
 # Update README Generation Task to depend on schema generation and run formatter
 [tasks.generate-readme]
 run = "deno run -A scripts/generate-readme.ts && trunk fmt"
-depends = ["install", "generate-schema", "validate-schema"]
+depends = ["install", "generate-contract-types", "validate-schema"]
 description = "Generate README.md from readme.yml and format using Trunk"
 
 # Check Contract Files Task

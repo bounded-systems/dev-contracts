@@ -53,7 +53,10 @@ PUSHD_DEVTOOLS_DIR = "{{config_root}}"
 
 # Reference to external configuration files
 CONTRACTS_FILE = "contracts.toml"
-# SETUP_FILE = "setup.toml" # Removed - Consolida
+
+[tools]
+# Core Runtime Tool versions
+ruby = "3.3
 # ... additional tasks
 ```
 

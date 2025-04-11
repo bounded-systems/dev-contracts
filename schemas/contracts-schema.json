@@ -118,6 +118,14 @@
             "type": "array",
             "items": { "type": "string" }
           }
+        },
+        "schema": {
+          "type": "string",
+          "description": "Reference to a schema definition (URL, path, or ref)."
+        },
+        "types": {
+          "type": "string",
+          "description": "Reference to a type definition file (URL, path, or ref)."
         }
       },
       "additionalProperties": false
