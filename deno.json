@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std/",
+    "zod": "https://deno.land/x/zod/mod.ts"
+  },
+  "tasks": {
+    "test": "deno test --allow-all scripts/**/*.test.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  }
+}

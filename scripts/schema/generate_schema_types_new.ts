@@ -734,6 +734,8 @@ async validateAndGenerate(): Promise<boolean> {
   }
 }
 
+} // End of SchemaValidator class
+
 // Main function to run everything
 async function main() {
   try {

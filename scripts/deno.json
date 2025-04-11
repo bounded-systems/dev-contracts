@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "std/": "https://deno.land/std/",
-    "zod": "https://deno.land/x/zod/mod.ts"
-  }
-}
