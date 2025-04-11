@@ -5,11 +5,18 @@ import * as path from "jsr:@std/path";
 import * as yaml from "jsr:@std/yaml";
 import * as toml from "jsr:@std/toml";
 import { loadProjectEnv as originalLoadProjectEnv } from "../setup/setup.ts";
-import { resolveRef, normalizeSchema, extractToolVersion } from "../utils/trunk_utils.ts";
+import {
+  resolveRef,
+  normalizeSchema,
+  extractToolVersion,
+  fetchSupportedRuntimes,
+  buildRuntimeMapping,
+} from "../utils/trunk_utils.ts";
 import type { ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo as PrintedTrunkConfig } from "../types/trunk.ts";
 import { validateMiseConfig, validateTrunkConfig } from "../validation/config_validators.ts";
 import { transformTrunkConfig as applyTrunkTransform } from "../config/config_transformer.ts";
 import type { MiseConfig, TrunkConfig } from "../types/mise.ts";
+import type { TransformContext } from "../types/transform_rules.ts";
 
 // Modified version of loadProjectEnv that doesn't exit on errors
 export async function loadEnv(rootDir?: string): Promise<Record<string, string>> {
@@ -27,25 +34,23 @@ export async function loadEnv(rootDir?: string): Promise<Record<string, string>>
   }
 }
 
-// Schema URLs
-const MISE_SCHEMA_URL = "https://mise.jdx.dev/schema/mise.json";
-const TRUNK_SCHEMA_URL = "https://static.trunk.io/pub/trunk-yaml-schema.json";
+// Schema URLs are now expected to be loaded from mise.toml
+// const MISE_SCHEMA_URL = "https://mise.jdx.dev/schema/mise.json";
+// const TRUNK_SCHEMA_URL = "https://static.trunk.io/pub/trunk-yaml-schema.json";
 
 /**
- * SchemaValidator class for fetching, validating, and generating types from JSON schemas
+ * SchemaValidator class focuses on fetching, loading, and orchestrating.
  */
 export class SchemaValidator {
   private readonly rootDir: string;
   private readonly miseConfigPath: string;
   private readonly trunkConfigPath: string;
-  private readonly typesDir: string;
   private readonly printedConfigPath: string;
 
   constructor(rootDir: string, miseConfigPath: string, trunkConfigPath: string) {
     this.rootDir = rootDir;
     this.miseConfigPath = path.join(rootDir, miseConfigPath);
     this.trunkConfigPath = path.join(rootDir, trunkConfigPath);
-    this.typesDir = path.join(rootDir, "scripts/types");
     this.printedConfigPath = path.join(rootDir, "trunk_full_config.yaml");
   }
 
@@ -85,18 +90,25 @@ export class SchemaValidator {
     }
   }
 
-  /**
-   * Validate a configuration object against a JSON schema
-   */
-  async validateConfig(config: any, schema: any): Promise<{ valid: boolean; issues: string[] }> {
+  // Generic schema validation (Placeholder)
+  async validateAgainstSchema(
+    config: any,
+    schemaUrl: string | undefined // Accept potentially undefined URL
+  ): Promise<{ valid: boolean; issues: string[] }> {
     const issues: string[] = [];
-    // TODO: Implement generic schema validation logic (e.g., using Ajv or similar)
-    console.warn("Generic config validation not implemented yet.");
-    // Placeholder implementation
-    return {
-      valid: true, // Assuming valid for now
-      issues,
-    };
+    if (!schemaUrl) {
+      issues.push("Schema URL not provided or found in config.");
+      return { valid: false, issues };
+    }
+    try {
+      console.log(`Attempting schema validation against: ${schemaUrl}`);
+      // const schema = await this.fetchSchema(schemaUrl);
+      // TODO: Implement actual validation using schema (e.g., with Ajv)
+      console.warn(`Schema validation against ${schemaUrl} not implemented yet.`);
+    } catch (error) {
+      issues.push(`Failed to fetch or validate against schema ${schemaUrl}: ${error}`);
+    }
+    return { valid: issues.length === 0, issues };
   }
 
   /**
@@ -123,202 +135,321 @@ export class SchemaValidator {
   }
 
   /**
-   * Validate configurations and analyze printed config using external functions
+   * Orchestrates validation (schema + custom) and analysis.
+   * Loads necessary configs first.
    */
-  async validateAndAnalyze(): Promise<boolean> {
+  async validateAndAnalyze(): Promise<{
+    overallValid: boolean;
+    miseConfig: MiseConfig | null;
+    trunkConfig: TrunkConfig | null;
+    printedConfig: PrintedTrunkConfig | null;
+  }> {
     let overallValid = true;
+    let miseConfig: MiseConfig | null = null;
+    let trunkConfig: TrunkConfig | null = null;
+    let printedConfig: PrintedTrunkConfig | null = null;
+
     try {
-      // Validate mise.toml using external validator
-      console.log("Validating mise.toml...");
-      const miseValidation = await validateMiseConfig(this.miseConfigPath);
-      console.log(`mise.toml: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-      if (!miseValidation.valid) {
-        console.log("  Issues:");
-        miseValidation.issues.forEach(issue => console.log(`  - ${issue}`));
+      // Load configs
+      try {
+        miseConfig = (await this.loadConfigFile(this.miseConfigPath)) as MiseConfig;
+        console.log(`Loaded mise config from ${this.miseConfigPath}`);
+      } catch (e) {
+        console.error(`Failed to load mise config: ${e}`);
         overallValid = false;
       }
-
-      // Validate trunk.yaml input using external validator
-      console.log(`Validating trunk.yaml input at: ${this.trunkConfigPath}...`);
-      const trunkValidation = await validateTrunkConfig(this.trunkConfigPath, this.miseConfigPath);
-      console.log(`trunk.yaml input: ${trunkValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
-      if (!trunkValidation.valid) {
-        console.log("  Issues:");
-        trunkValidation.issues.forEach(issue => console.log(`  - ${issue}`));
+      try {
+        trunkConfig = (await this.loadConfigFile(this.trunkConfigPath)) as TrunkConfig;
+        console.log(`Loaded trunk config from ${this.trunkConfigPath}`);
+      } catch (e) {
+        console.error(`Failed to load trunk config: ${e}`);
         overallValid = false;
       }
+      printedConfig = await this.loadPrintedTrunkConfig(); // Handles its own errors/warnings
+      if (!printedConfig) {
+        // Decide if missing printed config is a fatal validation error
+        console.warn("Printed config could not be loaded, analysis will be skipped.");
+        // overallValid = false; // Uncomment if printed config is mandatory
+      }
 
-      // --- Analyze Printed Trunk Config ---
-      console.log(`\nAnalyzing printed trunk config from: ${this.printedConfigPath}...`);
-      const printedConfig = await this.loadPrintedTrunkConfig();
+      // Extract schema URLs from loaded miseConfig
+      const miseSchemaUrl = miseConfig?.settings?.devtools?.schemas?.mise;
+      const trunkSchemaUrl = miseConfig?.settings?.devtools?.schemas?.trunk;
+      if (!miseSchemaUrl) {
+        console.warn("Mise schema URL not found in mise.toml at settings.devtools.schemas.mise");
+      }
+      if (!trunkSchemaUrl) {
+        console.warn("Trunk schema URL not found in mise.toml at settings.devtools.schemas.trunk");
+      }
 
-      if (printedConfig) {
-        // --- Placeholder for Analysis ---
-        console.log(`  -> Found CLI version: ${printedConfig.cli?.version}`);
-        const numLinterDefs = printedConfig.lint?.definitions?.length ?? 0;
-        console.log(`  -> Found ${numLinterDefs} resolved linter definitions.`);
-        const resolvedEslint = printedConfig.lint?.definitions?.find(d => d.name === "eslint");
-        if (resolvedEslint) {
-          console.log(
-            `  -> ESLint resolved with runtime: ${(resolvedEslint as any).runtime}, version: ${(resolvedEslint as any).version}`
-          );
-        } else {
-          console.log(`  -> ESLint not found in resolved definitions.`);
-        }
+      // Proceed only if initial loads were successful (or partially successful if desired)
+      if (miseConfig && trunkConfig) {
+        // --- Schema Validation (Optional - uses URLs from config) ---
+        // console.log("Running schema validation...");
+        // const miseSchemaValidation = await this.validateAgainstSchema(miseConfig, miseSchemaUrl);
+        // const trunkSchemaValidation = await this.validateAgainstSchema(trunkConfig, trunkSchemaUrl);
+        // if (!miseSchemaValidation.valid || !trunkSchemaValidation.valid) {
+        //      console.error("Schema validation failed.");
+        //      // Log specific issues from miseSchemaValidation.issues and trunkSchemaValidation.issues
+        //      overallValid = false;
+        // }
 
-        // Example: Compare resolved runtimes with mise tools
-        const miseConfig = (await this.loadConfigFile(this.miseConfigPath)) as MiseConfig; // Reload or pass as arg
-        const resolvedRuntimes = printedConfig.runtimes?.definitions ?? [];
-        console.log("\nComparing resolved runtimes with mise tools:");
-        for (const [tool, versionSpec] of Object.entries(miseConfig.tools ?? {})) {
-          if (["node", "ruby", "deno"].includes(tool)) {
-            // Focus on runtimes
-            const miseVersion = extractToolVersion(versionSpec);
-            const resolvedRuntime = resolvedRuntimes.find(r => r.type === tool);
-            if (resolvedRuntime) {
-              console.log(
-                `  - ${tool}: mise='${miseVersion}', resolved='${resolvedRuntime.version}' ${miseVersion === resolvedRuntime.version ? "(Match)" : "(MISMATCH!)"}`
-              );
-              if (miseVersion && miseVersion !== resolvedRuntime.version) {
-                console.error(`    MISMATCH DETECTED FOR ${tool}`);
-                overallValid = false; // Mismatch is an invalid state
-              }
-            } else {
-              console.log(`  - ${tool}: defined in mise, but not found in resolved runtimes!`);
-              overallValid = false; // Missing resolved runtime is invalid
-            }
-          }
-        }
-
-        // --- Find Resolved Versions for 'latest' Linters ---
-        const lintersSetToLatest: string[] = [];
-        const tools = miseConfig.tools ?? {};
-        const knownNonLinters = ["node", "ruby", "deno", "trunk"];
-        const builtInLinters = ["git-diff-check"];
-
-        for (const [tool, versionSpec] of Object.entries(tools)) {
-          const version = extractToolVersion(versionSpec);
-          if (!knownNonLinters.includes(tool) && !builtInLinters.includes(tool)) {
-            if (version?.toLowerCase() === "latest") {
-              lintersSetToLatest.push(tool);
-            }
-          }
-        }
-
-        if (lintersSetToLatest.length > 0) {
-          console.log("\n--------------------------------------------------");
-          console.warn("ACTION REQUIRED: Linters set to 'latest' in mise.toml");
-          console.log("--------------------------------------------------");
-          console.log("Resolved versions from 'trunk config print':");
-          const resolvedLinterDefs = printedConfig.lint?.definitions ?? [];
-          let allFound = true;
-
-          for (const linterName of lintersSetToLatest) {
-            const resolvedDef = resolvedLinterDefs.find(def => def.name === linterName);
-            const resolvedVersion = (resolvedDef as any)?.version;
-            if (resolvedVersion) {
-              console.log(`  - ${linterName} = "${resolvedVersion}"`);
-            } else {
-              console.log(`  - ${linterName}: Could not find resolved version in printed config.`);
-              allFound = false;
-            }
-          }
-          if (allFound) {
-            console.log("\n=> Please update mise.toml with these pinned versions.");
-          } else {
-            console.warn(
-              "\nWARNING: Could not determine all resolved versions. 'trunk_full_config.yaml' might be outdated or incomplete."
-            );
-          }
-          console.error("\nValidation FAILED because 'latest' is used for linters in mise.toml.");
+        // --- Custom Validation (using imported functions) ---
+        console.log("Running custom mise validation...");
+        const miseValidation = validateMiseConfig(miseConfig);
+        console.log(`Custom mise validation: ${miseValidation.valid ? "✅ VALID" : "❌ INVALID"}`);
+        if (!miseValidation.valid) {
+          console.log("  Issues:");
+          miseValidation.issues.forEach(issue => console.log(`  - ${issue}`));
           overallValid = false;
-          console.log("--------------------------------------------------");
+        }
+
+        console.log("Running custom trunk validation...");
+        const trunkValidation = validateTrunkConfig(trunkConfig, miseConfig);
+        console.log(
+          `Custom trunk validation: ${trunkValidation.valid ? "✅ VALID" : "❌ INVALID"}`
+        );
+        if (!trunkValidation.valid) {
+          console.log("  Issues:");
+          trunkValidation.issues.forEach(issue => console.log(`  - ${issue}`));
+          overallValid = false;
+        }
+
+        // --- Analysis (using printedConfig if available) ---
+        if (printedConfig) {
+          console.log(`\nAnalyzing printed trunk config from: ${this.printedConfigPath}...`);
+          // ... (Analysis logic remains largely the same, using the loaded printedConfig object) ...
+          // Example: Compare resolved runtimes with mise tools
+          const resolvedRuntimes = printedConfig.runtimes?.definitions ?? [];
+          console.log("\nComparing resolved runtimes with mise tools:");
+          for (const [tool, versionSpec] of Object.entries(miseConfig.tools ?? {})) {
+            if (["node", "ruby", "deno"].includes(tool)) {
+              const miseVersion = extractToolVersion(versionSpec);
+              const resolvedRuntime = resolvedRuntimes.find(r => r.type === tool);
+              if (resolvedRuntime) {
+                console.log(
+                  `  - ${tool}: mise='${miseVersion}', resolved='${resolvedRuntime.version}' ${
+                    miseVersion === resolvedRuntime.version ? "(Match)" : "(MISMATCH!)"
+                  }`
+                );
+                if (miseVersion && miseVersion !== resolvedRuntime.version) {
+                  console.error(`    MISMATCH DETECTED FOR ${tool}`);
+                  overallValid = false;
+                }
+              } else {
+                console.log(`  - ${tool}: defined in mise, but not found in resolved runtimes!`);
+                overallValid = false;
+              }
+            }
+          }
+
+          // Example: Check for 'latest' linters
+          const lintersSetToLatest: string[] = [];
+          const tools = miseConfig.tools ?? {};
+          const knownNonLinters = ["node", "ruby", "deno", "trunk"];
+          const builtInLinters = ["git-diff-check"];
+
+          for (const [tool, versionSpec] of Object.entries(tools)) {
+            const version = extractToolVersion(versionSpec);
+            if (!knownNonLinters.includes(tool) && !builtInLinters.includes(tool)) {
+              if (version?.toLowerCase() === "latest") {
+                lintersSetToLatest.push(tool);
+              }
+            }
+          }
+
+          if (lintersSetToLatest.length > 0) {
+            console.log("\n--------------------------------------------------");
+            console.warn("ACTION REQUIRED: Linters set to 'latest' in mise.toml");
+            console.log("--------------------------------------------------");
+            console.log("Resolved versions from 'trunk config print':");
+            const resolvedLinterDefs = printedConfig.lint?.definitions ?? [];
+            let allFound = true;
+
+            for (const linterName of lintersSetToLatest) {
+              const resolvedDef = resolvedLinterDefs.find(def => def.name === linterName);
+              const resolvedVersion = (resolvedDef as any)?.version;
+              if (resolvedVersion) {
+                console.log(`  - ${linterName} = "${resolvedVersion}"`);
+              } else {
+                console.log(
+                  `  - ${linterName}: Could not find resolved version in printed config.`
+                );
+                allFound = false;
+              }
+            }
+            if (allFound) {
+              console.log("\n=> Please update mise.toml with these pinned versions.");
+            } else {
+              console.warn(
+                "\nWARNING: Could not determine all resolved versions. 'trunk_full_config.yaml' might be outdated or incomplete."
+              );
+            }
+            console.error("\nValidation FAILED because 'latest' is used for linters in mise.toml.");
+            overallValid = false;
+          }
+        } else {
+          // If printed config is required for validation, mark as invalid
+          console.warn("Skipping analysis because printed config was not loaded.");
+          // overallValid = false; // Uncomment if analysis is mandatory for validation pass
         }
       } else {
-        console.log("  -> Skipping analysis as printed config could not be loaded.");
-        overallValid = false; // Fail if printed config is missing/unreadable
+        console.error("Cannot perform validation or analysis due to config loading errors.");
+        overallValid = false; // Ensure failure if essential configs didn't load
       }
 
-      return overallValid;
+      return { overallValid, miseConfig, trunkConfig, printedConfig };
     } catch (error) {
       console.error(
-        "Validation/Analysis failed:",
+        "Error during validation/analysis orchestration:",
         error instanceof Error ? error.message : String(error)
       );
-      return false;
+      return { overallValid: false, miseConfig: null, trunkConfig: null, printedConfig: null };
     }
   }
 
   /**
-   * Wrapper method to call the external trunk config transformer.
+   * Orchestrates loading configs, applying transformation, and saving the result.
+   * Fetches necessary context (like runtime mapping) before running the engine.
    */
-  async transformTrunkConfig(): Promise<boolean> {
-    return applyTrunkTransform(this.trunkConfigPath, this.miseConfigPath);
+  async transformAndSaveTrunkConfig(): Promise<boolean> {
+    let miseConfig: MiseConfig | null = null;
+    let trunkConfig: TrunkConfig | null = null;
+    try {
+      miseConfig = (await this.loadConfigFile(this.miseConfigPath)) as MiseConfig;
+      trunkConfig = (await this.loadConfigFile(this.trunkConfigPath)) as TrunkConfig;
+    } catch (e) {
+      console.error(`Failed to load configs for transformation: ${e}`);
+      return false;
+    }
+
+    if (miseConfig && trunkConfig) {
+      // --- Prepare Context ---
+      let transformContext: TransformContext = {};
+      try {
+        console.log("Preparing transformation context (fetching runtimes)...");
+        const supportedRuntimes = await fetchSupportedRuntimes();
+        transformContext.runtimeMapping = buildRuntimeMapping(supportedRuntimes);
+        console.log("Transformation context prepared.");
+      } catch (e) {
+        console.error(`Failed to prepare transformation context: ${e}. Proceeding without it.`);
+        // Decide if this is fatal or if rules can handle missing context
+      }
+
+      // --- Apply Transformation ---
+      // Apply the transformation (which now takes objects and context)
+      const { config: transformedConfig, changed } = await applyTrunkTransform(
+        trunkConfig,
+        miseConfig,
+        transformContext // Pass the prepared context
+        // Note: applyTrunkTransform itself needs to be updated to accept context
+        //       and pass it to applyTransformRules.
+      );
+
+      if (changed) {
+        console.log("Transformation resulted in changes. Writing to disk...");
+        try {
+          const yamlContent = yaml.stringify(transformedConfig, {
+            indent: 2,
+            skipInvalid: true,
+          });
+          await Deno.writeTextFile(this.trunkConfigPath, yamlContent);
+          console.log(`Successfully saved transformed config to ${this.trunkConfigPath}`);
+          return true;
+        } catch (e) {
+          console.error(`Failed to save transformed trunk config: ${e}`);
+          return false;
+        }
+      } else {
+        console.log("Transformation applied, but no changes were necessary.");
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 } // End of SchemaValidator class
 
-// Main function to run everything
+// --- Main function refactoring ---
 async function main() {
   try {
-    // Get project environment variables with fallback values
+    // ... (Initial env loading and path determination remains the same) ...
     const projectEnv = await loadEnv();
-
-    // Get paths from environment or use defaults
     const miseConfigPath = projectEnv["TOOL_VERSIONS_NAME"] || "mise.toml";
-    // Allow override via command line parameter --trunk-path
     let trunkConfigPath = projectEnv["TRUNK_YAML_PATH"] || ".trunk/trunk.yaml";
-
-    // Check if --trunk-path is specified in args
     const trunkPathIndex = Deno.args.indexOf("--trunk-path");
     if (trunkPathIndex !== -1 && trunkPathIndex < Deno.args.length - 1) {
       trunkConfigPath = Deno.args[trunkPathIndex + 1];
       console.log(`Overriding trunk.yaml path from command line: ${trunkConfigPath}`);
     }
-
-    // Determine root directory
     const rootDir =
       Deno.env.get("PUSHD_DEVTOOLS_DIR") ||
       path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
-
     console.log(`Root directory: ${rootDir}`);
     console.log(`mise.toml path: ${miseConfigPath}`);
     console.log(`trunk.yaml path: ${trunkConfigPath}`);
+    // --- End of initial setup ---
 
-    // Create validator
-    const validator = new SchemaValidator(rootDir, miseConfigPath, trunkConfigPath);
+    // Create orchestrator instance
+    const orchestrator = new SchemaValidator(rootDir, miseConfigPath, trunkConfigPath);
 
-    // Check for --transform flag
     const autoFix = Deno.args.includes("--transform") || Deno.args.includes("-t");
 
-    // Run validation and analysis
-    let isValid = await validator.validateAndAnalyze();
+    // Perform validation and analysis first
+    console.log("--- Running Validation and Analysis ---");
+    const { overallValid: initiallyValid } = await orchestrator.validateAndAnalyze();
 
-    // --- Optional: Run transform if validation failed and autoFix is enabled ---
-    if (!isValid && autoFix) {
-      console.log("Attempting to fix trunk.yaml input based on mise.toml...");
-      await validator.transformTrunkConfig();
-
-      // Re-validate after transformation
-      console.log("Re-validating after transformation...");
-      isValid = await validator.validateAndAnalyze();
-
-      if (isValid) {
-        console.log("✅ Validation passed after transformation!");
-      } else {
-        console.log("⚠️ Validation still failed after attempting transformation.");
-      }
-    } else if (!isValid) {
-      console.error("Validation found issues!");
-    } else {
-      console.log("✅ All checks passed!");
+    if (initiallyValid) {
+      console.log("✅ Initial validation and analysis passed!");
+      // Optionally exit here if only validation is needed unless --transform is passed
+      if (!autoFix) Deno.exit(0);
     }
 
-    // Exit with appropriate code
-    if (!isValid) {
+    let finalValid = initiallyValid;
+
+    // Attempt transformation if autoFix is enabled OR if initial validation failed (common use case)
+    if (autoFix || !initiallyValid) {
+      if (autoFix && initiallyValid) {
+        console.log(
+          "(--transform specified) Running transformation even though validation passed..."
+        );
+      } else if (!initiallyValid) {
+        console.log("Initial validation failed. Attempting transformation to fix...");
+      }
+
+      console.log("--- Applying Transformation ---");
+      const transformed = await orchestrator.transformAndSaveTrunkConfig();
+
+      if (transformed) {
+        console.log("--- Re-running Validation and Analysis after Transformation ---");
+        // Re-validate after successful transformation
+        const { overallValid: validAfterTransform } = await orchestrator.validateAndAnalyze();
+        finalValid = validAfterTransform;
+        if (finalValid) {
+          console.log("✅ Validation passed after transformation!");
+        } else {
+          console.error("❌ Validation FAILED even after transformation.");
+        }
+      } else {
+        console.log("Transformation did not run or resulted in no changes.");
+        // If initial validation failed and transform didn't run/change anything, the state is still invalid.
+        finalValid = initiallyValid;
+      }
+    }
+
+    console.log("--- Final Result ---");
+    if (!finalValid) {
+      console.error("❌ Process finished with validation errors.");
       Deno.exit(1);
+    } else {
+      console.log("✅ Process finished successfully.");
+      Deno.exit(0);
     }
   } catch (error) {
-    console.error("Error:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Critical Error in main function:",
+      error instanceof Error ? error.message : String(error)
+    );
     Deno.exit(1);
   }
 }

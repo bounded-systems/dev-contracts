@@ -192,3 +192,18 @@ echo "Running postinstall hook: Updating trunk.yaml..."
 deno run -A scripts/update_trunk.ts
 echo "Postinstall hook finished."
 '''
+
+[settings.devtools.trunk]
+# List of linters enabled via mise, will be synced to trunk.yaml
+enabled_linters = [
+    "standardrb@1.0.0",
+    "yamllint@1.26.3",
+    "prettier@3.0.0", # Version should match package.json
+    "eslint@8.0.0", # Version should match package.json
+    "git-diff-check@system", # Uses system git
+]
+
+# Example: Define schema locations within mise.toml
+[settings.devtools.schemas]
+mise = "https://mise.jdx.dev/schema/mise.json"
+trunk = "https://static.trunk.io/pub/trunk-yaml-schema.json"
