@@ -1,0 +1,3 @@
+[submodule "tools/schema_bridge"]
+	path = tools/schema_bridge
+	url = git@github.com:bdelanghe/schema-bridge.git
