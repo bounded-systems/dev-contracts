@@ -75,6 +75,8 @@ The tools within the `tools/` directory (potentially organized as sub-modules or
 standalone projects) facilitate interaction with the `contracts.toml`
 specification:
 
+- `dev-contracts-spec`: Handles the definition, validation, and manipulation of
+  the project **structure** defined in the contract.
 - **Extractors:** Scripts to pull data from existing files (e.g., `mise.toml`,
   `package.json`) into the contract.
 - `schema_bridge`: Tools to generate types (e.g., TypeScript) from JSON schemas

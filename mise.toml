@@ -140,28 +140,28 @@ depends = ["install"]
 description = "Generate .gitignore file from contracts.toml structure"
 
 [tasks.contracts-validate-structure]
-run = "deno run -A --unstable-fs tools/contract-processor/validate_structure.ts"
 description = "Validate that the repository structure matches contracts.toml (including schema check)"
+run = "deno run -A --unstable-fs tools/dev-contracts-spec/src/validate_structure.ts"
 depends = ["contracts-sort-structure"]
 
 [tasks.contracts-add-untracked]
-run = "deno run -A --unstable-fs tools/contract-processor/validate_structure.ts --add-untracked"
 description = "Add untracked files/directories found on the filesystem to contracts.toml [structure]"
+run = "deno run -A --unstable-fs tools/dev-contracts-spec/src/validate_structure.ts --add-untracked"
 depends = ["install"]
 
 [tasks.contracts-generate-structure]
-run = "deno run -A --unstable-fs tools/contract-processor/generate_structure.ts"
 description = "Create missing files/directories defined in contracts.toml [structure] (skips symlinks)"
+run = "deno run -A --unstable-fs tools/dev-contracts-spec/src/generate_structure.ts"
 depends = ["install"]
 
 [tasks.contracts-prune-structure]
-run = "deno run -A --unstable-fs tools/contract-processor/prune_structure.ts"
 description = "Remove entries from contracts.toml [structure] that do not exist on the filesystem"
+run = "deno run -A --unstable-fs tools/dev-contracts-spec/src/prune_structure.ts"
 depends = ["install", "contracts-sort-structure"]
 
 [tasks.contracts-sort-structure]
-run = "deno run -A tools/contract-processor/sort_structure.ts"
 description = "Sort and deduplicate the [structure] section in contracts.toml"
+run = "deno run -A tools/dev-contracts-spec/src/sort_structure.ts"
 depends = ["install"]
 
 [tasks.contracts-clean]
