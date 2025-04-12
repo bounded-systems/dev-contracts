@@ -7,7 +7,7 @@ TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* t
 PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
 
 # DevTools Environment (set by mise)
-PUSHD_DEVTOOLS_DIR = "{{config_root}}"
+DEVCONTRACTS_DIR = "{{config_root}}"
 
 # Reference to external configuration files
 CONTRACTS_FILE = "contracts.toml"
@@ -27,12 +27,12 @@ run = "mise install"
 [tasks.setup-symlinks]
 run = "deno run -A scripts/setup.ts symlinks"
 depends = ["install"]
-description = "Create symlinks from pushd-devtools templates to target project"
+description = "Create symlinks from DevContracts templates to target project"
 
 [tasks.setup-env]
 run = "deno run -A scripts/setup.ts env"
 depends = ["install"]
-description = "Configure PUSHD_DEVTOOLS_DIR environment variable in shell configuration"
+description = "Configure DEVCONTRACTS_DIR environment variable in shell configuration"
 
 [tasks.setup-all]
 depends = ["install", "setup-env", "setup-symlinks"]
@@ -128,7 +128,7 @@ description = "Generate missing test stubs and then validate test coverage"
 # Clone task (no dependencies as it's meant to be run before mise is even installed)
 [tasks.clone]
 run = "deno run -A scripts/clone.ts $MISE_ARGS"
-description = "Clone the pushd-devtools repository (pass repo URL and destination path as arguments)"
+description = "Clone the DevContracts repository (pass repo URL and destination path as arguments)"
 
 # Enable lockfile for consistent versioning across environments
 [settings]

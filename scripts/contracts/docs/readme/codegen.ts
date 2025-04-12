@@ -134,7 +134,7 @@ function generateTasksMarkdown(tasks: Task[]): string {
  * Generates markdown for structure section
  */
 function generateStructureMarkdown(structure: StructureItem[]): string {
-  let md = "```\npushd-devtools/\n";
+  let md = "```\nDevContracts/\n";
 
   function addStructure(items: StructureItem[], indent = 0): void {
     const prefix = "│   ".repeat(indent);
@@ -196,7 +196,7 @@ async function generateReadme() {
     readmeContent += `# ${schema.project.name}\n\n`;
     readmeContent += `*Last updated: ${
       now.toISOString().split("T")[0]
-    } by pushd-devtools*\n\n`;
+    } by DevContracts*\n\n`;
 
     // Add the overview
     readmeContent += "## Overview\n\n";
@@ -241,7 +241,7 @@ async function generateReadme() {
     readmeContent += "To update tools for all linked projects:\n\n";
     readmeContent += "1. Pull the latest changes:\n";
     readmeContent += "   ```bash\n";
-    readmeContent += "   cd $PUSHD_DEVTOOLS_DIR\n";
+    readmeContent += "   cd $DEVCONTRACTS_DIR\n";
     readmeContent += "   git pull origin main\n";
     readmeContent += "   ```\n\n";
     readmeContent += "2. Sync versions if needed:\n";
@@ -274,7 +274,7 @@ async function generateReadme() {
     readmeContent +=
       "This section defines the explicit contracts between components in the\n";
     readmeContent +=
-      "`pushd-devtools` system. These contracts establish the responsibilities,\n";
+      "`DevContracts` system. These contracts establish the responsibilities,\n";
     readmeContent +=
       "expectations, and guarantees between the various parts of the system.\n\n";
 

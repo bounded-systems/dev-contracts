@@ -1,6 +1,6 @@
 {
   "rubyLsp.rubyExecutablePath": "/opt/asf/ruby/bin/ruby",
-  "rubyLsp.bundleGemfile": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile",
+  "rubyLsp.bundleGemfile": "${env:DEVCONTRACTS_DIR}/config/Gemfile",
   "editor.defaultFormatter": "trunk.io",
   "editor.formatOnSave": false,
   "rubyLsp.enabledFeatures": {
@@ -30,7 +30,7 @@
       "description": "Launch Sorbet using bundle exec with ASF Ruby",
       "command": ["/opt/asf/ruby/bin/bundle", "exec", "srb", "tc", "--lsp"],
       "env": {
-        "PUSHD_DEVTOOLS_BUNDLE_GEMFILE": "${env:PUSHD_DEVTOOLS_DIR}/config/Gemfile"
+        "PUSHD_DEVTOOLS_BUNDLE_GEMFILE": "${env:DEVCONTRACTS_DIR}/config/Gemfile"
       }
     }
   ],
@@ -63,8 +63,12 @@
     "editor.tabSize": 2
   },
   "yaml.schemas": {
-    "https://static.trunk.io/pub/trunk-yaml-schema.json": ["**/trunk.{yml,yaml}"],
-    "https://json.schemastore.org/github-workflow.json": [".github/workflows/*.{yml,yaml}"],
+    "https://static.trunk.io/pub/trunk-yaml-schema.json": [
+      "**/trunk.{yml,yaml}"
+    ],
+    "https://json.schemastore.org/github-workflow.json": [
+      ".github/workflows/*.{yml,yaml}"
+    ],
     "https://raw.githubusercontent.com/rubocop/rubocop/master/config/default.yml": [
       "**/*rubocop*.{yml,yaml}"
     ],

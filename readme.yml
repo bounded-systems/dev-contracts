@@ -2,7 +2,7 @@
 # Sources: contracts.toml, mise.toml
 $schema: ./schemas/readme-schema.json
 project:
-  name: Pushd DevTools
+  name: DevContracts
   description: >-
     A centralized and sandboxed environment for development tools,
     configurations, and their associated runtimes
@@ -31,7 +31,7 @@ project:
        their `.gitignore` files
 contracts:
   - id: repo-contract
-    title: pushd-devtools Repository Contract
+    title: DevContracts Repository Contract
     provides:
       - Managed tool versions via mise.toml
       - Configuration templates in the templates/ directory
@@ -39,7 +39,7 @@ contracts:
       - Scripts for synchronizing configurations
     expects:
       - mise to be installed on the developer's machine
-      - PUSHD_DEVTOOLS_DIR environment variable to be set
+      - DEVCONTRACTS_DIR environment variable to be set
       - Target projects to implement the Target Project Contract
     guarantees:
       - Tool versions will be compatible with templates
@@ -51,7 +51,7 @@ contracts:
       - A workspace to place symlinked configurations
       - A .gitignore file that excludes the symlinked directories
     expects:
-      - Access to the pushd-devtools repository via PUSHD_DEVTOOLS_DIR
+      - Access to the DevContracts repository via DEVCONTRACTS_DIR
       - Scripts to set up appropriate symlinks
     guarantees:
       - Will not modify the symlinked configurations directly
@@ -76,10 +76,10 @@ configuration:
 tasks:
   - id: setup-symlinks
     command: mise run setup-symlinks
-    description: Create symlinks from pushd-devtools templates to target project
+    description: Create symlinks from DevContracts templates to target project
   - id: setup-env
     command: mise run setup-env
-    description: Configure PUSHD_DEVTOOLS_DIR environment variable in shell configuration
+    description: Configure DEVCONTRACTS_DIR environment variable in shell configuration
   - id: setup-all
     command: mise run setup-all
     description: >-
@@ -123,7 +123,7 @@ tasks:
   - id: clone
     command: mise run clone
     description: >-
-      Clone the pushd-devtools repository (pass repo URL and destination path as
+      Clone the DevContracts repository (pass repo URL and destination path as
       arguments)
   - id: generate-gitignore
     command: mise run generate-gitignore

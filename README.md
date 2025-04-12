@@ -1,6 +1,6 @@
-# Pushd DevTools
+# DevContracts
 
-_Last updated: 2025-04-11 by pushd-devtools_
+_Last updated: 2025-04-11 by DevContracts_
 
 ## Overview
 
@@ -49,7 +49,7 @@ TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* t
 PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
 
 # DevTools Environment (set by mise)
-PUSHD_DEVTOOLS_DIR = "{{config_root}}"
+DEVCONTRACTS_DIR = "{{config_root}}"
 
 # Reference to external configuration files
 CONTRACTS_FILE = "contracts.toml"
@@ -65,9 +65,9 @@ ruby = "3.3
 The repository provides several predefined tasks that can be run using
 `mise run`:
 
-- `mise run setup-symlinks` - Create symlinks from pushd-devtools templates to
+- `mise run setup-symlinks` - Create symlinks from DevContracts templates to
   target project
-- `mise run setup-env` - Configure PUSHD_DEVTOOLS_DIR environment variable in
+- `mise run setup-env` - Configure DEVCONTRACTS_DIR environment variable in
   shell configuration
 - `mise run setup-all` - Run all setup steps (install tools, configure
   environment, create symlinks)
@@ -88,7 +88,7 @@ The repository provides several predefined tasks that can be run using
 - `mise run check-contracts` - Check if all required contract files (e.g.,
   contracts.toml) exist in the project root, based on mise.toml config.
 - `mise run deno-test` - Run Deno tests
-- `mise run clone` - Clone the pushd-devtools repository (pass repo URL and
+- `mise run clone` - Clone the DevContracts repository (pass repo URL and
   destination path as arguments)
 - `mise run generate-gitignore` - Generate .gitignore file from contracts.toml
   structure
@@ -110,7 +110,7 @@ The repository provides several predefined tasks that can be run using
 ## Project Structure
 
 ```
-pushd-devtools/
+DevContracts/
 ├── .git            # Git version control data
 ├── .github            # GitHub workflows and configuration
 ├── .gitignore            # Defines files excluded from version control
@@ -147,7 +147,7 @@ To update tools for all linked projects:
 
 1. Pull the latest changes:
    ```bash
-   cd $PUSHD_DEVTOOLS_DIR
+   cd $DEVCONTRACTS_DIR
    git pull origin main
    ```
 
@@ -178,12 +178,12 @@ The repository includes configuration for Trunk.io tooling:
 ## Design by Contract
 
 This section defines the explicit contracts between components in the
-`pushd-devtools` system. These contracts establish the responsibilities,
+`DevContracts` system. These contracts establish the responsibilities,
 expectations, and guarantees between the various parts of the system.
 
 ### Component Contracts
 
-#### pushd-devtools Repository Contract
+#### DevContracts Repository Contract
 
 **Provides:**
 
@@ -195,7 +195,7 @@ expectations, and guarantees between the various parts of the system.
 **Expects:**
 
 - mise to be installed on the developer's machine
-- PUSHD_DEVTOOLS_DIR environment variable to be set
+- DEVCONTRACTS_DIR environment variable to be set
 - Target projects to implement the Target Project Contract
 
 **Guarantees:**
@@ -213,7 +213,7 @@ expectations, and guarantees between the various parts of the system.
 
 **Expects:**
 
-- Access to the pushd-devtools repository via PUSHD_DEVTOOLS_DIR
+- Access to the DevContracts repository via DEVCONTRACTS_DIR
 - Scripts to set up appropriate symlinks
 
 **Guarantees:**

@@ -28,13 +28,13 @@ runtimes:
     - type: ruby
       runtime_environment:
         - name: BUNDLE_GEMFILE
-          value: $PUSHD_DEVTOOLS_DIR/runtimes/ruby/Gemfile
+          value: $DEVCONTRACTS_DIR/runtimes/ruby/Gemfile
         - name: BUNDLE_PATH
-          value: $PUSHD_DEVTOOLS_DIR/runtimes/ruby/vendor/bundle
+          value: $DEVCONTRACTS_DIR/runtimes/ruby/vendor/bundle
         - name: BUNDLE_WITHOUT
           value: 'production:staging'
         - name: GEM_HOME
-          value: $PUSHD_DEVTOOLS_DIR/runtimes/ruby/vendor/bundle
+          value: $DEVCONTRACTS_DIR/runtimes/ruby/vendor/bundle
       version: 3.3.3
     - type: node
       version: 20.14.0
@@ -42,7 +42,7 @@ runtimes:
         - name: NODE_ENV
           value: development
         - name: PACKAGE_FILE
-          value: $PUSHD_DEVTOOLS_DIR/runtimes/node/package.json
+          value: $DEVCONTRACTS_DIR/runtimes/node/package.json
 plugins:
   sources:
     - id: trunk
