@@ -4,261 +4,188 @@ _Last updated: 2025-04-11 by DevContracts_
 
 ## Overview
 
-A centralized and sandboxed environment for development tools, configurations,
-and their associated runtimes
+**DevContracts** is a framework for defining, validating, and enforcing
+development standards, configurations, and project structure using a central
+specification file: `contracts.toml`. It provides a suite of tools to interact
+with this "development contract," ensuring consistency and maintainability
+across projects.
+
+Think of `contracts.toml` as the single source of truth for how a project
+_should_ be configured and structured. The associated tools help verify the
+current state against this contract, generate necessary configurations, and
+report discrepancies.
 
 ## Problem Solved
 
-Core projects often rely on specific, sometimes outdated, runtime versions. This
-dependency can prevent the adoption of newer development tools which require
-more recent runtimes. Upgrading core project runtimes directly can be complex,
-risky, and time-consuming.
+Maintaining consistency across various aspects of a software project—such as
+dependency versions, directory structures, configuration files, code quality
+standards, and environment setups—is challenging. Over time, projects tend to
+experience configuration drift, leading to inconsistencies, fragile builds, and
+increased onboarding time for new developers. It becomes difficult to answer
+questions like "What version of tool X are we supposed to use?" or "Is this file
+structure correct?".
 
-## Solution: Sandboxed & Linked Tooling
+## Solution: The Development Contract
 
-Sandboxed & Linked Tooling that acts as a central, up-to-date source for
-development tools and their necessary environments through:
+`DevContracts` addresses these challenges by introducing a formal **Development
+Contract**, defined in `contracts.toml`. This file explicitly declares the
+expected state of various project components.
 
-1. **Sandboxing:** Tools and runtimes are managed within this repository,
-   separate from target projects
-2. **Symlinking:** Configuration directories (`.vscode` and `.trunk`) are
-   maintained as templates and symlinked into target projects
-3. **Git Exclusion:** Target projects exclude these symlinked directories in
-   their `.gitignore` files
+A suite of specialized tools, managed within the `tools/` directory and
+orchestrated by `mise`, interacts with this contract to:
+
+1. **Validate:** Check if the actual project state (filesystem structure, file
+   contents, tool versions) matches the contract.
+2. **Generate:** Create or update configuration files, code scaffolding, or
+   documentation based on the contract's definitions.
+3. **Extract:** Pull information from existing project files or external sources
+   to populate or update the contract.
+4. **Transform:** Convert contract definitions between different formats or
+   representations as needed by various tools.
+
+This approach provides a verifiable and enforceable source of truth for project
+standards.
+
+## The Development Contract (`contracts.toml`)
+
+The `contracts.toml` file serves as the central specification. It defines
+various aspects of the project, including (but not limited to):
+
+- **Project Structure:** Defines the expected files and directories, their
+  purposes, and relationships.
+- **Tool Versions:** Specifies required versions for development tools (managed
+  via `mise.toml` which can be sourced/validated by the contract).
+- **Schema References:** Points to JSON schemas for validating configuration
+  files.
+- **Quality Rules:** Defines settings for linters, formatters, and other quality
+  tools (often by referencing configurations generated/validated against the
+  contract).
+- **Dependencies:** Can track dependencies or relationships between components
+  defined in the contract.
+
+Conceptually, this is similar to how design tokens provide a single source of
+truth for UI styles. Here, `contracts.toml` provides the source of truth for
+development environment and project metadata. Future work may include a
+`contracts.lock` file to capture the validated state of the project against the
+contract at a specific point in time.
+
+## Tooling Ecosystem
+
+The tools within the `tools/` directory (potentially organized as sub-modules or
+standalone projects) facilitate interaction with the `contracts.toml`
+specification:
+
+- **Extractors:** Scripts to pull data from existing files (e.g., `mise.toml`,
+  `package.json`) into the contract.
+- `schema_bridge`: Tools to generate types (e.g., TypeScript) from JSON schemas
+  defined in or referenced by the contract, ensuring type safety when
+  interacting with contract data.
+- **Validation:** Scripts to compare the actual project state against the
+  definitions in `contracts.toml`.
+- **Transformation:** Logic to convert contract data between formats (e.g., TOML
+  to inputs for other tools, potentially using libraries like Zod for schema
+  validation during transformation).
+- **Code Generation:** Tools to generate boilerplate code, configuration files
+  (like `.gitignore`), or documentation based on the contract.
 
 ## Setup & Usage
 
 Please refer to the tasks defined in `mise.toml` for setup and usage
-instructions. Common tasks include `mise run setup-all`, `mise run trunk-fmt`,
-etc.
+instructions. Core setup typically involves ensuring `mise` is installed and
+potentially running an initial setup task.
 
-## Tool Configuration
+## Tool Configuration (`mise.toml`)
 
-### mise_toml
-
-Core project configuration and task definitions managed by mise.toml. Key
-sections include:
+`mise` is used for managing tool versions and orchestrating tasks related to the
+development contract. Key configurations might include:
 
 ```toml
 [env]
-# Project configuration
-NODE_ENV = "development"
-
-# Trunk configuration
-TRUNK_YAML_PATH = "templates/trunk/.trunk/trunk.yaml" # Path to the *template* trunk.yaml used for transformations
-PUSHD_ROOT_TRUNK_YAML = ".trunk/trunk.yaml"         # Path to the *root* trunk.yaml that gets updated
-
-# DevTools Environment (set by mise)
+# Environment variables, potentially sourced from or validated by contracts.toml
 DEVCONTRACTS_DIR = "{{config_root}}"
-
-# Reference to external configuration files
-CONTRACTS_FILE = "contracts.toml"
+CONTRACTS_FILE = "contracts.toml" # Reference to the main contract file
 
 [tools]
-# Core Runtime Tool versions
-ruby = "3.3
-# ... additional tasks
+# Tool versions (ideally synced with or validated by contracts.toml)
+deno = "..."
+ruby = "..."
+# ... other tools
+
+[tasks]
+# Tasks defined to interact with the contract (see Common Tasks)
+# ...
 ```
 
 ## Common Tasks
 
-The repository provides several predefined tasks that can be run using
-`mise run`:
+The repository provides several predefined tasks, run using
+`mise run <task_name>`, designed to interact with the development contract:
 
-- `mise run setup-symlinks` - Create symlinks from DevContracts templates to
-  target project
-- `mise run setup-env` - Configure DEVCONTRACTS_DIR environment variable in
-  shell configuration
-- `mise run setup-all` - Run all setup steps (install tools, configure
-  environment, create symlinks)
-- `mise run trunk-check` - Run Trunk checks
-- `mise run trunk-fmt` - Format code using Trunk
-- `mise run trunk-upgrade` - Upgrade Trunk plugins
-- `mise run sync-trunk-versions` - Sync linter versions from .trunk/trunk.yaml
-  to mise.toml
-- `mise run trunk-upgrade-and-sync` - Upgrade Trunk plugins and sync versions
-  back to mise.toml
-- `mise run transform-apply` - Apply generated transformations (e.g., mise.toml
-  -> trunk.yaml)
-- `mise run generate-schema` - Generate readme.yml from mise.toml and format
-  using Trunk
-- `mise run validate-schema` - Validate readme.yml against the JSON schema
-- `mise run generate-readme` - Generate README.md from readme.yml and format
-  using Trunk
-- `mise run check-contracts` - Check if all required contract files (e.g.,
-  contracts.toml) exist in the project root, based on mise.toml config.
-- `mise run deno-test` - Run Deno tests
-- `mise run clone` - Clone the DevContracts repository (pass repo URL and
-  destination path as arguments)
-- `mise run generate-gitignore` - Generate .gitignore file from contracts.toml
-  structure
-- `mise run contracts-validate-structure` - Validate that the repository
-  structure matches contracts.toml (including schema check)
-- `mise run contracts-add-untracked` - Add untracked files/directories found on
-  the filesystem to contracts.toml [structure]
-- `mise run contracts-generate-structure` - Create missing files/directories
-  defined in contracts.toml [structure] (skips symlinks)
-- `mise run contracts-prune-structure` - Remove entries from contracts.toml
-  [structure] that do not exist on the filesystem
-- `mise run contracts-sort-structure` - Sort and deduplicate the [structure]
-  section in contracts.toml
-- `mise run contracts-clean` - Prune, generate, and sort the contracts.toml
-  [structure] section
-- `mise run contracts-delete-empty-dirs` - Delete empty directories defined in
-  contracts.toml [structure] if allow_empty_directory=false
+- `mise run contracts-validate-structure`: Validate the repository structure
+  against `contracts.toml`.
+- `mise run contracts-add-untracked`: Add untracked files/directories to
+  `contracts.toml`.
+- `mise run contracts-generate-structure`: Create missing files/directories
+  defined in `contracts.toml`.
+- `mise run contracts-prune-structure`: Remove non-existent entries from
+  `contracts.toml`.
+- `mise run contracts-sort-structure`: Sort the `[structure]` section in
+  `contracts.toml`.
+- `mise run contracts-clean`: Prune, generate, and sort the `contracts.toml`
+  structure.
+- `mise run contracts-delete-empty-dirs`: Remove empty directories defined in
+  `contracts.toml` (if disallowed).
+- `mise run generate-gitignore`: Generate `.gitignore` based on
+  `contracts.toml`.
+- `mise run transform-apply`: Apply transformations defined by rules,
+  potentially using `contracts.toml` data.
+- `mise run generate-readme`: Generate this `README.md` (potentially using data
+  derived from `contracts.toml`).
+- `mise run deno-test`: Run tests for the contract tools.
+- `mise run sync-trunk-versions`: (Example Extractor) Sync linter versions from
+  `.trunk/trunk.yaml` into `mise.toml` (could eventually sync _to_
+  `contracts.toml`).
+- _(Other tasks for setup, cloning, specific tool interactions)_
 
 ## Project Structure
 
 ```
 DevContracts/
-├── .git            # Git version control data
-├── .github            # GitHub workflows and configuration
-├── .gitignore            # Defines files excluded from version control
-├── .ruby-lsp            # Ruby language server configuration
-├── .trunk            # Trunk configuration directory
-├── .vscode            # VSCode configuration directory
-├── deno.json            # Deno runtime configuration
-├── deno.lock            # Locked Deno dependencies
-├── global            # Global settings inherited by all subfolders
-├── mise.toml            # Tool versions, environment variables, and tasks
-├── README.md            # Generated documentation
-├── readme.yml            # Schema for README generation
-├── runtimes            # Runtime environments
-├── scripts            # Helper scripts for setup and configuration
-│   ├── generate-readme.ts            # Generates README.md from schema
-│   ├── generate-schema-from-mise.ts            # Generates readme.yml from mise.toml
-│   ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
-│   └── transform-apply.ts            # Applies configuration transformations
-├── tools            # Source code for transformations and utilities
-│   └── transformation            # Transformation engine
-│   │   └── engine            # Core transformation logic
-├── templates            # Configuration templates for symlinks
-│   ├── trunk            # Trunk.io configuration
-│   └── vscode            # VS Code settings and extensions
-└── tests            # Test files
+├── .git/                 # Git version control data
+├── .github/              # GitHub workflows and configuration
+├── .gitignore            # Defines files excluded from version control (potentially generated)
+├── .ruby-lsp/            # Ruby language server configuration (managed via contract)
+├── .trunk/               # Trunk configuration directory (managed via contract/templates)
+├── .vscode/              # VSCode configuration directory (managed via contract/templates)
+├── contracts.toml        # The central Development Contract specification <--- CORE
+├── deno.json             # Deno runtime configuration
+├── deno.lock             # Locked Deno dependencies
+├── mise.toml             # Tool versions, environment variables, and tasks
+├── README.md             # This documentation (potentially generated)
+├── readme.yml            # Schema for README generation (input for generate-readme)
+├── runtimes/             # Runtime environment configurations (e.g., Node, Ruby)
+├── templates/            # Configuration templates (used by generators/symlinking)
+│   ├── trunk/
+│   └── vscode/
+├── tools/                # Suite of tools interacting with contracts.toml <--- TOOLS
+│   ├── contracts/        # Tools specifically for contracts.toml structure/validation
+│   ├── extractors/       # Tools to extract data into the contract
+│   ├── generated/        # Generated code/types (e.g., from schema_bridge)
+│   ├── schema_bridge/    # (Example Tool) Generates types from schemas
+│   ├── transformation/   # Tools for data transformation
+│   ├── types/            # Shared types used by tools
+│   └── utils/            # Utility functions for tools
+└── tests/                # Tests for the contract tools
 ```
 
-**Note:** The `setup.ts` and `link-configs.ts` scripts mentioned in the
-documentation are planned but not yet implemented.
+## Current Limitations and Known Issues
 
-## Managing & Updating Tools
-
-To update tools for all linked projects:
-
-1. Pull the latest changes:
-   ```bash
-   cd $DEVCONTRACTS_DIR
-   git pull origin main
-   ```
-
-2. Sync versions if needed:
-   ```bash
-   mise run sync-trunk-versions
-   ```
-
-3. Apply transformations:
-   ```bash
-   mise run transform-apply
-   ```
-
-4. Restart your editor if necessary
-
-## Trunk Integration
-
-The repository includes configuration for Trunk.io tooling:
-
-- Linters enabled can be seen in the Trunk template
-  (`templates/trunk/.trunk/trunk.yaml`).
-- Tool _versions_ are managed via `mise.toml` and synchronized using tasks.
-- When updating linter versions, use `mise run sync-trunk-versions` to keep
-  configurations in sync.
-- Custom transformations between mise.toml and trunk.yaml are handled by the
-  transform scripts.
-
-## Design by Contract
-
-This section defines the explicit contracts between components in the
-`DevContracts` system. These contracts establish the responsibilities,
-expectations, and guarantees between the various parts of the system.
-
-### Component Contracts
-
-#### DevContracts Repository Contract
-
-**Provides:**
-
-- Managed tool versions via mise.toml
-- Configuration templates in the templates/ directory
-- Transformation logic between configuration formats
-- Scripts for synchronizing configurations
-
-**Expects:**
-
-- mise to be installed on the developer's machine
-- DEVCONTRACTS_DIR environment variable to be set
-- Target projects to implement the Target Project Contract
-
-**Guarantees:**
-
-- Tool versions will be compatible with templates
-- Templates will be kept in sync with tool versions
-- Configuration transformations will be bidirectional and consistent
-
-#### Target Project Contract
-
-**Provides:**
-
-- A workspace to place symlinked configurations
-- A .gitignore file that excludes the symlinked directories
-
-**Expects:**
-
-- Access to the DevContracts repository via DEVCONTRACTS_DIR
-- Scripts to set up appropriate symlinks
-
-**Guarantees:**
-
-- Will not modify the symlinked configurations directly
-- Will not commit the symlinked configurations to version control
-
-#### mise Tool Manager Contract
-
-**Provides:**
-
-- Tool version management via mise.toml
-- Task definitions in mise.toml
-- Consistent environment variables
-
-**Expects:**
-
-- mise to be installed
-- Tool versions to be specified in mise.toml
-
-**Guarantees:**
-
-- Tools will be installed in isolated environments
-- Tasks will run with the correct tool versions
-- Environment variables will be consistent
-
-### Validation and Enforcement
-
-The contracts defined above should be validated and enforced through:
-
-1. **Script Validation:**
-   - transform-apply.ts validates configurations before applying them
-   - sync-trunk-versions.ts ensures consistent versions between systems
-
-2. **Error Handling:**
-   - All scripts should gracefully handle missing or invalid configurations
-   - Clear error messages should guide users to fix contract violations
-
-3. **Documentation Generation:**
-   - This README should be kept in sync with the actual implementation
-   - Future iterations will auto-generate parts of this documentation from code
-
-### Current Limitations and Known Issues
-
-- setup.ts and link-configs.ts mentioned in the README are not currently
-  implemented
-- No formal validation of the contract requirements
-- Manual synchronization required between documentation and implementation
+- The organization within `tools/` is evolving; tools may become separate
+  submodules or projects.
+- Full validation of all contract aspects (beyond structure) might require
+  additional tooling.
+- Synchronization between `mise.toml`, `trunk.yaml`, and `contracts.toml` is
+  partially manual or requires specific tasks. The goal is for `contracts.toml`
+  to be the ultimate source or validator.
+- Some setup scripts mentioned historically might be replaced by `mise` tasks
+  interacting with the contract.
