@@ -515,3 +515,34 @@ type = "directory"
 
 [structure."tests/contracts/structure"]
 type = "directory"
+
+# New additions for tools directory
+[structure.tools]
+type = "directory"
+purpose = "Contains standalone tool submodules"
+
+[structure."tools/dev-contracts-spec"]
+type = "directory" # This will be a submodule (git repo)
+purpose = "Defines the Zod schema and types for contracts.toml"
+
+[structure."tools/dev-contracts-spec/deno.json"]
+type = "file"
+purpose = "Deno configuration for the spec submodule"
+schema_ref = "deno-config"
+
+[structure."tools/dev-contracts-spec/src"]
+type = "directory"
+purpose = "Source code for the spec submodule"
+
+[structure."tools/dev-contracts-spec/src/contractsSpec.ts"]
+type = "file"
+purpose = "Zod schema definition for contracts.toml"
+
+[structure."tools/dev-contracts-spec/schemas"]
+type = "directory"
+purpose = "Generated JSON schema files"
+
+[structure."tools/dev-contracts-spec/schemas/contracts-schema.json"]
+type = "file"
+purpose = "Generated JSON schema from Zod definitions"
+depends_on = ["tools/dev-contracts-spec/src/contractsSpec.ts"]

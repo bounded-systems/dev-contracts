@@ -1,3 +1,6 @@
 [submodule "tools/schema_bridge"]
 	path = tools/schema_bridge
 	url = git@github.com:bdelanghe/schema-bridge.git
+[submodule "tools/dev-contracts-spec"]
+	path = tools/dev-contracts-spec
+	url = https://github.com/bdelanghe/dev-contracts-spec.git

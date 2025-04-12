@@ -67,7 +67,7 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 
 # Apply Transformation Task
 [tasks.transform-apply]
-run = "deno run -A tools/transforms/transform-apply.ts $MISE_ARGS"
+run = "deno run -A tools/transformation-engine/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
 # Generate Contract Types Task
@@ -96,7 +96,7 @@ description = "Generate README.md from readme.yml and format using Trunk"
 
 # Check Contract Files Task
 [tasks.check-contracts]
-run = "deno run -A tools/contracts/check-contracts.ts"
+run = "deno run -A tools/contract-processor/check.ts"
 depends = ["install"]
 description = "Check if all required contract files (e.g., contracts.toml) exist in the project root, based on mise.toml config."
 
@@ -135,32 +135,32 @@ description = "Clone the DevContracts repository (pass repo URL and destination 
 lockfile = true
 
 [tasks.generate-gitignore]
-run = "deno run -A tools/contracts/structure/generate-gitignore.ts"
+run = "deno run -A tools/contract-processor/generate_gitignore.ts"
 depends = ["install"]
 description = "Generate .gitignore file from contracts.toml structure"
 
 [tasks.contracts-validate-structure]
-run = "deno run -A --unstable-fs tools/contracts/structure/validate-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contract-processor/validate_structure.ts"
 description = "Validate that the repository structure matches contracts.toml (including schema check)"
 depends = ["contracts-sort-structure"]
 
 [tasks.contracts-add-untracked]
-run = "deno run -A --unstable-fs tools/contracts/structure/validate-contracts-structure.ts --add-untracked"
+run = "deno run -A --unstable-fs tools/contract-processor/validate_structure.ts --add-untracked"
 description = "Add untracked files/directories found on the filesystem to contracts.toml [structure]"
 depends = ["install"]
 
 [tasks.contracts-generate-structure]
-run = "deno run -A --unstable-fs tools/contracts/structure/generate-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contract-processor/generate_structure.ts"
 description = "Create missing files/directories defined in contracts.toml [structure] (skips symlinks)"
 depends = ["install"]
 
 [tasks.contracts-prune-structure]
-run = "deno run -A --unstable-fs tools/contracts/structure/prune-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contract-processor/prune_structure.ts"
 description = "Remove entries from contracts.toml [structure] that do not exist on the filesystem"
 depends = ["install", "contracts-sort-structure"]
 
 [tasks.contracts-sort-structure]
-run = "deno run -A tools/contracts/structure/sort-contracts-structure.ts"
+run = "deno run -A tools/contract-processor/sort_structure.ts"
 description = "Sort and deduplicate the [structure] section in contracts.toml"
 depends = ["install"]
 
@@ -169,7 +169,7 @@ description = "Prune, generate, and sort the contracts.toml [structure] section"
 depends = ["contracts-prune-structure", "contracts-generate-structure", "contracts-sort-structure"]
 
 [tasks.contracts-delete-empty-dirs]
-run = "deno run -A --unstable-fs tools/contracts/structure/delete-empty-dirs.ts"
+run = "deno run -A --unstable-fs tools/contract-processor/delete_empty_dirs.ts"
 description = "Delete empty directories defined in contracts.toml [structure] if allow_empty_directory=false"
 depends = ["install"] # Depends on deno
 
