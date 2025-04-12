@@ -7,26 +7,24 @@ import { Eta } from "jsr:@eta-dev/eta"; // CORRECTED PACKAGE NAME
 import type {
   TransformContext,
   TransformRule,
-} from "../../types/transform_rules.ts"; // Adjusted path
-import type { MiseConfig, TrunkConfig } from "../../types/mise.ts"; // Adjusted path
+} from "../../types/transforms/rules.d.ts"; // Corrected path to match structure
+import type { Mise as MiseConfig } from "../../types/mise/mise.d.ts"; // Corrected name and removed TrunkConfig
 
 // --- Configuration ---
 const ENGINE_DIR = path.dirname(path.fromFileUrl(import.meta.url)); // Path to this engine file's directory
-const REPO_ROOT = path.resolve(ENGINE_DIR, "..", "..", "..");
-const SRC_DIR = path.join(REPO_ROOT, "src");
+const REPO_ROOT = path.resolve(ENGINE_DIR, "..", ".."); // Adjusted: Now 2 levels up from src/schema_bridge
+const SRC_DIR = path.join(REPO_ROOT, "src"); // Stays the same relative to REPO_ROOT
 
-const TYPES_DIR = path.join(SRC_DIR, "types"); // Adjusted path
-const RULES_DIR = path.join(ENGINE_DIR, "rules"); // Adjusted path (rules moved here)
-const TEMPLATES_DIR = path.resolve(REPO_ROOT, "templates");
+const TYPES_DIR = path.join(SRC_DIR, "types"); // Stays the same relative to SRC_DIR
+const RULES_DIR = path.join(ENGINE_DIR, "rules"); // Correct: 'rules' dir inside 'schema_bridge'
+const TEMPLATES_DIR = path.resolve(REPO_ROOT, "templates"); // Correct: 'templates' dir at repo root
 const COMMON_TRANSFORMERS_PATH = path.join(
-  SRC_DIR,
-  "transformation",
+  ENGINE_DIR, // Adjusted: Now inside schema_bridge
   "common",
   "common_transformers.ts",
 );
 const OUTPUT_FILE = path.join(
-  SRC_DIR,
-  "transformation",
+  ENGINE_DIR, // Adjusted: Now inside schema_bridge
   "generated",
   "generated_transformers.ts",
 );
@@ -34,13 +32,15 @@ const TEMPLATE_FILE = path.join(
   TEMPLATES_DIR,
   "transforms/generated_transformers.eta",
 );
-const GENERATED_FILE = path.resolve(ENGINE_DIR, "transformers.ts");
+const GENERATED_FILE = path.resolve(ENGINE_DIR, "transformers.ts"); // This seems unused? Keep for now or remove? Let's keep.
 const MISE_TO_TRUNK_RULES_FILE = path.join(RULES_DIR, "mise_to_trunk.toml");
 const TRUNK_TO_MISE_RULES_FILE = path.join(RULES_DIR, "trunk_to_mise.toml");
 
 // --- Helper Functions ---
 
-async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
+async function readAndParseRules(
+  filePath: string,
+): Promise<TransformRule<any, any>[]> {
   if (!(await exists(filePath))) {
     // This is not an error, the file might be optional
     // console.warn(`Rule file not found: ${filePath}. Skipping.`);
@@ -96,8 +96,16 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
     });
 
     // Sort rules by priority (ascending)
-    const rules = parsed.rule as TransformRule[];
-    rules.sort((a, b) => (a.priority ?? Infinity) - (b.priority ?? Infinity));
+    const rulesToSort = parsed.rule as Record<string, any>[]; // Use weaker type for sorting
+    rulesToSort.sort((a, b) =>
+      (a.priority ?? Infinity) - (b.priority ?? Infinity)
+    );
+
+    // Cast to the stricter type after sorting if needed for return
+    const rules: TransformRule<any, any>[] = rulesToSort as TransformRule<
+      any,
+      any
+    >[];
 
     console.log(`Successfully parsed ${rules.length} rules from ${filePath}`);
     return rules;
@@ -115,7 +123,7 @@ async function readAndParseRules(filePath: string): Promise<TransformRule[]> {
  * Safely gets a value from a nested object/array structure using a path array.
  * Returns undefined if the path doesn't exist.
  */
-function getValueByPath(obj: any, path: (string | number)[]): any {
+export function getValueByPath(obj: any, path: (string | number)[]): any {
   let current = obj;
   for (const key of path) {
     if (current === null || typeof current !== "object") {
@@ -137,7 +145,7 @@ function getValueByPath(obj: any, path: (string | number)[]): any {
  * Creates intermediate objects/arrays if they don't exist.
  * Returns true if the value was set (even if it was the same), false on error.
  */
-function setValueByPath(
+export function setValueByPath(
   obj: any,
   path: (string | number)[],
   value: any,
@@ -201,9 +209,12 @@ async function generateTransformers() {
   const trunkToMiseRules = await readAndParseRules(TRUNK_TO_MISE_RULES_FILE);
 
   // 2. Collect unique transformer function names from *all* parsed rules
-  const allParsedRules = [...miseToTrunkRules, ...trunkToMiseRules];
+  const allParsedRules: Record<string, any>[] = [
+    ...(miseToTrunkRules as Record<string, any>[]), // Use weaker type for access
+    ...(trunkToMiseRules as Record<string, any>[]), // Use weaker type for access
+  ];
   const transformerFunctions = [
-    ...new Set(allParsedRules.map((rule) => rule.transformer_function)),
+    ...new Set(allParsedRules.map((rule) => rule.transformer_function)), // Now this access is safe
   ].sort();
 
   if (allParsedRules.length === 0) {
@@ -233,19 +244,19 @@ async function generateTransformers() {
     trunkToMiseRules: trunkToMiseRules,
     miseToTrunkRulesFileName: path.basename(MISE_TO_TRUNK_RULES_FILE),
     trunkToMiseRulesFileName: path.basename(TRUNK_TO_MISE_RULES_FILE),
-    // Calculate relative paths from the OUTPUT file directory
+    // Calculate relative paths from the OUTPUT file directory (now src/schema_bridge/generated)
     commonTransformersRelativePath: path
-      .relative(path.dirname(OUTPUT_FILE), COMMON_TRANSFORMERS_PATH)
-      .replace(/\\/g, "/"), // Should still be correct
+      .relative(path.dirname(OUTPUT_FILE), COMMON_TRANSFORMERS_PATH) // Will calculate ../common/common_transformers.ts
+      .replace(/\\/g, "/"),
     miseTrunkTypesRelativePath: path
-      .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "mise.ts"))
-      .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
+      .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "mise.ts")) // Will calculate ../../types/mise.ts
+      .replace(/\\/g, "/"),
     transformRulesTypesRelativePath: path
       .relative(
         path.dirname(OUTPUT_FILE),
-        path.join(TYPES_DIR, "transform_rules.ts"),
+        path.join(TYPES_DIR, "transforms", "rules.ts"), // Corrected path here as well
       )
-      .replace(/\\/g, "/"), // Adjusted TYPES_DIR path
+      .replace(/\\/g, "/"),
   };
 
   // 4. Initialize Eta and Render Template

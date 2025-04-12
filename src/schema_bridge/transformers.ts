@@ -1,5 +1,5 @@
-import type { TransformContext } from "../../types/transform_rules.ts";
-import { extractToolVersion } from "../../utils/trunk_utils.ts";
+import type { TransformContext } from "../../types/transforms/rules.d.ts";
+import { extractToolVersion } from "../mise/extractors.ts";
 
 // --- Helper Functions ---
 
@@ -442,7 +442,9 @@ export function parseJsonString(
     return { newValue: parsed, changed: true };
   } catch (error) {
     console.error(
-      `parseJsonString: Failed to parse JSON string: ${error.message}. Returning null.`,
+      `parseJsonString: Failed to parse JSON string: ${
+        error instanceof Error ? error.message : String(error)
+      }. Returning null.`,
     );
     return { newValue: null, changed: false };
   }

@@ -1,3 +1,6 @@
+import { getValueByPath, setValueByPath } from "./engine.ts"; // Import helpers
+import type { TransformContext } from "../../types/transforms/rules.d.ts"; // Corrected typo
+
 // ... existing helpers ...
 
 // --- More Generic Helpers ---
@@ -11,12 +14,13 @@
 export function buildRenameKey(
   value: any,
   target: any,
-  targetPath: string, // The NEW key path
-  context: TransformationContext & { sourcePath?: string }, // Optional: pass original source path via context if deletion is needed
+  targetPath: string, // The NEW key path (as string)
+  context: TransformContext & { sourcePath?: string }, // Optional: pass original source path via context if deletion is needed
 ): boolean {
   if (value === undefined) return false; // Nothing to rename
 
-  const changed = setValueByPath(target, targetPath, value);
+  const pathSegments = targetPath.replace(/\\[(\\d+)\\]/g, ".$1").split("."); // Parse path
+  const changed = setValueByPath(target, pathSegments, value); // Use parsed path
 
   // Optional: Delete the old key if sourcePath is provided in context
   // This part is tricky as it requires knowledge of the original path.
@@ -35,8 +39,8 @@ export function buildRenameKey(
 export function buildMapArrayItems(
   sourceArray: any[],
   target: any,
-  targetPath: string,
-  context: TransformationContext & {
+  targetPath: string, // Path as string
+  context: TransformContext & {
     itemMapper: (item: any, index: number) => any;
   },
 ): boolean {
@@ -54,11 +58,12 @@ export function buildMapArrayItems(
   }
 
   const targetArray = sourceArray.map(context.itemMapper);
+  const pathSegments = targetPath.replace(/\\[(\\d+)\\]/g, ".$1").split("."); // Parse path
 
   // Compare before setting
-  const currentValue = getValueByPath(target, targetPath);
+  const currentValue = getValueByPath(target, pathSegments); // Use parsed path
   if (JSON.stringify(currentValue) !== JSON.stringify(targetArray)) {
-    return setValueByPath(target, targetPath, targetArray);
+    return setValueByPath(target, pathSegments, targetArray); // Use parsed path
   }
   return false;
 }
@@ -71,7 +76,7 @@ export function buildMapArrayItems(
 export function extractFlattenObjectArray(
   sourceArray: any[],
   _sourcePath: string,
-  context: TransformationContext & { keyProp: string; valueProp: string },
+  context: TransformContext & { keyProp: string; valueProp: string },
 ): any {
   if (!Array.isArray(sourceArray)) return undefined;
   if (!context.keyProp || !context.valueProp) return undefined;

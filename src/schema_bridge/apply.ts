@@ -7,12 +7,15 @@ import { exists } from "jsr:@std/fs/exists";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 
 // Import the generated transformation function(s)
-import { applyMiseToTrunkRules } from "../transformation/generated/generated_transformers.ts";
+// import { applyMiseToTrunkRules } from "./generated/generated_transformers.ts"; // Adjusted path relative to apply.ts - COMMENTED OUT FOR NOW
 
 // Assuming types are defined, adjust path as needed
-import type { MiseConfig } from "../../types/mise/mise.ts";
-import type { TrunkConfig } from "../../types/trunk/trunk.ts";
-import type { TransformContext } from "../../types/transforms/rules.ts";
+import type { Mise as MiseConfig } from "../../types/mise/mise.d.ts";
+import type {
+  ConfigurationSchemaForTrunkAPowerfulLinterRunnerHttpsDocsTrunkIo
+    as TrunkConfig,
+} from "../../types/trunk/trunk.d.ts";
+import type { TransformContext } from "../../types/transforms/rules.d.ts";
 
 // --- Constants & Configuration ---
 const SCRIPT_DIR = path.dirname(path.fromFileUrl(import.meta.url));
@@ -119,7 +122,7 @@ async function main() {
     const miseConfig = await parseMiseConfig(MISE_CONFIG_PATH);
     // Read the *template* config as the base for transformation
     const originalTrunkConfig = await parseTrunkConfig(
-      TEMPLATE_TRUNK_YAML_PATH,
+      TEMPLATE_TRUNK_YAML_PATH!,
     );
 
     // 2. Define context (optional, for future use)
@@ -131,11 +134,15 @@ async function main() {
 
     // 3. Apply transformations (Mise -> Trunk)
     // TODO: Add Trunk -> Mise direction if needed later
+    /* // COMMENTED OUT UNTIL applyMiseToTrunkRules is generated
     const { config: updatedTrunkConfig, changed } = await applyMiseToTrunkRules(
       originalTrunkConfig,
       miseConfig,
       context,
     );
+    */
+    const updatedTrunkConfig = originalTrunkConfig; // Placeholder
+    const changed = false; // Placeholder
 
     // 4. Output and Write (if changed and not dry run)
     if (changed) {
@@ -157,7 +164,7 @@ async function main() {
       } else {
         // Write to both files
         await writeTrunkConfig(
-          TEMPLATE_TRUNK_YAML_PATH,
+          TEMPLATE_TRUNK_YAML_PATH!,
           updatedTrunkConfig,
           "Template",
         );
