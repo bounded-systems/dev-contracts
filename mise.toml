@@ -25,12 +25,12 @@ run = "mise install"
 
 # Setup tasks
 [tasks.setup-symlinks]
-run = "deno run -A scripts/setup.ts symlinks"
+run = "deno run -A tools/setup/setup.ts symlinks"
 depends = ["install"]
 description = "Create symlinks from DevContracts templates to target project"
 
 [tasks.setup-env]
-run = "deno run -A scripts/setup.ts env"
+run = "deno run -A tools/setup/setup.ts env"
 depends = ["install"]
 description = "Configure DEVCONTRACTS_DIR environment variable in shell configuration"
 
@@ -56,7 +56,7 @@ description = "Upgrade Trunk plugins"
 
 # Sync trunk.yaml versions back to mise.toml
 [tasks.sync-trunk-versions]
-run = "deno run -A scripts/sync-trunk-versions.ts"
+run = "deno run -A tools/trunk/sync-trunk-versions.ts"
 depends = ["install"] # Depends on deno being installed
 description = "Sync linter versions from .trunk/trunk.yaml to mise.toml"
 
@@ -67,21 +67,21 @@ description = "Upgrade Trunk plugins and sync versions back to mise.toml"
 
 # Apply Transformation Task
 [tasks.transform-apply]
-run = "deno run -A scripts/transform-apply.ts $MISE_ARGS"
+run = "deno run -A tools/transforms/transform-apply.ts $MISE_ARGS"
 description = "Apply generated transformations (e.g., mise.toml -> trunk.yaml)"
 
 # Generate Contract Types Task
 [tasks.generate-types]
-run = "deno run --allow-read --allow-write --allow-run scripts/types/generate.ts"
+run = "deno run --allow-read --allow-write --allow-run tools/types/generate.ts"
 depends = ["install"]
-description = "Generate TypeScript .d.ts files for specified source directories (src/contracts, scripts)"
+description = "Generate TypeScript .d.ts files for specified source directories (tools/contracts, tools/scripts)"
 
 # Validate Type Definition Coverage Task
 [tasks.validate-types-coverage]
 # Pass MISE_WORKSPACE_ROOT environment variable to the script
-run = "MISE_WORKSPACE_ROOT={{env.PWD}} deno run --allow-read --allow-env scripts/types/validate.ts"
+run = "MISE_WORKSPACE_ROOT={{env.PWD}} deno run --allow-read --allow-env tools/types/validate.ts"
 depends = ["install"]
-description = "Validate that all .ts files in src/contracts and scripts have corresponding .d.ts files in types"
+description = "Validate that all .ts files in tools/contracts and tools/scripts have corresponding .d.ts files in types"
 
 # Ensure Type Definition Coverage (Generate + Validate)
 [tasks.ensure-types]
@@ -90,13 +90,13 @@ description = "Generate type definitions and then validate coverage"
 
 # Update README Generation Task to depend on schema generation and run formatter
 [tasks.generate-readme]
-run = "deno run -A scripts/generate-readme.ts && trunk fmt"
+run = "deno run -A tools/docs/generate-readme.ts && trunk fmt"
 depends = ["install", "generate-contract-types"] # REMOVED validate-schema dependency
 description = "Generate README.md from readme.yml and format using Trunk"
 
 # Check Contract Files Task
 [tasks.check-contracts]
-run = "deno run -A scripts/contracts/check-contracts.ts"
+run = "deno run -A tools/contracts/check-contracts.ts"
 depends = ["install"]
 description = "Check if all required contract files (e.g., contracts.toml) exist in the project root, based on mise.toml config."
 
@@ -108,15 +108,15 @@ description = "Run Deno tests"
 
 # New Task: Validate Test Coverage
 [tasks.validate-coverage]
-# run = "deno run --allow-read src/contracts/quality/coverage/validate.ts"
-run = "deno run --allow-read src/contracts/quality/coverage/runner.ts" # Updated to use runner
+# run = "deno run --allow-read tools/contracts/quality/coverage/validate.ts"
+run = "deno run --allow-read tools/contracts/quality/coverage/runner.ts" # Updated to use runner
 depends = ["install"]
 description = "Check that all .ts files have a corresponding .test.ts file"
 
 # New Task: Generate Test Stubs
 [tasks.coverage-codegen]
-# run = "deno run --allow-read --allow-write src/contracts/quality/coverage/codegen.ts"
-run = "deno run --allow-read=.,templates --allow-write src/contracts/quality/coverage/codegen.ts" # Added read access to templates
+# run = "deno run --allow-read --allow-write tools/contracts/quality/coverage/codegen.ts"
+run = "deno run --allow-read=.,tools/templates --allow-write tools/contracts/quality/coverage/codegen.ts" # Added read access to templates
 depends = ["install"]
 description = "Generate placeholder .test.ts files for missing tests"
 
@@ -127,7 +127,7 @@ description = "Generate missing test stubs and then validate test coverage"
 
 # Clone task (no dependencies as it's meant to be run before mise is even installed)
 [tasks.clone]
-run = "deno run -A scripts/clone.ts $MISE_ARGS"
+run = "deno run -A tools/setup/clone.ts $MISE_ARGS"
 description = "Clone the DevContracts repository (pass repo URL and destination path as arguments)"
 
 # Enable lockfile for consistent versioning across environments
@@ -135,32 +135,32 @@ description = "Clone the DevContracts repository (pass repo URL and destination 
 lockfile = true
 
 [tasks.generate-gitignore]
-run = "deno run -A src/contracts/structure/generate-gitignore.ts"
+run = "deno run -A tools/contracts/structure/generate-gitignore.ts"
 depends = ["install"]
 description = "Generate .gitignore file from contracts.toml structure"
 
 [tasks.contracts-validate-structure]
-run = "deno run -A --unstable-fs src/contracts/structure/validate-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contracts/structure/validate-contracts-structure.ts"
 description = "Validate that the repository structure matches contracts.toml (including schema check)"
 depends = ["contracts-sort-structure"]
 
 [tasks.contracts-add-untracked]
-run = "deno run -A --unstable-fs src/contracts/structure/validate-contracts-structure.ts --add-untracked"
+run = "deno run -A --unstable-fs tools/contracts/structure/validate-contracts-structure.ts --add-untracked"
 description = "Add untracked files/directories found on the filesystem to contracts.toml [structure]"
 depends = ["install"]
 
 [tasks.contracts-generate-structure]
-run = "deno run -A --unstable-fs src/contracts/structure/generate-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contracts/structure/generate-contracts-structure.ts"
 description = "Create missing files/directories defined in contracts.toml [structure] (skips symlinks)"
 depends = ["install"]
 
 [tasks.contracts-prune-structure]
-run = "deno run -A --unstable-fs src/contracts/structure/prune-contracts-structure.ts"
+run = "deno run -A --unstable-fs tools/contracts/structure/prune-contracts-structure.ts"
 description = "Remove entries from contracts.toml [structure] that do not exist on the filesystem"
 depends = ["install", "contracts-sort-structure"]
 
 [tasks.contracts-sort-structure]
-run = "deno run -A src/contracts/structure/sort-contracts-structure.ts"
+run = "deno run -A tools/contracts/structure/sort-contracts-structure.ts"
 description = "Sort and deduplicate the [structure] section in contracts.toml"
 depends = ["install"]
 
@@ -169,11 +169,11 @@ description = "Prune, generate, and sort the contracts.toml [structure] section"
 depends = ["contracts-prune-structure", "contracts-generate-structure", "contracts-sort-structure"]
 
 [tasks.contracts-delete-empty-dirs]
-run = "deno run -A --unstable-fs src/contracts/structure/delete-empty-dirs.ts"
+run = "deno run -A --unstable-fs tools/contracts/structure/delete-empty-dirs.ts"
 description = "Delete empty directories defined in contracts.toml [structure] if allow_empty_directory=false"
 depends = ["install"] # Depends on deno
 
 [tasks.contracts-validate-schemas]
-run = "deno run --allow-read --allow-net scripts/validate-schemas.ts"
+run = "deno run --allow-read --allow-net tools/schemas/validate-schemas.ts"
 description = "Validates files against schemas defined in contracts.toml"
-sources = ["contracts.toml", "schemas/**/*.json", "scripts/validate-schemas.ts"]
+sources = ["contracts.toml", "tools/schemas/**/*.json", "tools/schemas/validate-schemas.ts"]

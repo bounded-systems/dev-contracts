@@ -129,7 +129,7 @@ DevContracts/
 │   ├── generate-schema-from-mise.ts            # Generates readme.yml from mise.toml
 │   ├── sync-trunk-versions.ts            # Syncs versions from Trunk to mise
 │   └── transform-apply.ts            # Applies configuration transformations
-├── src            # Source code for transformations and utilities
+├── tools            # Source code for transformations and utilities
 │   └── transformation            # Transformation engine
 │   │   └── engine            # Core transformation logic
 ├── templates            # Configuration templates for symlinks
