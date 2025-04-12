@@ -1,6 +1,0 @@
-{
-  "tasks": {
-    "generate": "deno run --allow-read --allow-write --allow-env ./engine.ts",
-    "apply": "deno run --allow-read --allow-write --allow-env ./apply.ts"
-  }
-}
