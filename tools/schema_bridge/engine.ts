@@ -7,8 +7,7 @@ import { Eta } from "jsr:@eta-dev/eta"; // CORRECTED PACKAGE NAME
 import type {
   TransformContext,
   TransformRule,
-} from "../../types/transforms/rules.d.ts"; // Corrected path to match structure
-import type { Mise as MiseConfig } from "../../types/mise/mise.d.ts"; // Corrected name and removed TrunkConfig
+} from "@types/transforms/rules.d.ts"; // Adjusted path
 
 // --- Configuration ---
 const ENGINE_DIR = path.dirname(path.fromFileUrl(import.meta.url)); // Path to this engine file's directory
@@ -32,9 +31,10 @@ const TEMPLATE_FILE = path.join(
   TEMPLATES_DIR,
   "transforms/generated_transformers.eta",
 );
-const GENERATED_FILE = path.resolve(ENGINE_DIR, "transformers.ts"); // This seems unused? Keep for now or remove? Let's keep.
-const MISE_TO_TRUNK_RULES_FILE = path.join(RULES_DIR, "mise_to_trunk.toml");
-const TRUNK_TO_MISE_RULES_FILE = path.join(RULES_DIR, "trunk_to_mise.toml");
+const GENERATED_FILE = path.resolve(ENGINE_DIR, "transformers.ts"); // This seems unused?
+
+// Import the rule loader from the plugin
+import { loadMiseTrunkRules } from "./plugins/mise_trunk_rules.ts";
 
 // --- Helper Functions ---
 
@@ -204,9 +204,13 @@ export function setValueByPath(
 async function generateTransformers() {
   console.log("Starting transformer generation using Eta...");
 
-  // 1. Read rules
-  const miseToTrunkRules = await readAndParseRules(MISE_TO_TRUNK_RULES_FILE);
-  const trunkToMiseRules = await readAndParseRules(TRUNK_TO_MISE_RULES_FILE);
+  // 1. Read rules using the plugin loader
+  const {
+    miseToTrunkRules,
+    trunkToMiseRules,
+    miseToTrunkRulesFileName,
+    trunkToMiseRulesFileName,
+  } = await loadMiseTrunkRules();
 
   // 2. Collect unique transformer function names from *all* parsed rules
   const allParsedRules: Record<string, any>[] = [
@@ -242,21 +246,14 @@ async function generateTransformers() {
     transformerFunctions: transformerFunctions,
     miseToTrunkRules: miseToTrunkRules,
     trunkToMiseRules: trunkToMiseRules,
-    miseToTrunkRulesFileName: path.basename(MISE_TO_TRUNK_RULES_FILE),
-    trunkToMiseRulesFileName: path.basename(TRUNK_TO_MISE_RULES_FILE),
+    miseToTrunkRulesFileName: miseToTrunkRulesFileName,
+    trunkToMiseRulesFileName: trunkToMiseRulesFileName,
     // Calculate relative paths from the OUTPUT file directory (now src/schema_bridge/generated)
     commonTransformersRelativePath: path
       .relative(path.dirname(OUTPUT_FILE), COMMON_TRANSFORMERS_PATH) // Will calculate ../common/common_transformers.ts
       .replace(/\\/g, "/"),
-    miseTrunkTypesRelativePath: path
-      .relative(path.dirname(OUTPUT_FILE), path.join(TYPES_DIR, "mise.ts")) // Will calculate ../../types/mise.ts
-      .replace(/\\/g, "/"),
-    transformRulesTypesRelativePath: path
-      .relative(
-        path.dirname(OUTPUT_FILE),
-        path.join(TYPES_DIR, "transforms", "rules.ts"), // Corrected path here as well
-      )
-      .replace(/\\/g, "/"),
+    rulesRelativePath: path
+      .relative(path.dirname(OUTPUT_FILE), RULES_DIR), // Will calculate ../rules
   };
 
   // 4. Initialize Eta and Render Template

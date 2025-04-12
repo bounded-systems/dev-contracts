@@ -1,5 +1,5 @@
 import { getValueByPath, setValueByPath } from "./engine.ts"; // Import helpers
-import type { TransformContext } from "../../types/transforms/rules.d.ts"; // Corrected typo
+import type { TransformContext } from "@types/transforms/rules.d.ts"; // Corrected typo
 
 // ... existing helpers ...
 

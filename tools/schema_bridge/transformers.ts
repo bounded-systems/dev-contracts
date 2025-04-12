@@ -1,5 +1,5 @@
-import type { TransformContext } from "../../types/transforms/rules.d.ts";
-import { extractToolVersion } from "../mise/extractors.ts";
+import type { TransformContext } from "@types/transforms/rules.d.ts";
+import { extractToolVersion } from "./common/utils.ts";
 
 // --- Helper Functions ---
 
@@ -359,65 +359,6 @@ export function generateEnabledListFromDefinitions(
   }
 
   return { newValue: newEnabledList, changed };
-}
-
-/**
- * Updates a target version field based on a source version specifier string.
- * Context can provide `ignoreSchemaVersion` to avoid overwriting specific target values.
- */
-export function updateTrunkVersion(
-  sourceValue: unknown,
-  targetValue: unknown,
-  context?: TransformContext,
-): { newValue: string | number; changed: boolean } {
-  let changed = false;
-  const sourceVersionSpec = typeof sourceValue === "string"
-    ? sourceValue
-    : null;
-  const targetVersion =
-    typeof targetValue === "string" || typeof targetValue === "number"
-      ? targetValue
-      : null;
-  const ignoreSchemaVersion = context?.ignoreSchemaVersion;
-
-  let finalValue: string | number = targetValue as (string | number); // Default to keeping target
-
-  if (sourceVersionSpec) {
-    const sourceVersion = extractToolVersion(sourceVersionSpec);
-
-    if (sourceVersion && String(targetVersion) !== String(sourceVersion)) {
-      // Check if we should ignore overwriting based on context
-      if (
-        ignoreSchemaVersion !== undefined &&
-        String(targetVersion) === String(ignoreSchemaVersion)
-      ) {
-        console.log(
-          `updateTrunkVersion: Target version (${targetVersion}) matches ignoreSchemaVersion. Not updating.`,
-        );
-      } else {
-        console.log(
-          `updateTrunkVersion: Updating version: ${targetVersion} -> ${sourceVersion}`,
-        );
-        finalValue = sourceVersion;
-        changed = true;
-      }
-    }
-  } else if (
-    targetVersion !== null && ignoreSchemaVersion !== undefined &&
-    String(targetVersion) !== String(ignoreSchemaVersion)
-  ) {
-    console.log(
-      "updateTrunkVersion: Source version not specified. Keeping existing target version.",
-    );
-  }
-
-  // Ensure the return type matches what might be expected (e.g., if target was number)
-  if (typeof targetValue === "number" && typeof finalValue === "string") {
-    const num = parseFloat(finalValue);
-    if (!isNaN(num)) finalValue = num;
-  }
-
-  return { newValue: finalValue, changed };
 }
 
 /**

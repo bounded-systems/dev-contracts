@@ -5,7 +5,8 @@
     "ajv-formats": "https://esm.sh/ajv-formats@3.0.1",
     "ajv-errors": "https://esm.sh/ajv-errors@3.0.0",
     "jsonc-parser": "https://esm.sh/jsonc-parser@3.2.1",
-    "zod": "https://deno.land/x/zod/mod.ts"
+    "zod": "https://deno.land/x/zod/mod.ts",
+    "@types/": "./types/"
   },
   "compilerOptions": {
     "lib": ["deno.window"]
