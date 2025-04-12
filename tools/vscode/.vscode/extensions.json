@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "Shopify.ruby-lsp",
-    "sorbet.sorbet-vscode-extension",
-    "trunk.io",
-    "redhat.vscode-yaml"
-  ]
-}
