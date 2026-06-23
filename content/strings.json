@@ -3,8 +3,12 @@
     "type": "name",
     "value": "Dev Contracts"
   },
+  "tagline": {
+    "type": "tagline",
+    "value": "Last updated: 2025-04-11 by DevContracts"
+  },
   "description": {
     "type": "meta",
-    "value": "Last updated: 2025-04-11 by DevContracts"
+    "value": "Last updated: 2025-04-11 by DevContracts DevContracts is a framework for defining, validating, and enforcing development standards, configurations, and project structure using a central specification file: contracts. toml.  It provides a suite of tools to interact with this \"d…"
   }
 }
