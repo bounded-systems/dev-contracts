@@ -5,13 +5,23 @@
     "ajv-formats": "https://esm.sh/ajv-formats@3.0.1",
     "ajv-errors": "https://esm.sh/ajv-errors@3.0.0",
     "jsonc-parser": "https://esm.sh/jsonc-parser@3.2.1",
-    "zod": "https://deno.land/x/zod/mod.ts",
-    "@types/": "./types/"
+    "zod": "npm:zod@^3.23.8",
+    "@types/": "./types/",
+    "zod-to-json-schema": "npm:zod-to-json-schema@^3.23.0"
   },
   "compilerOptions": {
-    "lib": ["deno.window"]
+    "lib": [
+      "deno.window"
+    ]
   },
   "tasks": {
     "test": "deno test --allow-read --allow-net --allow-write ."
+  },
+  "name": "@bounded-systems/dev-contracts",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./mod.ts",
+    "./spec": "./spec/mod.ts"
   }
 }
