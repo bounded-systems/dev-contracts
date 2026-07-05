@@ -1,0 +1,31 @@
+deno.json
+  s_70508ca017cb29::t_3f9ac33a76b99c 26-30
+deno.lock
+  s_70508ca017cb29::t_961aa432844da6 4-8,11-28,34-37
+spec/mod.test.ts
+  s_70508ca017cb29::t_289a8ced2dbe25 1-77
+spec/schemas/common.test.ts
+  s_70508ca017cb29::t_75a7b61aabe6fa 1-18
+spec/schemas/dev_contract.test.ts
+  s_70508ca017cb29::t_76aea1b9ebe6b6 1-208
+spec/schemas/lockfile.test.ts
+  s_70508ca017cb29::t_5be6dc72da421c 1-31
+spec/schemas/token.test.ts
+  s_70508ca017cb29::t_c932e22b0e494c 1-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "f06c4e9677c65c6d27a187d85cdbd7ce400b5806",
+  "prompts": {},
+  "sessions": {
+    "s_70508ca017cb29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d283f13f-34c8-429b-8cb1-b020e645c0e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
